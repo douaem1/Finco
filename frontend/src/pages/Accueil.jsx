@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './accueil.css';
 
 /* ============================================================
@@ -42,7 +44,26 @@ const ETAPES = [
   { n: '4', titre: 'Clôturer', texte: 'Répartition des coûts et états financiers.' },
 ];
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+
 export default function Accueil() {
+  const [etatApi, setEtatApi] = useState('verification');
+  const { estConnecte } = useAuth();
+
+  useEffect(() => {
+    let actif = true;
+
+    fetch(`${API_URL}/api/test`)
+      .then((reponse) => {
+        if (!reponse.ok) throw new Error('API indisponible');
+        return reponse.text();
+      })
+      .then(() => actif && setEtatApi('operationnel'))
+      .catch(() => actif && setEtatApi('indisponible'));
+
+    return () => { actif = false; };
+  }, []);
+
   return (
     <div className="accueil">
       {/* formes décoratives */}
@@ -62,7 +83,10 @@ export default function Accueil() {
           <a href="#fonctionnalites">Fonctionnalités</a>
           <a href="#flux">Comment ça marche</a>
         </nav>
-        <Link to="/login" className="btn btn-noir">Se connecter</Link>
+        <Link to={estConnecte ? '/pieces' : '/login'} className="btn btn-noir">
+          {estConnecte ? 'Mon espace →' : 'Se connecter'}
+        </Link>
+      
       </header>
 
       {/* ---------- héros ---------- */}
@@ -80,10 +104,6 @@ export default function Accueil() {
             factures, budgets, répartition des coûts et tableaux de bord —
             du brouillon à la clôture.
           </p>
-          <div className="heros-actions">
-            <Link to="/login" className="btn btn-corail grand">Accéder à l'application →</Link>
-            <a href="#modules" className="lien-souligne">Découvrir les modules</a>
-          </div>
         </div>
 
         {/* collage : pièce comptable + graphique + autocollants */}
@@ -182,12 +202,7 @@ export default function Accueil() {
         </div>
       </section>
 
-      {/* ---------- appel final ---------- */}
-      <section className="cta">
-        <h2>Prêt à équilibrer vos comptes&nbsp;?</h2>
-        <p>Connectez-vous en tant que comptable, contrôleur de gestion, directeur financier ou administrateur.</p>
-        <Link to="/login" className="btn btn-noir grand">Se connecter à FinCo →</Link>
-      </section>
+    
 
       <footer className="pied">
         <span><span className="tampon petit">F</span> FinCo — Comptabilité financière &amp; contrôle de gestion</span>

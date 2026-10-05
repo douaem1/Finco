@@ -200,6 +200,30 @@ h1, h2, h3 { font-family: 'Fraunces', Georgia, serif; }
   transform: rotate(-2deg);
   margin-bottom: 26px;
 }
+.etat-backend {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: fit-content;
+  margin: 0 0 18px 4px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--sarcelle);
+  color: #4a4438;
+  background: rgba(255, 253, 247, 0.78);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+.etat-point {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 9px;
+  border-radius: 50%;
+  background: var(--jaune);
+}
+.etat-backend.operationnel { border-left-color: var(--sarcelle); }
+.etat-backend.operationnel .etat-point { background: var(--sarcelle); }
+.etat-backend.indisponible { border-left-color: var(--corail); }
+.etat-backend.indisponible .etat-point { background: var(--corail); }
 .heros h1 {
   font-size: clamp(2.6rem, 5.2vw, 4.4rem);
   font-weight: 800;
