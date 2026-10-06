@@ -55,11 +55,12 @@ public class DonneesInitiales implements CommandLineRunner {
     public void run(String... args) {
         if (utilisateurRepository.count() == 0) {
             String hache = passwordEncoder.encode(MOT_DE_PASSE_DEMO);
+            // new Utilisateur(nom, prénom, email, mot de passe haché, rôle)
             utilisateurRepository.saveAll(List.of(
-                    new Utilisateur("admin", hache, "Administrateur", "admin@finco.ma", Role.ADMIN),
-                    new Utilisateur("comptable", hache, "Sara Comptable", "compta@finco.ma", Role.COMPTABLE),
-                    new Utilisateur("controleur", hache, "Youssef Contrôleur", "cg@finco.ma", Role.CONTROLEUR),
-                    new Utilisateur("daf", hache, "Nadia Directrice fin.", "daf@finco.ma", Role.DIRECTEUR_FINANCIER)));
+                    new Utilisateur("Alami", "Karim", "admin@finco.ma", hache, Role.ADMIN),
+                    new Utilisateur("Bennani", "Sara", "comptable@finco.ma", hache, Role.COMPTABLE),
+                    new Utilisateur("Tazi", "Youssef", "controleur@finco.ma", hache, Role.CONTROLEUR),
+                    new Utilisateur("El Idrissi", "Nadia", "daf@finco.ma", hache, Role.DIRECTEUR_FINANCIER)));
             log.info("Utilisateurs de démonstration créés (mot de passe : {}).", MOT_DE_PASSE_DEMO);
         }
 

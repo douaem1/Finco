@@ -10,6 +10,6 @@ import java.util.Optional;
 @Repository
 public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> {
 
-    /** SELECT * FROM utilisateur WHERE login = ? — utilisé à la connexion. */
-    Optional<Utilisateur> findByLogin(String login);
+    /** SELECT * FROM utilisateur WHERE email = ? — utilisé à la connexion. */
+    Optional<Utilisateur> findByEmail(String email);
 }

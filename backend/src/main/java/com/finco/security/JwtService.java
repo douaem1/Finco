@@ -15,7 +15,7 @@ import java.util.Date;
 /**
  * Fabrique et vérifie les jetons JWT.
  *
- * Un JWT = en-tête.contenu.signature (Base64). Le contenu porte le login
+ * Un JWT = en-tête.contenu.signature (Base64). Le contenu porte l'email
  * (« subject ») et le rôle. La signature HMAC-SHA256, calculée avec une clé
  * secrète connue du serveur seul, empêche toute falsification : si quelqu'un
  * modifie le rôle dans le jeton, la signature ne correspond plus.
@@ -37,10 +37,10 @@ public class JwtService {
     }
 
     /** Crée un jeton signé valable `dureeValiditeMs` (24 h par défaut). */
-    public String genererToken(String login, String role) {
+    public String genererToken(String email, String role) {
         Date maintenant = new Date();
         return Jwts.builder()
-                .setSubject(login)
+                .setSubject(email)
                 .claim("role", role)
                 .setIssuedAt(maintenant)
                 .setExpiration(new Date(maintenant.getTime() + dureeValiditeMs))
@@ -49,10 +49,10 @@ public class JwtService {
     }
 
     /**
-     * Vérifie la signature et la date d'expiration, puis renvoie le login.
+     * Vérifie la signature et la date d'expiration, puis renvoie l'email (subject).
      * Renvoie null si le jeton est invalide, falsifié ou expiré.
      */
-    public String extraireLoginSiValide(String token) {
+    public String extraireEmailSiValide(String token) {
         try {
             Claims contenu = Jwts.parserBuilder()
                     .setSigningKey(cle)

@@ -48,12 +48,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (entete != null && entete.startsWith(PREFIXE)
                 && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            String login = jwtService.extraireLoginSiValide(entete.substring(PREFIXE.length()));
+            String email = jwtService.extraireEmailSiValide(entete.substring(PREFIXE.length()));
 
-            if (login != null) {
+            if (email != null) {
                 try {
                     // On recharge l'utilisateur : un compte désactivé ou supprimé perd l'accès.
-                    UserDetails utilisateur = userDetailsService.loadUserByUsername(login);
+                    UserDetails utilisateur = userDetailsService.loadUserByUsername(email);
                     if (utilisateur.isEnabled()) {
                         var authentification = new UsernamePasswordAuthenticationToken(
                                 utilisateur, null, utilisateur.getAuthorities());

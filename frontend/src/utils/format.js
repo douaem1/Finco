@@ -12,6 +12,20 @@ export function dateFr(iso) {
   return `${j}/${m}/${a}`;
 }
 
+export function nomAffiche(utilisateur) {
+  if (!utilisateur) return '';
+  return `${utilisateur.prenom ?? ''} ${utilisateur.nom ?? ''}`.trim();
+}
+
+export function initiales(utilisateur) {
+  return `${utilisateur?.prenom?.[0] ?? ''}${utilisateur?.nom?.[0] ?? ''}`.toUpperCase() || '?';
+}
+
+export function minutesSecondes(secondes) {
+  const s = Math.max(0, Math.floor(secondes));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+
 export const LIBELLES_ROLES = {
   COMPTABLE: 'Comptable',
   CONTROLEUR: 'Contrôleur de gestion',

@@ -37,10 +37,16 @@ public class GlobalExceptionHandler {
         return reponse(HttpStatus.NOT_FOUND, e.getMessage());
     }
 
-    /** Login ou mot de passe faux -> 401 Unauthorized. */
+    /** Email ou mot de passe faux -> 401 Unauthorized. */
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErreurResponse> mauvaisIdentifiants(BadCredentialsException e) {
-        return reponse(HttpStatus.UNAUTHORIZED, "Identifiant ou mot de passe incorrect.");
+        return reponse(HttpStatus.UNAUTHORIZED, "Email ou mot de passe incorrect.");
+    }
+
+    /** Code OTP faux, expiré ou épuisé -> 401 Unauthorized. */
+    @ExceptionHandler(AuthentificationException.class)
+    public ResponseEntity<ErreurResponse> authentification(AuthentificationException e) {
+        return reponse(HttpStatus.UNAUTHORIZED, e.getMessage());
     }
 
     /** Compte désactivé -> 401. */

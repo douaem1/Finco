@@ -27,12 +27,13 @@ public class UtilisateurDetailsService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String login) throws UsernameNotFoundException {
-        Utilisateur u = utilisateurRepository.findByLogin(login)
-                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur inconnu : " + login));
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        // L'email sert d'identifiant (« username » pour Spring Security).
+        Utilisateur u = utilisateurRepository.findByEmail(email.trim().toLowerCase())
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur inconnu : " + email));
 
         // Le rôle devient une « autorité » préfixée ROLE_ (convention Spring).
-        return User.withUsername(u.getLogin())
+        return User.withUsername(u.getEmail())
                 .password(u.getMotDePasse())
                 .authorities(List.of(new SimpleGrantedAuthority("ROLE_" + u.getRole().name())))
                 .disabled(!u.isActif())

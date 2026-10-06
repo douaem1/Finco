@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 
 /**
  * Utilisateur de l'application (table `utilisateur`).
+ * L'EMAIL sert d'identifiant de connexion (unique) ; il reçoit aussi le code OTP.
  * Le mot de passe n'est JAMAIS stocké en clair : uniquement son hachage BCrypt.
  */
 @Entity
@@ -25,18 +26,19 @@ public class Utilisateur {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 50)
-    private String login;
+    @Column(nullable = false, length = 100)
+    private String nom;
+
+    @Column(nullable = false, length = 100)
+    private String prenom;
+
+    /** Identifiant de connexion, stocké en minuscules. */
+    @Column(nullable = false, unique = true, length = 150)
+    private String email;
 
     /** Hachage BCrypt, ex. "$2a$10$...". */
     @Column(name = "mot_de_passe", nullable = false, length = 100)
     private String motDePasse;
-
-    @Column(name = "nom_complet", nullable = false, length = 100)
-    private String nomComplet;
-
-    @Column(length = 100)
-    private String email;
 
     /** Stocké en texte ("COMPTABLE"...) plutôt qu'en numéro : plus lisible et robuste. */
     @Enumerated(EnumType.STRING)
@@ -52,11 +54,11 @@ public class Utilisateur {
     public Utilisateur() {
     }
 
-    public Utilisateur(String login, String motDePasse, String nomComplet, String email, Role role) {
-        this.login = login;
-        this.motDePasse = motDePasse;
-        this.nomComplet = nomComplet;
+    public Utilisateur(String nom, String prenom, String email, String motDePasse, Role role) {
+        this.nom = nom;
+        this.prenom = prenom;
         this.email = email;
+        this.motDePasse = motDePasse;
         this.role = role;
     }
 
@@ -68,15 +70,20 @@ public class Utilisateur {
         }
     }
 
+    /** "Sara Bennani" : pratique pour l'affichage. */
+    public String getNomComplet() {
+        return prenom + " " + nom;
+    }
+
     public Long getId() { return id; }
-    public String getLogin() { return login; }
-    public void setLogin(String login) { this.login = login; }
-    public String getMotDePasse() { return motDePasse; }
-    public void setMotDePasse(String motDePasse) { this.motDePasse = motDePasse; }
-    public String getNomComplet() { return nomComplet; }
-    public void setNomComplet(String nomComplet) { this.nomComplet = nomComplet; }
+    public String getNom() { return nom; }
+    public void setNom(String nom) { this.nom = nom; }
+    public String getPrenom() { return prenom; }
+    public void setPrenom(String prenom) { this.prenom = prenom; }
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+    public String getMotDePasse() { return motDePasse; }
+    public void setMotDePasse(String motDePasse) { this.motDePasse = motDePasse; }
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
     public boolean isActif() { return actif; }

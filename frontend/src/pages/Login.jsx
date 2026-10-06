@@ -1,97 +1,186 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { demanderCode, renvoyerCode } from '../services/authApi';
 import { messageErreur } from '../services/api';
+import { minutesSecondes } from '../utils/format';
+import Logo from '../components/Logo';
+import { EcritureAnimee } from '../components/Balance';
 import ChampSaisie from '../components/ChampSaisie';
 import MessageErreur from '../components/MessageErreur';
+import SaisieCode from '../components/SaisieCode';
 
-/* Comptes de démonstration (créés par DonneesInitiales côté serveur). */
-const COMPTES_DEMO = [
-  { login: 'comptable', role: 'Comptable', couleur: 'corail' },
-  { login: 'controleur', role: 'Contrôleur', couleur: 'sarcelle' },
-  { login: 'daf', role: 'Directeur fin.', couleur: 'jaune' },
-  { login: 'admin', role: 'Admin', couleur: 'lilas' },
-];
+/* ============================================================
+   Connexion en deux étapes :
+   1. email + mot de passe  -> le serveur envoie un code par email
+   2. code à 6 chiffres     -> le serveur renvoie le jeton JWT
+   ============================================================ */
 
 export default function Login() {
-  const { connexion, estConnecte } = useAuth();
+  const { finaliserConnexion, estConnecte } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [params] = useSearchParams();
 
-  const [login, setLogin] = useState('');
+  const [etape, setEtape] = useState('identifiants'); // 'identifiants' | 'code'
+  const [email, setEmail] = useState('');
   const [motDePasse, setMotDePasse] = useState('');
-  const [erreur, setErreur] = useState(params.get('expire') ? 'Votre session a expiré, reconnectez-vous.' : '');
+  const [voirMdp, setVoirMdp] = useState(false);
+  const [otp, setOtp] = useState(null); // { jetonOtp, emailMasque, validiteSecondes, renvoiDansSecondes }
+  const [code, setCode] = useState('');
+  const [erreur, setErreur] = useState(params.get('expire') ? 'Votre session a expiré. Reconnectez-vous.' : '');
+  const [info, setInfo] = useState('');
   const [envoi, setEnvoi] = useState(false);
+  const [maintenant, setMaintenant] = useState(Date.now());
 
-  if (estConnecte) return <Navigate to="/pieces" replace />;
+  // Horloge pour les comptes à rebours (validité du code, délai de renvoi).
+  useEffect(() => {
+    if (etape !== 'code') return undefined;
+    const minuterie = setInterval(() => setMaintenant(Date.now()), 1000);
+    return () => clearInterval(minuterie);
+  }, [etape]);
 
-  async function soumettre(e) {
+  if (estConnecte) return <Navigate to="/pieces/nouvelle" replace />;
+
+  function recevoirOtp(reponse) {
+    const t = Date.now();
+    setOtp({ ...reponse, expireA: t + reponse.validiteSecondes * 1000, renvoiA: t + reponse.renvoiDansSecondes * 1000 });
+    setMaintenant(t);
+  }
+
+  async function envoyerIdentifiants(e) {
     e.preventDefault();
-    setErreur('');
-    setEnvoi(true);
+    setErreur(''); setInfo(''); setEnvoi(true);
     try {
-      await connexion(login, motDePasse);
-      navigate(location.state?.depuis || '/pieces', { replace: true });
+      recevoirOtp(await demanderCode(email, motDePasse));
+      setCode('');
+      setEtape('code');
     } catch (err) {
-      setErreur(messageErreur(err)); // ex. « Identifiant ou mot de passe incorrect. »
+      setErreur(messageErreur(err));
     } finally {
       setEnvoi(false);
     }
   }
 
-  function remplirDemo(compte) {
-    setLogin(compte.login);
-    setMotDePasse('admin123');
-    setErreur('');
+  async function envoyerCode(e) {
+    e.preventDefault();
+    setErreur(''); setInfo(''); setEnvoi(true);
+    try {
+      await finaliserConnexion(otp.jetonOtp, code);
+      navigate(location.state?.depuis || '/pieces/nouvelle', { replace: true });
+    } catch (err) {
+      setErreur(messageErreur(err)); // ex. « Code incorrect. Il vous reste 3 essais. »
+      setCode('');
+    } finally {
+      setEnvoi(false);
+    }
   }
 
-  // Aide d'ergonomie autorisée : bouton désactivé si un champ est vide.
-  const incomplet = !login.trim() || !motDePasse;
+  async function demanderNouveauCode() {
+    setErreur(''); setInfo('');
+    try {
+      recevoirOtp(await renvoyerCode(otp.jetonOtp));
+      setCode('');
+      setInfo('Un nouveau code vous a été envoyé.');
+    } catch (err) {
+      setErreur(messageErreur(err));
+    }
+  }
+
+  function changerDeCompte() {
+    setEtape('identifiants'); setOtp(null); setCode(''); setErreur(''); setInfo('');
+  }
+
+  const resteValidite = otp ? (otp.expireA - maintenant) / 1000 : 0;
+  const resteRenvoi = otp ? Math.ceil((otp.renvoiA - maintenant) / 1000) : 0;
 
   return (
-    <div className="f-login">
-      <span className="f-forme f-forme-cercle" aria-hidden="true" />
-      <span className="f-forme f-forme-croix" aria-hidden="true">+</span>
-
-      <section className="f-login-carte">
-        <Link to="/" className="f-logo">
-          <span className="f-tampon">F</span>
-          <span>Fin<b>Co</b></span>
-        </Link>
-
-        <h1>Bon retour <span className="f-surligne">parmi nous</span></h1>
-        <p className="f-muet">Connectez-vous pour saisir et consulter les écritures.</p>
-
-        <form onSubmit={soumettre} className="f-pile">
-          <ChampSaisie id="login" label="Identifiant" autoComplete="username" autoFocus
-            value={login} onChange={(e) => setLogin(e.target.value)} placeholder="ex. comptable" />
-          <ChampSaisie id="mdp" label="Mot de passe" type="password" autoComplete="current-password"
-            value={motDePasse} onChange={(e) => setMotDePasse(e.target.value)} placeholder="••••••••" />
-
-          <MessageErreur message={erreur} />
-
-          <button type="submit" className="f-btn f-btn-noir f-btn-large" disabled={incomplet || envoi}>
-            {envoi ? 'Connexion…' : 'Se connecter →'}
-          </button>
-        </form>
-
-        
-      </section>
-
-      <aside className="f-login-visuel" aria-hidden="true">
-        <div className="f-papier f-ticket">
-          <div className="f-ticket-entete">
-            <span>Écriture n° PC-2026-00042</span>
-            <span className="f-tampon-texte">ÉQUILIBRÉE</span>
-          </div>
-          <div className="f-ticket-ligne"><span>6136 · Honoraires</span><b>30 000,00</b><i /></div>
-          <div className="f-ticket-ligne"><span>34552 · TVA récup.</span><b>6 000,00</b><i /></div>
-          <div className="f-ticket-ligne"><span>4411 · Fournisseurs</span><i /><b>36 000,00</b></div>
-          <div className="f-ticket-total"><span>Σ</span><b>36 000,00</b><b>36 000,00</b></div>
+    <div className="connexion">
+      <aside className="connexion-registre" aria-hidden="true">
+        <Logo />
+        <div className="registre-contenu">
+          <p className="registre-titre">Chaque écriture trouve son équilibre.</p>
+          <p className="registre-texte">
+            Saisie en partie double selon le plan comptable CGNC, imputation des charges
+            par centre de coûts et suivi budgétaire, pour les PME marocaines.
+          </p>
+          <EcritureAnimee />
         </div>
-        <p className="f-login-slogan">Débit = Crédit.<br /><em>Toujours.</em></p>
+        <p className="registre-pied">Connexion protégée par code à usage unique</p>
       </aside>
+
+      <main className="connexion-panneau">
+        <div className="connexion-boite">
+          <Link to="/" className="connexion-logo-mobile"><Logo /></Link>
+
+          <ol className="etapes-connexion" aria-label="Étapes de connexion">
+            <li className={etape === 'identifiants' ? 'en-cours' : 'faite'}>Identifiants</li>
+            <li className={etape === 'code' ? 'en-cours' : ''}>Code de vérification</li>
+          </ol>
+
+          {etape === 'identifiants' ? (
+            <form onSubmit={envoyerIdentifiants} className="pile">
+              <div>
+                <h1>Connexion</h1>
+                <p className="texte-secondaire">Accédez à votre espace comptable FinCo.</p>
+              </div>
+
+              <ChampSaisie id="email" label="Adresse email" type="email" autoComplete="username" autoFocus
+                value={email} onChange={(e) => setEmail(e.target.value)} placeholder="prenom.nom@entreprise.ma" />
+
+              <div className="champ">
+                <label className="champ-label" htmlFor="mdp">Mot de passe</label>
+                <div className="champ-avec-bouton">
+                  <input id="mdp" className="input" type={voirMdp ? 'text' : 'password'} autoComplete="current-password"
+                    value={motDePasse} onChange={(e) => setMotDePasse(e.target.value)} />
+                  <button type="button" className="bouton-texte" onClick={() => setVoirMdp((v) => !v)}
+                    aria-pressed={voirMdp}>
+                    {voirMdp ? 'Masquer' : 'Afficher'}
+                  </button>
+                </div>
+              </div>
+
+              <MessageErreur message={erreur} />
+
+              {/* Ergonomie autorisée : bouton désactivé si un champ est vide. */}
+              <button type="submit" className="btn btn-primaire btn-large" disabled={!email.trim() || !motDePasse || envoi}>
+                {envoi ? 'Vérification…' : 'Continuer'}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={envoyerCode} className="pile">
+              <div>
+                <h1>Vérification</h1>
+                <p className="texte-secondaire">
+                  Saisissez le code à 6 chiffres envoyé à <strong>{otp?.emailMasque}</strong>.
+                </p>
+              </div>
+
+              <SaisieCode valeur={code} onChange={setCode} desactive={envoi} enErreur={Boolean(erreur)} />
+
+              <p className={`validite ${resteValidite <= 60 ? 'validite-proche' : ''}`}>
+                {resteValidite > 0
+                  ? <>Code valable encore <strong>{minutesSecondes(resteValidite)}</strong></>
+                  : 'Le code a expiré. Demandez-en un nouveau.'}
+              </p>
+
+              <MessageErreur message={erreur} />
+              {info && <p className="message-info" role="status">{info}</p>}
+
+              <button type="submit" className="btn btn-primaire btn-large" disabled={code.length !== 6 || envoi}>
+                {envoi ? 'Connexion…' : 'Se connecter'}
+              </button>
+
+              <div className="liens-code">
+                <button type="button" className="bouton-texte" onClick={demanderNouveauCode} disabled={resteRenvoi > 0}>
+                  {resteRenvoi > 0 ? `Renvoyer le code (${resteRenvoi} s)` : 'Renvoyer le code'}
+                </button>
+                <button type="button" className="bouton-texte" onClick={changerDeCompte}>Changer de compte</button>
+              </div>
+            </form>
+          )}
+        </div>
+      </main>
     </div>
   );
 }

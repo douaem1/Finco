@@ -1,7 +1,7 @@
 export default function Chargement({ texte = 'Chargement…' }) {
   return (
-    <div className="f-chargement" role="status">
-      <span className="f-chargement-point" /><span className="f-chargement-point" /><span className="f-chargement-point" />
+    <div className="chargement" role="status">
+      <span className="chargement-roue" aria-hidden="true" />
       <span>{texte}</span>
     </div>
   );
