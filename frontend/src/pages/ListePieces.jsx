@@ -33,15 +33,13 @@ export default function ListePieces() {
   const visibles = useMemo(() => pieces.filter((p) =>
     !filtre || p.numero.toLowerCase().includes(filtre) || p.libelle.toLowerCase().includes(filtre)), [pieces, filtre]);
 
-  const brouillons = pieces.filter((p) => !p.validee).length;
-  const mouvements = pieces.reduce((t, p) => t + Number(p.totalDebit || 0), 0);
 
   return (
     <section>
       <header className="entete-page">
         <div>
-          <p className="fil">Comptabilité financière</p>
           <h1>Journal des écritures</h1>
+          <p className="texte-secondaire">Toutes les pièces de l’exercice, de la plus récente à la plus ancienne.</p>
         </div>
         {peutSaisir && (
           <Link to="/pieces/nouvelle" className="btn btn-primaire"><Icone nom="plus" taille={18} /> Nouvelle écriture</Link>
@@ -50,15 +48,6 @@ export default function ListePieces() {
 
       {location.state?.succes && <p className="message-succes" role="status">{location.state.succes}</p>}
       <MessageErreur message={erreur} />
-
-      {!chargement && pieces.length > 0 && (
-        <dl className="synthese">
-          <div><dt>Pièces saisies</dt><dd className="chiffres">{pieces.length}</dd></div>
-          <div><dt>En brouillon</dt><dd className="chiffres">{brouillons}</dd></div>
-          <div><dt>Validées</dt><dd className="chiffres">{pieces.length - brouillons}</dd></div>
-          <div className="synthese-large"><dt>Total des mouvements</dt><dd className="chiffres">{montant(mouvements)} <small>MAD</small></dd></div>
-        </dl>
-      )}
 
       {chargement ? <Chargement /> : pieces.length === 0 ? (
         <div className="panneau vide">

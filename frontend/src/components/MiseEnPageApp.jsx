@@ -17,12 +17,12 @@ export default function MiseEnPageApp() {
   return (
     <div className="app">
       <aside className="lateral">
-        <div className="lateral-logo"><Logo variante="inverse" /></div>
+        <div className="lateral-logo"><Logo /></div>
 
         <nav className="lateral-nav" aria-label="Navigation principale">
           <p className="lateral-groupe">Comptabilité financière</p>
+          <NavLink to="/pieces/nouvelle"><Icone nom="plus" /> Saisie d'écriture</NavLink>
           <NavLink to="/pieces" end><Icone nom="journal" /> Journal</NavLink>
-          <NavLink to="/pieces/nouvelle"><Icone nom="plus" /> Nouvelle écriture</NavLink>
 
           <p className="lateral-groupe">Contrôle de gestion</p>
           <span className="lateral-bientot" title="Disponible prochainement"><Icone nom="centres" /> Centres de coûts <em>bientôt</em></span>

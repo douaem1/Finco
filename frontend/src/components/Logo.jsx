@@ -1,21 +1,19 @@
 /**
  * Logo FinCo.
- * Le « F » est dessiné avec deux barres de même longueur : elles forment
- * aussi un signe « = » (débit = crédit). Le petit carré vert en bas à droite
- * évoque un solde à zéro : l'écriture est équilibrée.
- *
- * variante : "clair" (sur fond blanc) ou "inverse" (sur fond bleu).
+ * Tampon corail bordé d'encre (style « papier & encre »). Le « F » est fait
+ * de deux barres de même longueur : un signe « = » (débit = crédit).
+ * Le point sarcelle évoque un solde à zéro.
  */
 export function LogoMarque({ taille = 36, inverse = false }) {
-  const fond = inverse ? '#FFFFFF' : '#12304F';
-  const trait = inverse ? '#12304F' : '#FFFFFF';
   return (
     <svg width={taille} height={taille} viewBox="0 0 40 40" aria-hidden="true" focusable="false">
-      <rect width="40" height="40" rx="9" fill={fond} />
-      <rect x="11" y="9" width="5" height="22" fill={trait} />
-      <rect x="11" y="9" width="18" height="5" fill={trait} />
-      <rect x="11" y="18" width="18" height="5" fill={trait} />
-      <rect x="24.5" y="26.5" width="4.5" height="4.5" fill="#3FB68B" />
+      {/* ombre décalée (encre), puis tampon corail bordé d'encre */}
+      <rect x="4" y="4" width="34" height="34" rx="9" fill="#221D16" />
+      <rect x="1.5" y="1.5" width="34" height="34" rx="9" fill={inverse ? '#FFFDF7' : '#FF6B57'} stroke="#221D16" strokeWidth="2" />
+      <rect x="11" y="9" width="4.6" height="19" rx="1.2" fill={inverse ? '#221D16' : '#FFFDF7'} />
+      <rect x="11" y="9" width="15.5" height="4.6" rx="1.2" fill={inverse ? '#221D16' : '#FFFDF7'} />
+      <rect x="11" y="16.6" width="15.5" height="4.6" rx="1.2" fill={inverse ? '#221D16' : '#FFFDF7'} />
+      <circle cx="25" cy="26" r="2.5" fill="#12A5A0" stroke="#221D16" strokeWidth="1.2" />
     </svg>
   );
 }

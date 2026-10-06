@@ -85,7 +85,6 @@ export default function SaisiePiece() {
       <Link to="/pieces" className="lien-retour">Retour au journal</Link>
       <header className="entete-page">
         <div>
-          <p className="fil">Comptabilité financière</p>
           <h1>Nouvelle écriture</h1>
           <p className="texte-secondaire">Le numéro de pièce est attribué par le serveur à l’enregistrement.</p>
         </div>

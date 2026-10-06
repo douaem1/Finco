@@ -40,7 +40,7 @@ export default function Login() {
     return () => clearInterval(minuterie);
   }, [etape]);
 
-  if (estConnecte) return <Navigate to="/pieces" replace />;
+  if (estConnecte) return <Navigate to="/pieces/nouvelle" replace />;
 
   function recevoirOtp(reponse) {
     const t = Date.now();
@@ -67,7 +67,7 @@ export default function Login() {
     setErreur(''); setInfo(''); setEnvoi(true);
     try {
       await finaliserConnexion(otp.jetonOtp, code);
-      navigate(location.state?.depuis || '/pieces', { replace: true });
+      navigate(location.state?.depuis || '/pieces/nouvelle', { replace: true });
     } catch (err) {
       setErreur(messageErreur(err)); // ex. « Code incorrect. Il vous reste 3 essais. »
       setCode('');
@@ -97,14 +97,14 @@ export default function Login() {
   return (
     <div className="connexion">
       <aside className="connexion-registre" aria-hidden="true">
-        <Logo variante="inverse" />
+        <Logo />
         <div className="registre-contenu">
           <p className="registre-titre">Chaque écriture trouve son équilibre.</p>
           <p className="registre-texte">
             Saisie en partie double selon le plan comptable CGNC, imputation des charges
             par centre de coûts et suivi budgétaire, pour les PME marocaines.
           </p>
-          <EcritureAnimee inverse />
+          <EcritureAnimee />
         </div>
         <p className="registre-pied">Connexion protégée par code à usage unique</p>
       </aside>
