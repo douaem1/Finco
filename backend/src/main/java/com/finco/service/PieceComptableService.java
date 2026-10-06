@@ -80,9 +80,9 @@ public class PieceComptableService {
 
     /**
      * Enregistre une nouvelle écriture, en brouillon (validee = false).
-     * @param loginSaisisseur login de l'utilisateur connecté, fourni par le controller
+     * @param emailSaisisseur email de l'utilisateur connecté (issu du jeton JWT), fourni par le controller
      */
-    public PieceComptableResponse create(PieceComptableRequest requete, String loginSaisisseur) {
+    public PieceComptableResponse create(PieceComptableRequest requete, String emailSaisisseur) {
         if (requete == null) {
             throw new RegleMetierException("Aucune donnée reçue.");
         }
@@ -114,7 +114,7 @@ public class PieceComptableService {
         piece.setDateEcriture(date);
         piece.setExercice(exercice);
         piece.setValidee(false);
-        piece.setUtilisateur(trouverUtilisateur(loginSaisisseur));
+        piece.setUtilisateur(trouverUtilisateur(emailSaisisseur));
 
         // Règles 4 et 5 : ligne par ligne
         for (int i = 0; i < lignesSaisies.size(); i++) {
@@ -185,9 +185,9 @@ public class PieceComptableService {
         return propre;
     }
 
-    private Utilisateur trouverUtilisateur(String login) {
-        return utilisateurRepository.findByLogin(login)
-                .orElseThrow(() -> new RessourceIntrouvableException("Utilisateur connecté introuvable : " + login));
+    private Utilisateur trouverUtilisateur(String email) {
+        return utilisateurRepository.findByEmail(email)
+                .orElseThrow(() -> new RessourceIntrouvableException("Utilisateur connecté introuvable : " + email));
     }
 
     /** PC-2026-00001, PC-2026-00002... (dernier numéro de l'année + 1). */

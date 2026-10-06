@@ -60,7 +60,7 @@ public class SecurityConfig {
                         // Public
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/test", "/error").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/verifier-otp", "/api/auth/renvoyer-otp").permitAll()
                         // Saisie d'écritures : comptable ou admin
                         .requestMatchers(HttpMethod.POST, "/api/pieces/**").hasAnyRole(ROLES_SAISIE_COMPTABLE)
                         // Gestion des centres de coûts : contrôleur de gestion ou admin

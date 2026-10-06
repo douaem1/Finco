@@ -1,5 +1,5 @@
 package com.finco.dto;
 
-/** Corps de POST /api/auth/login : { "login": "...", "motDePasse": "..." }. */
-public record LoginRequest(String login, String motDePasse) {
+/** Étape 1 — POST /api/auth/login : { "email": "...", "motDePasse": "..." }. */
+public record LoginRequest(String email, String motDePasse) {
 }

@@ -1,8 +1,10 @@
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LIBELLES_ROLES } from '../utils/format';
+import { LIBELLES_ROLES, initiales, nomAffiche } from '../utils/format';
+import Logo from './Logo';
+import Icone from './Icone';
 
-/** Cadre commun des pages connectées : barre du haut + contenu. */
+/** Cadre des pages connectées : barre latérale bleue + zone de travail. */
 export default function MiseEnPageApp() {
   const { utilisateur, deconnexion } = useAuth();
   const navigate = useNavigate();
@@ -12,33 +14,33 @@ export default function MiseEnPageApp() {
     navigate('/login');
   }
 
-  const initiales = (utilisateur?.nomComplet || '?')
-    .split(' ').map((mot) => mot[0]).slice(0, 2).join('').toUpperCase();
-
   return (
-    <div className="f-app">
-      <header className="f-barre">
-        <Link to="/" className="f-logo">
-          <span className="f-tampon">F</span>
-          <span>Fin<b>Co</b></span>
-        </Link>
+    <div className="app">
+      <aside className="lateral">
+        <div className="lateral-logo"><Logo variante="inverse" /></div>
 
-        <nav className="f-menu">
-          <NavLink to="/pieces" end>Journal</NavLink>
-          <NavLink to="/pieces/nouvelle">Nouvelle écriture</NavLink>
+        <nav className="lateral-nav" aria-label="Navigation principale">
+          <p className="lateral-groupe">Comptabilité financière</p>
+          <NavLink to="/pieces" end><Icone nom="journal" /> Journal</NavLink>
+          <NavLink to="/pieces/nouvelle"><Icone nom="plus" /> Nouvelle écriture</NavLink>
+
+          <p className="lateral-groupe">Contrôle de gestion</p>
+          <span className="lateral-bientot" title="Disponible prochainement"><Icone nom="centres" /> Centres de coûts <em>bientôt</em></span>
         </nav>
 
-        <div className="f-profil">
-          <span className="f-avatar" aria-hidden="true">{initiales}</span>
-          <span className="f-profil-texte">
-            <b>{utilisateur?.nomComplet}</b>
+        <div className="lateral-profil">
+          <span className="avatar" aria-hidden="true">{initiales(utilisateur)}</span>
+          <span className="lateral-profil-texte">
+            <strong>{nomAffiche(utilisateur)}</strong>
             <small>{LIBELLES_ROLES[utilisateur?.role] ?? utilisateur?.role}</small>
           </span>
-          <button type="button" className="f-btn f-btn-petit" onClick={quitter}>Déconnexion</button>
+          <button type="button" className="lateral-sortie" onClick={quitter} title="Se déconnecter" aria-label="Se déconnecter">
+            <Icone nom="sortie" />
+          </button>
         </div>
-      </header>
+      </aside>
 
-      <main className="f-contenu">
+      <main className="contenu">
         <Outlet />
       </main>
     </div>

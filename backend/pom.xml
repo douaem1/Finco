@@ -46,6 +46,12 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
+        <!-- Envoi d'emails (codes OTP de connexion) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- Pilote MySQL -->
         <dependency>
             <groupId>com.mysql</groupId>
@@ -95,4 +101,4 @@
             </plugin>
         </plugins>
     </build>
-</project>
+</project>

@@ -4,8 +4,9 @@ import axios from 'axios';
    Client HTTP unique de l'application.
    - baseURL : adresse du backend Spring (port 8081)
    - intercepteur de requête : ajoute « Authorization: Bearer <jeton> »
-   - intercepteur de réponse : si le serveur répond 401 (jeton absent
-     ou expiré), on efface la session et on renvoie vers /login
+   - intercepteur de réponse : si le serveur répond 401 sur une route
+     protégée (jeton absent ou expiré), on efface la session et on
+     renvoie vers /login
    ============================================================ */
 
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
@@ -25,8 +26,9 @@ api.interceptors.response.use(
   (reponse) => reponse,
   (erreur) => {
     const statut = erreur.response?.status;
-    const estLogin = erreur.config?.url?.includes('/auth/login');
-    if (statut === 401 && !estLogin) {
+    // Les routes /auth/* (login, OTP) gèrent elles-mêmes leurs 401.
+    const routeAuth = erreur.config?.url?.startsWith('/auth/');
+    if (statut === 401 && !routeAuth) {
       localStorage.removeItem(CLE_SESSION);
       window.location.assign('/login?expire=1');
     }
@@ -48,7 +50,7 @@ export function lireSession() {
  */
 export function messageErreur(erreur) {
   if (erreur.response?.data?.message) return erreur.response.data.message;
-  if (erreur.request && !erreur.response) return 'Serveur injoignable : vérifiez que le backend est démarré.';
+  if (erreur.request && !erreur.response) return 'Serveur injoignable. Vérifiez que le backend est démarré.';
   return 'Une erreur inattendue est survenue.';
 }
 

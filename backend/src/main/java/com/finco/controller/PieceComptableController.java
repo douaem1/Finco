@@ -41,7 +41,7 @@ public class PieceComptableController {
         return pieceComptableService.findById(id);
     }
 
-    /** Le login du saisisseur vient du jeton (jamais du corps de la requête). */
+    /** L'email du saisisseur vient du jeton (jamais du corps de la requête). */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PieceComptableResponse saisir(@RequestBody PieceComptableRequest requete, Authentication authentification) {

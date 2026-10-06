@@ -1,8 +1,20 @@
 import api from './api';
 
-/** POST /api/auth/login -> { token, utilisateur } */
-export async function seConnecter(login, motDePasse) {
-  const { data } = await api.post('/auth/login', { login, motDePasse });
+/** Étape 1 — POST /api/auth/login -> { jetonOtp, emailMasque, validiteSecondes, renvoiDansSecondes } */
+export async function demanderCode(email, motDePasse) {
+  const { data } = await api.post('/auth/login', { email, motDePasse });
+  return data;
+}
+
+/** Étape 2 — POST /api/auth/verifier-otp -> { token, utilisateur } */
+export async function verifierCode(jetonOtp, code) {
+  const { data } = await api.post('/auth/verifier-otp', { jetonOtp, code });
+  return data;
+}
+
+/** POST /api/auth/renvoyer-otp -> nouvelles infos du code */
+export async function renvoyerCode(jetonOtp) {
+  const { data } = await api.post('/auth/renvoyer-otp', { jetonOtp });
   return data;
 }
 

@@ -1,212 +1,169 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../services/api';
+import Logo from '../components/Logo';
+import { EcritureAnimee } from '../components/Balance';
 import './accueil.css';
 
 /* ============================================================
-   Page d'accueil publique de FinCo — thème clair « papier & encre »
-   (seule page codée du squelette — le reste est à compléter)
+   Page d'accueil publique de FinCo.
    ============================================================ */
-
-const TICKER = ['Débit = Crédit', 'Plan comptable CGNC', 'FI · Comptabilité financière', 'CO · Contrôle de gestion',
-  'Budgets & écarts', 'Répartition des coûts', 'Factures → Écritures', 'Montants en MAD'];
 
 const MODULES = [
   {
-    lettre: 'FI',
-    couleur: 'corail',
+    code: 'FI',
     titre: 'Comptabilité financière',
-    texte: "Saisie des écritures en partie double, plan comptable CGNC, factures fournisseurs et clients, paiements, grand livre et balance.",
-    points: ['Écritures équilibrées (Débit = Crédit)', 'Cycle facture : brouillon → validée → payée', 'Balance et états financiers'],
+    texte: 'Écritures en partie double sur le plan comptable CGNC, factures fournisseurs et clients, paiements, grand livre et balance.',
+    points: ['Pièces numérotées par exercice', 'Contrôle débit = crédit à chaque saisie', 'Cycle facture : brouillon, validée, payée'],
   },
   {
-    lettre: 'CO',
-    couleur: 'sarcelle',
+    code: 'CO',
     titre: 'Contrôle de gestion',
-    texte: "Centres de coûts, budgets annuels, répartition des charges des centres auxiliaires vers les principaux, analyse des écarts.",
-    points: ['Imputation analytique des charges', 'part = montant × clé / Σ clés', 'Suivi réel / budget et écarts'],
+    texte: 'Centres de coûts principaux et auxiliaires, budgets annuels, répartition des charges et analyse des écarts.',
+    points: ['Imputation de chaque charge de classe 6', 'Répartition selon des clés (surface, effectif…)', 'Suivi réel / budget par centre'],
   },
 ];
 
 const FONCTIONNALITES = [
-  { icone: '⚖️', couleur: 'jaune', titre: 'Partie double garantie', texte: 'Aucune écriture ne passe si Σ débits ≠ Σ crédits.' },
-  { icone: '🧾', couleur: 'corail', titre: 'Factures automatisées', texte: 'Valider une facture génère son écriture comptable.' },
-  { icone: '🏭', couleur: 'sarcelle', titre: 'Centres de coûts', texte: 'Chaque charge de classe 6 est imputée sur un centre.' },
-  { icone: '📊', couleur: 'lilas', titre: 'Tableau de bord', texte: 'CA, charges et résultat en direct pour le DAF.' },
-  { icone: '🔐', couleur: 'jaune', titre: '4 rôles métier', texte: 'Comptable, contrôleur, directeur financier, admin.' },
-  { icone: '🇲🇦', couleur: 'corail', titre: 'Contexte marocain', texte: 'CGNC, MAD et TVA 20 / 14 / 10 / 7 %.' },
+  { icone: 'balance', titre: 'Partie double contrôlée', texte: 'Une pièce n’est enregistrée que si le total des débits égale le total des crédits.' },
+  { icone: 'centre', titre: 'Charges imputées', texte: 'Toute charge de classe 6 est rattachée à un centre de coûts dès la saisie.' },
+  { icone: 'cadenas', titre: 'Connexion en deux étapes', texte: 'Mot de passe puis code à usage unique reçu par email.' },
+  { icone: 'roles', titre: 'Quatre rôles métier', texte: 'Comptable, contrôleur de gestion, directeur financier et administrateur.' },
+  { icone: 'facture', titre: 'Factures et paiements', texte: 'La validation d’une facture produit son écriture comptable.' },
+  { icone: 'maroc', titre: 'Cadre marocain', texte: 'Plan comptable CGNC, montants en dirhams, TVA à 20, 14, 10 et 7 %.' },
 ];
 
 const ETAPES = [
-  { n: '1', titre: 'Saisir', texte: 'Le comptable enregistre factures et écritures.' },
-  { n: '2', titre: 'Contrôler', texte: 'Le contrôleur suit budgets et écarts.' },
-  { n: '3', titre: 'Valider', texte: 'Le directeur financier approuve les paiements.' },
-  { n: '4', titre: 'Clôturer', texte: 'Répartition des coûts et états financiers.' },
+  { titre: 'Saisir', texte: 'Le comptable enregistre les pièces et les factures.' },
+  { titre: 'Contrôler', texte: 'Le contrôleur de gestion suit les budgets et les écarts.' },
+  { titre: 'Valider', texte: 'Le directeur financier approuve les paiements.' },
+  { titre: 'Clôturer', texte: 'Les coûts sont répartis et les états financiers produits.' },
 ];
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+function Icone({ nom }) {
+  const traits = {
+    balance: <><path d="M12 4v16M6 20h12M4 8h16" /><path d="M7 8l-3 6h6zM17 8l-3 6h6z" /></>,
+    centre: <><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3.5" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></>,
+    cadenas: <><rect x="5" y="10.5" width="14" height="10" rx="2" /><path d="M8 10.5V7.5a4 4 0 018 0v3M12 14.5v2.5" /></>,
+    roles: <><circle cx="9" cy="8" r="3" /><path d="M3.5 19a5.5 5.5 0 0111 0" /><circle cx="17" cy="9" r="2.4" /><path d="M15.5 14.2a4.5 4.5 0 015.5 4.8" /></>,
+    facture: <><path d="M6 3h9l3 3v15l-2-1.2-2 1.2-2-1.2-2 1.2-2-1.2L6 21z" /><path d="M9 9h6M9 13h6M9 17h3" /></>,
+    maroc: <><path d="M12 3.5l2.3 6.8h7.1l-5.8 4.2 2.2 6.9L12 17.2l-5.8 4.2 2.2-6.9-5.8-4.2h7.1z" /></>,
+  };
+  return (
+    <svg className="ac-icone" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"
+      strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      {traits[nom]}
+    </svg>
+  );
+}
 
 export default function Accueil() {
-  const [etatApi, setEtatApi] = useState('verification');
   const { estConnecte } = useAuth();
+  const [etatApi, setEtatApi] = useState('verification');
 
   useEffect(() => {
     let actif = true;
-
     fetch(`${API_URL}/api/test`)
-      .then((reponse) => {
-        if (!reponse.ok) throw new Error('API indisponible');
-        return reponse.text();
-      })
+      .then((reponse) => { if (!reponse.ok) throw new Error(); })
       .then(() => actif && setEtatApi('operationnel'))
       .catch(() => actif && setEtatApi('indisponible'));
-
     return () => { actif = false; };
   }, []);
 
-  return (
-    <div className="accueil">
-      {/* formes décoratives */}
-      <span className="forme cercle" aria-hidden="true" />
-      <span className="forme demi" aria-hidden="true" />
-      <span className="forme croix" aria-hidden="true">+</span>
-      <span className="forme croix c2" aria-hidden="true">+</span>
+  const lienEspace = estConnecte ? '/pieces' : '/login';
+  const texteEspace = estConnecte ? 'Ouvrir mon espace' : 'Se connecter';
 
-      {/* ---------- barre de navigation ---------- */}
-      <header className="nav">
-        <div className="nav-logo">
-          <span className="tampon">F</span>
-          <span>Fin<b>Co</b></span>
-        </div>
-        <nav className="nav-liens">
+  return (
+    <div className="ac">
+      <header className="ac-nav">
+        <Link to="/" className="ac-nav-logo"><Logo /></Link>
+        <nav className="ac-nav-liens" aria-label="Sections de la page">
           <a href="#modules">Modules</a>
           <a href="#fonctionnalites">Fonctionnalités</a>
-          <a href="#flux">Comment ça marche</a>
+          <a href="#fonctionnement">Fonctionnement</a>
         </nav>
-        <Link to={estConnecte ? '/pieces' : '/login'} className="btn btn-noir">
-          {estConnecte ? 'Mon espace →' : 'Se connecter'}
-        </Link>
-      
+        <Link to={lienEspace} className="btn btn-primaire">{texteEspace}</Link>
       </header>
 
-      {/* ---------- héros ---------- */}
-      <main className="heros">
-        <div className="heros-texte">
-          <span className="badge">✦ Inspiré de SAP FI / CO</span>
-          <h1>
-            La compta,<br />
-            <span className="surligne">enfin</span> en{' '}
-            <span className="entoure">équilibre<svg viewBox="0 0 220 70" preserveAspectRatio="none"><ellipse cx="110" cy="35" rx="105" ry="30" /></svg></span>
-          </h1>
-          <p className="sous-titre">
-            FinCo réunit la <strong>comptabilité financière</strong> et le{' '}
-            <strong>contrôle de gestion</strong> : écritures en partie double,
-            factures, budgets, répartition des coûts et tableaux de bord —
-            du brouillon à la clôture.
-          </p>
-        </div>
-
-        {/* collage : pièce comptable + graphique + autocollants */}
-        <div className="heros-visuel">
-          <div className="papier piece">
-            <div className="piece-entete">
-              <span className="perfo" /><span className="perfo" /><span className="perfo" />
-              <b>Pièce n° PC-2026-001</b>
-              <span className="tampon-valide">VALIDÉE ✓</span>
-            </div>
-            <table>
-              <thead>
-                <tr><th>Compte</th><th>Débit</th><th>Crédit</th></tr>
-              </thead>
-              <tbody>
-                <tr><td>6131 · Loyer</td><td>90 000</td><td>—</td></tr>
-                <tr><td>34552 · TVA</td><td>18 000</td><td>—</td></tr>
-                <tr><td>4411 · Frs</td><td>—</td><td>108 000</td></tr>
-              </tbody>
-              <tfoot>
-                <tr><td>Totaux</td><td>108 000</td><td>108 000</td></tr>
-              </tfoot>
-            </table>
-          </div>
-
-          <div className="papier graphe">
-            <b>Réel / budget par centre</b>
-            <div className="barres">
-              {[
-                { h: 62, c: 'corail' }, { h: 88, c: 'sarcelle' }, { h: 48, c: 'jaune' },
-                { h: 95, c: 'lilas' }, { h: 70, c: 'corail' }, { h: 56, c: 'sarcelle' },
-              ].map((b, i) => (
-                <span key={i} className={b.c} style={{ '--h': `${b.h}%`, '--d': `${i * 0.1}s` }} />
-              ))}
+      <main>
+        <section className="ac-heros">
+          <div className="ac-heros-texte">
+            <h1>La comptabilité et le contrôle de gestion de votre PME, dans un seul registre.</h1>
+            <p>
+              FinCo enregistre vos écritures en partie double selon le plan comptable CGNC,
+              impute chaque charge sur un centre de coûts et suit vos budgets au fil de l’exercice.
+            </p>
+            <div className="ac-heros-actions">
+              <Link to={lienEspace} className="btn btn-primaire btn-heros">{texteEspace}</Link>
+              <a href="#modules" className="btn btn-secondaire btn-heros">Découvrir les modules</a>
             </div>
           </div>
 
-          <span className="autocollant a1">⚖️ Débit = Crédit</span>
-          <span className="autocollant a2">100 % équilibré</span>
-          <span className="autocollant a3">MAD</span>
-        </div>
+          <div className="ac-apercu" aria-label="Démonstration : une écriture en partie double s’équilibre">
+            <div className="ac-apercu-barre">
+              <span>Pièce PC-2026-00017</span>
+              <span className="texte-secondaire">Facture Cabinet Audit F-0917</span>
+            </div>
+            <EcritureAnimee />
+          </div>
+        </section>
+
+        <section id="modules" className="ac-section">
+          <div className="ac-section-tete">
+            <h2>Deux modules, les mêmes écritures</h2>
+            <p>Comme dans SAP, la finance et le contrôle de gestion partagent une seule source de vérité.</p>
+          </div>
+          <div className="ac-modules">
+            {MODULES.map((m) => (
+              <article key={m.code} className="ac-module">
+                <span className="ac-module-code">{m.code}</span>
+                <h3>{m.titre}</h3>
+                <p>{m.texte}</p>
+                <ul>{m.points.map((p) => <li key={p}>{p}</li>)}</ul>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="fonctionnalites" className="ac-section ac-section-blanche">
+          <div className="ac-section-tete">
+            <h2>Ce que FinCo vérifie pour vous</h2>
+            <p>Les règles comptables sont appliquées par le serveur, à chaque enregistrement.</p>
+          </div>
+          <div className="ac-fonctions">
+            {FONCTIONNALITES.map((f) => (
+              <article key={f.titre} className="ac-fonction">
+                <Icone nom={f.icone} />
+                <h3>{f.titre}</h3>
+                <p>{f.texte}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="fonctionnement" className="ac-section">
+          <div className="ac-section-tete">
+            <h2>Du brouillon à la clôture</h2>
+            <p>Chaque rôle intervient à son étape du cycle comptable.</p>
+          </div>
+          <ol className="ac-etapes">
+            {ETAPES.map((e) => (
+              <li key={e.titre}>
+                <h3>{e.titre}</h3>
+                <p>{e.texte}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
       </main>
 
-      {/* ---------- ruban défilant ---------- */}
-      <div className="ruban" aria-hidden="true">
-        <div className="ruban-piste">
-          {[...TICKER, ...TICKER].map((t, i) => (
-            <span key={i}>{t} <i>✦</i></span>
-          ))}
-        </div>
-      </div>
-
-      {/* ---------- modules FI / CO ---------- */}
-      <section id="modules" className="section">
-        <h2><span className="surligne-fin">Deux modules</span>, une seule vérité comptable</h2>
-        <p className="section-intro">Comme dans SAP, la finance (FI) et le contrôle de gestion (CO) partagent les mêmes écritures.</p>
-        <div className="modules">
-          {MODULES.map((m) => (
-            <article key={m.lettre} className={`module fond-${m.couleur}`}>
-              <span className="module-lettre">{m.lettre}</span>
-              <h3>{m.titre}</h3>
-              <p>{m.texte}</p>
-              <ul>
-                {m.points.map((p) => <li key={p}>{p}</li>)}
-              </ul>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      {/* ---------- fonctionnalités ---------- */}
-      <section id="fonctionnalites" className="section">
-        <h2>Pensé pour <span className="surligne-fin">chaque rôle</span></h2>
-        <div className="fonctionnalites">
-          {FONCTIONNALITES.map((f, i) => (
-            <article key={f.titre} className={`fonc pente-${i % 3}`}>
-              <span className={`fonc-icone fond-${f.couleur}`}>{f.icone}</span>
-              <h4>{f.titre}</h4>
-              <p>{f.texte}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      {/* ---------- flux de travail ---------- */}
-      <section id="flux" className="section">
-        <h2>Du brouillon <span className="surligne-fin">à la clôture</span></h2>
-        <div className="etapes">
-          {ETAPES.map((e) => (
-            <div key={e.n} className="etape">
-              <span className="etape-num">{e.n}</span>
-              <h4>{e.titre}</h4>
-              <p>{e.texte}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-    
-
-      <footer className="pied">
-        <span><span className="tampon petit">F</span> FinCo — Comptabilité financière &amp; contrôle de gestion</span>
-        <span className="muet">Projet académique inspiré de SAP FI/CO · Spring Boot · React · MySQL</span>
+      <footer className="ac-pied">
+        <Logo avecSlogan={false} taille={28} />
+        <p>Projet académique inspiré de SAP FI/CO — Spring Boot, React et MySQL.</p>
+        <p className={`ac-api ac-api-${etatApi}`}>
+          {etatApi === 'operationnel' ? 'Serveur disponible' : etatApi === 'indisponible' ? 'Serveur indisponible' : 'Vérification du serveur…'}
+        </p>
       </footer>
     </div>
   );
