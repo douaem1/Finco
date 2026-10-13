@@ -4,7 +4,7 @@ import {
   listerFournisseurs, creerFournisseur, modifierFournisseur, supprimerFournisseur,
   listerClients, creerClient, modifierClient, supprimerClient,
 } from '../services/tiersApi';
-import { messageErreur } from '../services/api';
+import { erreursParChamp, messageErreur } from '../services/api';
 import { montant } from '../utils/format';
 import MessageErreur from '../components/MessageErreur';
 import Chargement from '../components/Chargement';
@@ -29,6 +29,7 @@ export default function Tiers() {
     nom: '', ice: '', email: '', telephone: '', rib: '', plafondCredit: '0.00',
   });
   const [erreursChamps, setErreursChamps] = useState({});
+  const [erreurModale, setErreurModale] = useState('');
   const [chargementAction, setChargementAction] = useState(false);
 
   // Modale suppression
@@ -60,6 +61,7 @@ export default function Tiers() {
       nom: '', ice: '', email: '', telephone: '', rib: '', plafondCredit: '0.00',
     });
     setErreursChamps({});
+    setErreurModale('');
     setModaleOuverte(true);
   }
 
@@ -74,6 +76,7 @@ export default function Tiers() {
       plafondCredit: item.plafondCredit !== undefined ? String(item.plafondCredit) : '0.00',
     });
     setErreursChamps({});
+    setErreurModale('');
     setModaleOuverte(true);
   }
 
@@ -85,6 +88,17 @@ export default function Tiers() {
       errs.nom = 'Le nom ne doit pas dépasser 150 caractères.';
     }
 
+    // Aide à la saisie : mêmes règles que le serveur (qui reste seul juge).
+    const iceSaisi = (formulaire.ice || '').replace(/[\s.-]/g, '');
+    if (iceSaisi && !/^[0-9]{15}$/.test(iceSaisi)) {
+      errs.ice = "L'ICE doit comporter exactement 15 chiffres.";
+    }
+
+    const telSaisi = (formulaire.telephone || '').replace(/[\s.-]/g, '').replace(/^00212/, '+212');
+    if (telSaisi && !/^(\+212|0)[5-8][0-9]{8}$/.test(telSaisi)) {
+      errs.telephone = 'Numéro marocain attendu : 10 chiffres commençant par 05, 06, 07 ou 08 (ou +212).';
+    }
+
     if (formulaire.email && formulaire.email.trim()) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formulaire.email.trim())) {
@@ -93,7 +107,7 @@ export default function Tiers() {
     }
 
     if (onglet === 'fournisseurs' && formulaire.rib && formulaire.rib.trim()) {
-      if (!/^[0-9]{24}$/.test(formulaire.rib.trim())) {
+      if (!/^[0-9]{24}$/.test(formulaire.rib.replace(/[\s.-]/g, ''))) {
         errs.rib = 'Le RIB doit comporter exactement 24 chiffres.';
       }
     }
@@ -102,6 +116,8 @@ export default function Tiers() {
       const plafond = Number(formulaire.plafondCredit);
       if (isNaN(plafond) || plafond < 0) {
         errs.plafondCredit = 'Le plafond de crédit doit être supérieur ou égal à zéro.';
+      } else if (!/^\d+([.,]\d{1,2})?$/.test(String(formulaire.plafondCredit || '0').trim())) {
+        errs.plafondCredit = 'Le plafond de crédit ne peut pas avoir plus de 2 décimales.';
       }
     }
 
@@ -157,7 +173,8 @@ export default function Tiers() {
       }
       setModaleOuverte(false);
     } catch (err) {
-      setErreur(messageErreur(err));
+      setErreursChamps((prev) => ({ ...prev, ...erreursParChamp(err) }));
+      setErreurModale(messageErreur(err));
     } finally {
       setChargementAction(false);
     }
@@ -354,6 +371,7 @@ export default function Tiers() {
 
             <form onSubmit={enregistrer}>
               <div className="modale-corps">
+                <MessageErreur message={erreurModale} onFermer={() => setErreurModale('')} />
                 <div className="champ">
                   <label className="champ-label" htmlFor="tiers-nom">
                     Raison sociale / Nom complet <span style={{ color: 'var(--corail)' }}>*</span>
@@ -376,12 +394,16 @@ export default function Tiers() {
                   <input
                     id="tiers-ice"
                     type="text"
-                    className="input"
+                    className={`input ${erreursChamps.ice ? 'input-erreur' : ''}`}
                     value={formulaire.ice}
                     onChange={(e) => setFormulaire({ ...formulaire, ice: e.target.value })}
                     placeholder="15 chiffres (ex. 001524368000085)"
+                    inputMode="numeric"
                     maxLength={20}
                   />
+                  {erreursChamps.ice
+                    ? <span className="champ-erreur">{erreursChamps.ice}</span>
+                    : <span className="champ-aide">Facultatif — exactement 15 chiffres, unique par {onglet === 'fournisseurs' ? 'fournisseur' : 'client'}.</span>}
                 </div>
 
                 <div className="champ">
@@ -403,12 +425,16 @@ export default function Tiers() {
                   <input
                     id="tiers-telephone"
                     type="tel"
-                    className="input"
+                    className={`input ${erreursChamps.telephone ? 'input-erreur' : ''}`}
                     value={formulaire.telephone}
                     onChange={(e) => setFormulaire({ ...formulaire, telephone: e.target.value })}
                     placeholder="05 22 00 00 00"
+                    inputMode="tel"
                     maxLength={20}
                   />
+                  {erreursChamps.telephone
+                    ? <span className="champ-erreur">{erreursChamps.telephone}</span>
+                    : <span className="champ-aide">Facultatif — 05, 06, 07 ou 08 suivi de 8 chiffres, ou +212.</span>}
                 </div>
 
                 {onglet === 'fournisseurs' ? (
@@ -421,7 +447,8 @@ export default function Tiers() {
                       value={formulaire.rib}
                       onChange={(e) => setFormulaire({ ...formulaire, rib: e.target.value })}
                       placeholder="Ex. 011780000012345678901234"
-                      maxLength={24}
+                      inputMode="numeric"
+                      maxLength={30}
                     />
                     {erreursChamps.rib && <span className="champ-erreur">{erreursChamps.rib}</span>}
                     <span className="champ-aide">Compte bancaire marocain à 24 chiffres.</span>
@@ -432,7 +459,7 @@ export default function Tiers() {
                     <input
                       id="tiers-plafond"
                       type="number"
-                      step="1000"
+                      step="0.01"
                       min="0"
                       className={`input ${erreursChamps.plafondCredit ? 'input-erreur' : ''}`}
                       value={formulaire.plafondCredit}

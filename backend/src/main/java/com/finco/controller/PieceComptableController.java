@@ -6,6 +6,7 @@ import com.finco.service.PieceComptableService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -46,5 +47,11 @@ public class PieceComptableController {
     @ResponseStatus(HttpStatus.CREATED)
     public PieceComptableResponse saisir(@RequestBody PieceComptableRequest requete, Authentication authentification) {
         return pieceComptableService.create(requete, authentification.getName());
+    }
+
+    /** Validation d'une pièce en brouillon (la pièce entre alors dans la balance). */
+    @PatchMapping("/{id}/valider")
+    public PieceComptableResponse valider(@PathVariable Long id) {
+        return pieceComptableService.valider(id);
     }
 }

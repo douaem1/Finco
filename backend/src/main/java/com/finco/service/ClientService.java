@@ -39,28 +39,15 @@ public class ClientService {
     }
 
     public ClientResponse create(ClientRequest request) {
-        validerDonnees(request);
         Client c = new Client();
-        c.setNom(request.nom().trim());
-        c.setIce(nettoyer(request.ice()));
-        c.setEmail(nettoyer(request.email()));
-        c.setTelephone(nettoyer(request.telephone()));
-        c.setPlafondCredit(request.plafondCredit() != null ? request.plafondCredit() : BigDecimal.ZERO);
-
+        appliquer(c, request, null);
         Client enregistre = clientRepository.save(c);
         return ClientResponse.de(enregistre);
     }
 
     public ClientResponse update(Long id, ClientRequest request) {
         Client c = getClientOuErreur(id);
-        validerDonnees(request);
-
-        c.setNom(request.nom().trim());
-        c.setIce(nettoyer(request.ice()));
-        c.setEmail(nettoyer(request.email()));
-        c.setTelephone(nettoyer(request.telephone()));
-        c.setPlafondCredit(request.plafondCredit() != null ? request.plafondCredit() : BigDecimal.ZERO);
-
+        appliquer(c, request, id);
         Client misAJour = clientRepository.save(c);
         return ClientResponse.de(misAJour);
     }
@@ -79,22 +66,23 @@ public class ClientService {
                 .orElseThrow(() -> new RessourceIntrouvableException("Client introuvable (id = " + id + ")."));
     }
 
-    private void validerDonnees(ClientRequest request) {
-        if (request == null || request.nom() == null || request.nom().isBlank()) {
-            throw new RegleMetierException("Le nom du client est obligatoire.");
+    /**
+     * Contrôle puis recopie les données saisies (règles dans ReglesTiers).
+     * @param idExclu id du client modifié (null à la création), pour le contrôle d'unicité de l'ICE
+     */
+    private void appliquer(Client c, ClientRequest request, Long idExclu) {
+        if (request == null) {
+            throw new RegleMetierException("Aucune donnée reçue.");
         }
-        if (request.nom().trim().length() > 150) {
-            throw new RegleMetierException("Le nom ne doit pas dépasser 150 caractères.");
+        String ice = ReglesTiers.ice(request.ice());
+        if (ice != null && (idExclu == null ? clientRepository.existsByIce(ice)
+                : clientRepository.existsByIceAndIdNot(ice, idExclu))) {
+            throw new ConflitMetierException("ice", "Un client avec l'ICE « " + ice + " » existe déjà.");
         }
-        if (request.plafondCredit() != null && request.plafondCredit().compareTo(BigDecimal.ZERO) < 0) {
-            throw new RegleMetierException("Le plafond de crédit doit être supérieur ou égal à zéro.");
-        }
-    }
-
-    private String nettoyer(String valeur) {
-        if (valeur == null || valeur.isBlank()) {
-            return null;
-        }
-        return valeur.trim();
+        c.setNom(ReglesTiers.nom(request.nom(), "client"));
+        c.setIce(ice);
+        c.setEmail(ReglesTiers.email(request.email()));
+        c.setTelephone(ReglesTiers.telephone(request.telephone()));
+        c.setPlafondCredit(ReglesTiers.plafondCredit(request.plafondCredit()));
     }
 }

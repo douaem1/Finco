@@ -10,4 +10,10 @@ import java.util.List;
 public interface FournisseurRepository extends JpaRepository<Fournisseur, Long> {
 
     List<Fournisseur> findAllByOrderByNomAsc();
+
+    /** Unicité de l'ICE (identifiant commun de l'entreprise) parmi les fournisseurs. */
+    boolean existsByIce(String ice);
+
+    /** Même contrôle à la modification, en excluant le tiers modifié. */
+    boolean existsByIceAndIdNot(String ice, Long id);
 }

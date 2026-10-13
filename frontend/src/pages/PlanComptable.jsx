@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { listerComptes, creerCompte, modifierCompte, supprimerCompte } from '../services/compteApi';
-import { messageErreur } from '../services/api';
+import { erreursParChamp, messageErreur } from '../services/api';
 import MessageErreur from '../components/MessageErreur';
 import Chargement from '../components/Chargement';
 import Icone from '../components/Icone';
@@ -30,6 +30,7 @@ export default function PlanComptable() {
   const [compteEnCours, setCompteEnCours] = useState(null); // null = création
   const [formulaire, setFormulaire] = useState({ numero: '', libelle: '' });
   const [erreursChamps, setErreursChamps] = useState({});
+  const [erreurModale, setErreurModale] = useState('');
   const [chargementAction, setChargementAction] = useState(false);
 
   // Modale suppression
@@ -58,6 +59,7 @@ export default function PlanComptable() {
     setCompteEnCours(null);
     setFormulaire({ numero: '', libelle: '' });
     setErreursChamps({});
+    setErreurModale('');
     setModaleOuverte(true);
   }
 
@@ -65,6 +67,7 @@ export default function PlanComptable() {
     setCompteEnCours(c);
     setFormulaire({ numero: c.numero, libelle: c.libelle });
     setErreursChamps({});
+    setErreurModale('');
     setModaleOuverte(true);
   }
 
@@ -113,7 +116,8 @@ export default function PlanComptable() {
       }
       setModaleOuverte(false);
     } catch (err) {
-      setErreur(messageErreur(err));
+      setErreursChamps((prev) => ({ ...prev, ...erreursParChamp(err) }));
+      setErreurModale(messageErreur(err));
     } finally {
       setChargementAction(false);
     }
@@ -276,6 +280,7 @@ export default function PlanComptable() {
 
             <form onSubmit={enregistrer}>
               <div className="modale-corps">
+                <MessageErreur message={erreurModale} onFermer={() => setErreurModale('')} />
                 <div className="champ">
                   <label className="champ-label" htmlFor="compte-numero">
                     Numéro de compte <span style={{ color: 'var(--corail)' }}>*</span>
@@ -287,6 +292,7 @@ export default function PlanComptable() {
                     value={formulaire.numero}
                     onChange={(e) => setFormulaire({ ...formulaire, numero: e.target.value })}
                     placeholder="Ex. 6111, 4411, 3421..."
+                    inputMode="numeric"
                     maxLength={10}
                     required
                   />

@@ -4,7 +4,7 @@ import {
   listerBudgets, creerBudget, modifierBudget, supprimerBudget,
 } from '../services/budgetApi';
 import { listerCentres } from '../services/centreCoutApi';
-import { messageErreur } from '../services/api';
+import { erreursParChamp, messageErreur } from '../services/api';
 import { montant } from '../utils/format';
 import MessageErreur from '../components/MessageErreur';
 import Chargement from '../components/Chargement';
@@ -32,12 +32,13 @@ export default function Budgets() {
     centreCoutId: '',
   });
   const [erreursChamps, setErreursChamps] = useState({});
+  const [erreurModale, setErreurModale] = useState('');
   const [chargementAction, setChargementAction] = useState(false);
 
   // Modale suppression
   const [elementASupprimer, setElementASupprimer] = useState(null);
 
-  const peutModifier = utilisateur?.role === 'CONTROLEUR' || utilisateur?.role === 'ADMIN';
+  const peutModifier = utilisateur?.role === 'CONTROLEUR';
 
   useEffect(() => { chargerDonnees(); }, []);
 
@@ -63,6 +64,7 @@ export default function Budgets() {
       centreCoutId: centres.length > 0 ? String(centres[0].id) : '',
     });
     setErreursChamps({});
+    setErreurModale('');
     setModaleOuverte(true);
   }
 
@@ -74,6 +76,7 @@ export default function Budgets() {
       centreCoutId: String(budget.centreCoutId),
     });
     setErreursChamps({});
+    setErreurModale('');
     setModaleOuverte(true);
   }
 
@@ -86,6 +89,8 @@ export default function Budgets() {
     const montantVal = Number(formulaire.montantPrevu);
     if (!formulaire.montantPrevu || isNaN(montantVal) || montantVal < 0) {
       errs.montantPrevu = 'Le montant prévu doit être supérieur ou égal à zéro.';
+    } else if (!/^\d+([.,]\d{1,2})?$/.test(String(formulaire.montantPrevu).trim())) {
+      errs.montantPrevu = 'Le montant prévu ne peut pas avoir plus de 2 décimales.';
     }
     if (!formulaire.centreCoutId) {
       errs.centreCoutId = 'Le centre de coûts est obligatoire.';
@@ -117,7 +122,8 @@ export default function Budgets() {
       }
       setModaleOuverte(false);
     } catch (err) {
-      setErreur(messageErreur(err));
+      setErreursChamps((prev) => ({ ...prev, ...erreursParChamp(err) }));
+      setErreurModale(messageErreur(err));
     } finally {
       setChargementAction(false);
     }
@@ -306,6 +312,7 @@ export default function Budgets() {
             </div>
             <form onSubmit={enregistrer}>
               <div className="modale-corps">
+                <MessageErreur message={erreurModale} onFermer={() => setErreurModale('')} />
                 <div className="champ">
                   <label className="champ-label" htmlFor="budget-centre">
                     Centre de coûts <span style={{ color: 'var(--corail)' }}>*</span>
@@ -349,7 +356,7 @@ export default function Budgets() {
                   <input
                     id="budget-montant"
                     type="number"
-                    step="1000"
+                    step="0.01"
                     min="0"
                     className={`input ${erreursChamps.montantPrevu ? 'input-erreur' : ''}`}
                     value={formulaire.montantPrevu}
@@ -358,7 +365,7 @@ export default function Budgets() {
                     required
                   />
                   {erreursChamps.montantPrevu && <span className="champ-erreur">{erreursChamps.montantPrevu}</span>}
-                  <span className="champ-aide">Montant prévisionnel annuel pour ce centre.</span>
+                  <span className="champ-aide">Montant prévisionnel annuel pour ce centre (≥ 0, 2 décimales max). Un seul budget par centre et par année ; le budget d'un exercice clôturé est figé.</span>
                 </div>
               </div>
 

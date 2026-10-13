@@ -4,7 +4,7 @@ import {
   listerExercices, creerExercice, modifierExercice,
   cloturerExercice, supprimerExercice,
 } from '../services/exerciceApi';
-import { messageErreur } from '../services/api';
+import { erreursParChamp, messageErreur } from '../services/api';
 import { dateFr } from '../utils/format';
 import MessageErreur from '../components/MessageErreur';
 import Chargement from '../components/Chargement';
@@ -35,6 +35,7 @@ export default function Exercices() {
     dateFin: `${ANNEE_COURANTE}-12-31`,
   });
   const [erreursChamps, setErreursChamps] = useState({});
+  const [erreurModale, setErreurModale] = useState('');
   const [chargementAction, setChargementAction] = useState(false);
 
   // Modale suppression
@@ -42,8 +43,10 @@ export default function Exercices() {
   // Modale clôture
   const [elementACloturer, setElementACloturer] = useState(null);
 
-  const peutEcrire = utilisateur?.role === 'COMPTABLE' || utilisateur?.role === 'ADMIN';
-  const peutAdmin = utilisateur?.role === 'ADMIN';
+  // Les exercices relèvent de l'espace COMPTABLE (roleAccess.js + SecurityConfig) :
+  // c'est donc le comptable qui crée, modifie, clôture et supprime un exercice.
+  const peutEcrire = utilisateur?.role === 'COMPTABLE';
+  const peutAdmin = utilisateur?.role === 'COMPTABLE';
 
   useEffect(() => { chargerDonnees(); }, []);
 
@@ -68,6 +71,7 @@ export default function Exercices() {
       dateFin: `${ANNEE_COURANTE}-12-31`,
     });
     setErreursChamps({});
+    setErreurModale('');
     setModaleOuverte(true);
   }
 
@@ -79,6 +83,7 @@ export default function Exercices() {
       dateFin: ex.dateFin,
     });
     setErreursChamps({});
+    setErreurModale('');
     setModaleOuverte(true);
   }
 
@@ -92,6 +97,18 @@ export default function Exercices() {
     if (!formulaire.dateFin) errs.dateFin = 'La date de fin est obligatoire.';
     if (formulaire.dateDebut && formulaire.dateFin && formulaire.dateDebut >= formulaire.dateFin) {
       errs.dateFin = 'La date de fin doit être postérieure à la date de début.';
+    } else if (formulaire.dateDebut && formulaire.dateFin) {
+      // Aide à la saisie : un exercice dure au plus 12 mois (le serveur le vérifie aussi).
+      const limite = new Date(formulaire.dateDebut);
+      limite.setFullYear(limite.getFullYear() + 1);
+      limite.setDate(limite.getDate() - 1);
+      if (new Date(formulaire.dateFin) > limite) {
+        errs.dateFin = 'Un exercice comptable ne peut pas dépasser 12 mois.';
+      }
+      const anneesPossibles = [formulaire.dateDebut.slice(0, 4), formulaire.dateFin.slice(0, 4)];
+      if (!errs.annee && !anneesPossibles.includes(String(formulaire.annee))) {
+        errs.annee = "L'année doit correspondre à l'année de début ou de fin de l'exercice.";
+      }
     }
     setErreursChamps(errs);
     return Object.keys(errs).length === 0;
@@ -120,7 +137,8 @@ export default function Exercices() {
       }
       setModaleOuverte(false);
     } catch (err) {
-      setErreur(messageErreur(err));
+      setErreursChamps((prev) => ({ ...prev, ...erreursParChamp(err) }));
+      setErreurModale(messageErreur(err));
     } finally {
       setChargementAction(false);
     }
@@ -274,6 +292,7 @@ export default function Exercices() {
             </div>
             <form onSubmit={enregistrer}>
               <div className="modale-corps">
+                <MessageErreur message={erreurModale} onFermer={() => setErreurModale('')} />
                 <div className="champ">
                   <label className="champ-label" htmlFor="exercice-annee">
                     Année <span style={{ color: 'var(--corail)' }}>*</span>
@@ -326,7 +345,9 @@ export default function Exercices() {
                     onChange={e => setFormulaire({ ...formulaire, dateFin: e.target.value })}
                     required
                   />
-                  {erreursChamps.dateFin && <span className="champ-erreur">{erreursChamps.dateFin}</span>}
+                  {erreursChamps.dateFin
+                    ? <span className="champ-erreur">{erreursChamps.dateFin}</span>
+                    : <span className="champ-aide">12 mois maximum, sans chevaucher un autre exercice.</span>}
                 </div>
               </div>
 

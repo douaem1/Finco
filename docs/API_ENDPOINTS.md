@@ -49,45 +49,44 @@ FinCo utilise une authentification à deux facteurs :
 
 ### Utilisateurs de démonstration par défaut
 
-| Rôle | Email | Mot de passe | Permissions |
+| Rôle | Email | Mot de passe | Espace (page d'arrivée) |
 |---|---|---|---|
-| **COMPTABLE** | `raissouni.aya@etu.uae.ac.ma` *(ou `comptable@finco.ma`)* | `admin123` | Saisie d'écritures, CRUD Tiers |
-| **CONTROLEUR** | `cg@finco.ma` *(ou `controleur@finco.ma`)* | `admin123` | CRUD Centres de coûts |
-| **ADMIN** | `admin@finco.ma` | `admin123` | CRUD Plan comptable, Administration |
-| **DIRECTEUR_FINANCIER** | `daf@finco.ma` | `admin123` | Consultation Tiers, Journal, Approbation |
+| **COMPTABLE** | `comptable@finco.ma` | `admin123` | Journal, Saisie d'écriture, Tiers, Exercices (`/pieces`) |
+| **CONTROLEUR** | `controleur@finco.ma` | `admin123` | Centres de coûts, Budgets CO (`/centres-cout`) |
+| **ADMIN** | `admin@finco.ma` | `admin123` | Plan comptable (`/comptes`) |
+| **DIRECTEUR_FINANCIER** | `daf@finco.ma` | `admin123` | Espace Direction (`/direction`) |
 
 ---
 
 ## 3. Matrice de Sécurité (Contrôle d'accès RBAC)
 
+Source de vérité : `SecurityConfig.java` (serveur) et `frontend/src/config/roleAccess.js` (menus et routes).
+Un rôle non autorisé reçoit `403 Forbidden` ; une requête sans jeton reçoit `401 Unauthorized`.
+
 | Ressource | Méthode | URL | Rôles autorisés |
 |---|---|---|---|
-| **Auth** | POST | `/api/auth/login` | Public |
-| **Auth** | POST | `/api/auth/verifier-otp` | Public |
-| **Auth** | POST | `/api/auth/renvoyer-otp` | Public |
-| **Tiers (Fournisseurs)** | GET | `/api/fournisseurs` | `COMPTABLE`, `DIRECTEUR_FINANCIER`, `ADMIN` |
-| **Tiers (Fournisseurs)** | GET | `/api/fournisseurs/{id}` | `COMPTABLE`, `DIRECTEUR_FINANCIER`, `ADMIN` |
-| **Tiers (Fournisseurs)** | POST | `/api/fournisseurs` | `COMPTABLE` |
-| **Tiers (Fournisseurs)** | PUT | `/api/fournisseurs/{id}` | `COMPTABLE` |
-| **Tiers (Fournisseurs)** | DELETE | `/api/fournisseurs/{id}` | `COMPTABLE` |
-| **Tiers (Clients)** | GET | `/api/clients` | `COMPTABLE`, `DIRECTEUR_FINANCIER`, `ADMIN` |
-| **Tiers (Clients)** | GET | `/api/clients/{id}` | `COMPTABLE`, `DIRECTEUR_FINANCIER`, `ADMIN` |
-| **Tiers (Clients)** | POST | `/api/clients` | `COMPTABLE` |
-| **Tiers (Clients)** | PUT | `/api/clients/{id}` | `COMPTABLE` |
-| **Tiers (Clients)** | DELETE | `/api/clients/{id}` | `COMPTABLE` |
-| **Plan comptable** | GET | `/api/comptes` | Tout utilisateur authentifié |
-| **Plan comptable** | GET | `/api/comptes/{id}` | Tout utilisateur authentifié |
-| **Plan comptable** | POST | `/api/comptes` | `ADMIN` |
-| **Plan comptable** | PUT | `/api/comptes/{id}` | `ADMIN` |
-| **Plan comptable** | DELETE | `/api/comptes/{id}` | `ADMIN` |
-| **Centres de coûts** | GET | `/api/centres-cout` | Tout utilisateur authentifié |
-| **Centres de coûts** | GET | `/api/centres-cout/{id}` | Tout utilisateur authentifié |
-| **Centres de coûts** | POST | `/api/centres-cout` | `CONTROLEUR` |
-| **Centres de coûts** | PUT | `/api/centres-cout/{id}` | `CONTROLEUR` |
-| **Centres de coûts** | DELETE | `/api/centres-cout/{id}` | `CONTROLEUR` |
-| **Écritures** | GET | `/api/pieces` | Tout utilisateur authentifié |
-| **Écritures** | GET | `/api/pieces/{id}` | Tout utilisateur authentifié |
-| **Écritures** | POST | `/api/pieces` | `COMPTABLE`, `ADMIN` |
+| **Auth** | POST | `/api/auth/login`, `/api/auth/verifier-otp`, `/api/auth/renvoyer-otp` | Public |
+| **Auth** | GET | `/api/auth/me` | Tout utilisateur authentifié |
+| **Écritures** | GET | `/api/pieces`, `/api/pieces/{id}` | `COMPTABLE` |
+| **Écritures** | POST | `/api/pieces` | `COMPTABLE` |
+| **Écritures** | PATCH | `/api/pieces/{id}/valider` | `COMPTABLE` |
+| **Tiers** | GET, POST, PUT, DELETE | `/api/fournisseurs/**`, `/api/clients/**` | `COMPTABLE` |
+| **Exercices** | GET, POST, PUT, DELETE | `/api/exercices/**` | `COMPTABLE` |
+| **Exercices** | PATCH | `/api/exercices/{id}/cloturer` | `COMPTABLE` |
+| **Plan comptable** | GET | `/api/comptes/**` | Tout utilisateur authentifié (listes déroulantes de la saisie) |
+| **Plan comptable** | POST, PUT, DELETE | `/api/comptes/**` | `ADMIN` |
+| **Centres de coûts** | GET | `/api/centres-cout/**` | Tout utilisateur authentifié (listes déroulantes) |
+| **Centres de coûts** | POST, PUT, DELETE | `/api/centres-cout/**` | `CONTROLEUR` |
+| **Budgets CO** | GET, POST, PUT, DELETE | `/api/budgets/**` | `CONTROLEUR` |
+
+### Format des erreurs
+
+```json
+{ "message": "L'ICE doit comporter exactement 15 chiffres.",
+  "champs": { "ice": "L'ICE doit comporter exactement 15 chiffres." } }
+```
+`message` est affiché tel quel par React ; `champs` (facultatif) indique le champ fautif, que le formulaire encadre en rouge.
+Pour une écriture, les champs de ligne sont nommés `lignes.N.compteId`, `lignes.N.centreCoutId`, `lignes.N.montant` (N = numéro de ligne, à partir de 1).
 
 ---
 
@@ -132,7 +131,8 @@ FinCo utilise une authentification à deux facteurs :
 ```
 - **Succès :** `201 Created` avec en-tête `Location: /api/fournisseurs/{id}`.
 - **Erreurs :**
-  - `400 Bad Request` : nom manquant, RIB différent de 24 chiffres, email mal formé.
+  - `400 Bad Request` : nom manquant ; ICE différent de 15 chiffres ; email mal formé ; téléphone non marocain (05/06/07/08 + 8 chiffres, ou +212) ; RIB différent de 24 chiffres. Les espaces, points et tirets sont ignorés.
+  - `409 Conflict` : un autre fournisseur possède déjà cet ICE.
   - `403 Forbidden` : utilisateur non `COMPTABLE`.
 
 #### `PUT /api/fournisseurs/{id}`
@@ -168,7 +168,8 @@ FinCo utilise une authentification à deux facteurs :
 ```
 - **Succès :** `201 Created` avec en-tête `Location: /api/clients/{id}`.
 - **Erreurs :**
-  - `400 Bad Request` : nom manquant ou plafond de crédit négatif.
+  - `400 Bad Request` : nom manquant ; ICE, email ou téléphone invalide ; plafond de crédit négatif ou avec plus de 2 décimales.
+  - `409 Conflict` : un autre client possède déjà cet ICE.
   - `403 Forbidden` : utilisateur non `COMPTABLE`.
 
 #### `PUT /api/clients/{id}`
@@ -279,3 +280,23 @@ Les fichiers de tests Postman se trouvent dans le répertoire `postman/` :
 1. Exécutez les requêtes du dossier `0-Authentification` pour obtenir les jetons `tokenComptable`, `tokenControleur` et `tokenAdmin`.
    *(Remplacez le code OTP par celui affiché dans la console du serveur lors du login).*
 2. Vous pouvez ensuite exécuter les dossiers `1-Tiers`, `2-Plan comptable` et `3-Centres de coûts` ou lancer le **Collection Runner** pour exécuter tous les tests d'assertion automatisés.
+
+---
+
+## 6. Endpoints ajoutés : écritures, exercices, budgets
+
+### 6.1. Écritures (`/api/pieces`) — rôle `COMPTABLE`
+- `POST /api/pieces` : `{ "dateEcriture": "2026-10-13", "libelle": "Loyer octobre", "lignes": [ { "compteId": 8, "centreCoutId": 2, "sens": "DEBIT", "montant": 9000 }, { "compteId": 5, "sens": "CREDIT", "montant": 9000 } ] }` → `201 Created` (pièce en **brouillon**, numéro `PC-AAAA-NNNNN` attribué par le serveur).
+- Erreurs `400` : libellé vide ou > 255 caractères ; date absente, **future**, hors exercice ou dans un exercice **clôturé** ; moins de 2 lignes ou pas de débit **et** de crédit ; compte manquant ; montant ≤ 0, > 2 décimales ou > 13 chiffres ; compte de **classe 6 sans centre de coûts** ; centre de coûts sur un compte de **bilan (classes 1 à 5)** ; total débit ≠ total crédit.
+- `PATCH /api/pieces/{id}/valider` → `200 OK`. Erreurs `400` : pièce déjà validée, exercice clôturé ; `404` : pièce introuvable.
+
+### 6.2. Exercices (`/api/exercices`) — rôle `COMPTABLE`
+- `POST` / `PUT` : `{ "annee": 2027, "dateDebut": "2027-01-01", "dateFin": "2027-12-31" }`.
+- Erreurs `400` : année hors 2000–2099 ou différente de l'année de début/fin ; début ≥ fin ; durée > 12 mois ; exercice clôturé (modification) ; pièces qui sortiraient de la nouvelle période. Erreurs `409` : année déjà utilisée ; période qui **chevauche** un autre exercice ; suppression d'un exercice contenant des pièces.
+- `PATCH /api/exercices/{id}/cloturer` → `200 OK`. Erreurs `400` : déjà clôturé ; un exercice **antérieur** n'est pas clôturé ; des pièces sont encore en **brouillon**.
+- `DELETE` : `400` si l'exercice est clôturé, `409` s'il contient des pièces.
+
+### 6.3. Budgets CO (`/api/budgets`) — rôle `CONTROLEUR`
+- `POST` / `PUT` : `{ "centreCoutId": 3, "annee": 2026, "montantPrevu": 900000 }`.
+- Erreurs `400` : centre manquant ou introuvable ; année hors 2000–2099 ; montant négatif, > 2 décimales ou > 13 chiffres ; exercice de l'année **clôturé** (budget figé, aussi pour la suppression). Erreur `409` : un budget existe déjà pour ce centre et cette année.
+

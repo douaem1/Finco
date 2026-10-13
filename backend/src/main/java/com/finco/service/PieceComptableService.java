@@ -30,13 +30,16 @@ import java.util.Locale;
  * Couche MÉTIER de la saisie d'écritures comptables (partie double).
  *
  * Règles vérifiées ici, côté serveur (React ne fait qu'afficher le message) :
- *  1. libellé et date obligatoires ;
+ *  1. libellé (255 car. max) et date obligatoires ; la date ne peut pas être dans le futur ;
  *  2. la date appartient à un exercice comptable NON clôturé ;
- *  3. au moins 2 lignes ;
- *  4. chaque ligne : compte existant, sens DEBIT/CREDIT, montant > 0 (2 décimales max) ;
+ *  3. au moins 2 lignes, dont au moins un débit et un crédit ;
+ *  4. chaque ligne : compte existant, sens DEBIT/CREDIT, montant > 0 (2 décimales, 13 chiffres max) ;
  *  5. compte de charges (classe 6) => centre de coûts obligatoire (lien FI -> CO) ;
+ *     un centre de coûts n'est accepté que sur un compte de gestion (classes 6 et 7) ;
  *  6. Σ débits = Σ crédits (équilibre de la partie double) ;
- *  7. le numéro PC-AAAA-NNNNN est attribué par le serveur, jamais par le client.
+ *  7. le numéro PC-AAAA-NNNNN est attribué par le serveur, jamais par le client ;
+ *  8. validation : seule une pièce en brouillon d'un exercice ouvert peut être validée,
+ *     et une pièce validée n'est plus modifiable (elle entre dans la balance).
  */
 @Service
 @Transactional
@@ -91,22 +94,27 @@ public class PieceComptableService {
         String libelle = verifierLibelle(requete.libelle());
         LocalDate date = requete.dateEcriture();
         if (date == null) {
-            throw new RegleMetierException("La date de l'écriture est obligatoire.");
+            throw new RegleMetierException("dateEcriture", "La date de l'écriture est obligatoire.");
+        }
+        if (date.isAfter(LocalDate.now())) {
+            throw new RegleMetierException("dateEcriture",
+                    "La date de l'écriture ne peut pas être postérieure à aujourd'hui.");
         }
 
         // Règle 2 : exercice ouvert
         Exercice exercice = exerciceRepository
                 .findFirstByDateDebutLessThanEqualAndDateFinGreaterThanEqual(date, date)
-                .orElseThrow(() -> new RegleMetierException(
+                .orElseThrow(() -> new RegleMetierException("dateEcriture",
                         "Aucun exercice comptable ne couvre la date du " + date.format(FORMAT_DATE) + "."));
         if (exercice.isCloture()) {
-            throw new RegleMetierException("L'exercice " + exercice.getAnnee() + " est clôturé : saisie impossible.");
+            throw new RegleMetierException("dateEcriture",
+                    "L'exercice " + exercice.getAnnee() + " est clôturé : saisie impossible.");
         }
 
         // Règle 3 : au moins deux lignes
         List<LigneEcritureRequest> lignesSaisies = requete.lignes();
         if (lignesSaisies == null || lignesSaisies.size() < 2) {
-            throw new RegleMetierException("Une écriture doit comporter au moins 2 lignes (un débit et un crédit).");
+            throw new RegleMetierException("lignes", "Une écriture doit comporter au moins 2 lignes (un débit et un crédit).");
         }
 
         PieceComptable piece = new PieceComptable();
@@ -121,11 +129,18 @@ public class PieceComptableService {
             piece.ajouterLigne(construireLigne(lignesSaisies.get(i), i + 1));
         }
 
+        // Règle 3 (suite) : au moins un débit ET un crédit.
+        boolean aUnDebit = piece.getLignes().stream().anyMatch(LigneEcriture::estAuDebit);
+        boolean aUnCredit = piece.getLignes().stream().anyMatch(l -> !l.estAuDebit());
+        if (!aUnDebit || !aUnCredit) {
+            throw new RegleMetierException("lignes", "Une écriture doit comporter au moins une ligne au débit et une ligne au crédit.");
+        }
+
         // Règle 6 : équilibre. compareTo et non equals : 100.0 et 100.00 sont égaux.
         BigDecimal totalDebit = piece.totalDebit();
         BigDecimal totalCredit = piece.totalCredit();
         if (totalDebit.compareTo(totalCredit) != 0) {
-            throw new RegleMetierException("Écriture déséquilibrée : total débit = " + mad(totalDebit)
+            throw new RegleMetierException("lignes", "Écriture déséquilibrée : total débit = " + mad(totalDebit)
                     + ", total crédit = " + mad(totalCredit)
                     + " (écart de " + mad(totalDebit.subtract(totalCredit).abs()) + ").");
         }
@@ -141,48 +156,68 @@ public class PieceComptableService {
 
     private LigneEcriture construireLigne(LigneEcritureRequest saisie, int numeroLigne) {
         String prefixe = "Ligne " + numeroLigne + " : ";
+        String champ = "lignes." + numeroLigne + ".";
         if (saisie == null) {
-            throw new RegleMetierException(prefixe + "ligne vide.");
+            throw new RegleMetierException("lignes", prefixe + "ligne vide.");
         }
         if (saisie.compteId() == null) {
-            throw new RegleMetierException(prefixe + "le compte est obligatoire.");
+            throw new RegleMetierException(champ + "compteId", prefixe + "le compte est obligatoire.");
         }
         CompteGeneral compte = compteRepository.findById(saisie.compteId())
-                .orElseThrow(() -> new RegleMetierException(prefixe + "compte introuvable dans le plan comptable."));
-
+                .orElseThrow(() -> new RegleMetierException(champ + "compteId",
+                        prefixe + "compte introuvable dans le plan comptable."));
         if (saisie.sens() == null) {
-            throw new RegleMetierException(prefixe + "le sens (débit ou crédit) est obligatoire.");
+            throw new RegleMetierException(champ + "sens", prefixe + "le sens (débit ou crédit) est obligatoire.");
         }
         BigDecimal montant = saisie.montant();
         if (montant == null || montant.signum() <= 0) {
-            throw new RegleMetierException(prefixe + "le montant doit être strictement positif.");
+            throw new RegleMetierException(champ + "montant", prefixe + "le montant doit être strictement positif.");
         }
-        if (montant.stripTrailingZeros().scale() > 2) {
-            throw new RegleMetierException(prefixe + "le montant ne peut pas avoir plus de 2 décimales.");
-        }
-
+        ReglesMontant.verifierFormat(montant, champ + "montant", prefixe + "le montant");
         CentreCout centre = null;
         if (saisie.centreCoutId() != null) {
             centre = centreCoutRepository.findById(saisie.centreCoutId())
-                    .orElseThrow(() -> new RegleMetierException(prefixe + "centre de coûts introuvable."));
+                    .orElseThrow(() -> new RegleMetierException(champ + "centreCoutId",
+                            prefixe + "centre de coûts introuvable."));
         }
         if (compte.estCompteDeCharges() && centre == null) {
-            throw new RegleMetierException(prefixe + "le compte " + compte.getNumero()
+            throw new RegleMetierException(champ + "centreCoutId", prefixe + "le compte " + compte.getNumero()
                     + " est un compte de charges (classe 6), un centre de coûts est obligatoire.");
         }
-
+        if (centre != null && compte.getClasse() != 6 && compte.getClasse() != 7) {
+            throw new RegleMetierException(champ + "centreCoutId", prefixe + "un centre de coûts ne s'impute que sur "
+                    + "un compte de charges ou de produits (classes 6 et 7), pas sur le compte " + compte.getNumero() + ".");
+        }
         return new LigneEcriture(compte, centre, saisie.sens(), montant.setScale(2));
     }
 
     private String verifierLibelle(String libelle) {
         if (libelle == null || libelle.isBlank()) {
-            throw new RegleMetierException("Le libellé de l'écriture est obligatoire.");
+            throw new RegleMetierException("libelle", "Le libellé de l'écriture est obligatoire.");
         }
         String propre = libelle.trim();
         if (propre.length() > LIBELLE_LONGUEUR_MAX) {
-            throw new RegleMetierException("Le libellé ne doit pas dépasser " + LIBELLE_LONGUEUR_MAX + " caractères.");
+            throw new RegleMetierException("libelle", "Le libellé ne doit pas dépasser " + LIBELLE_LONGUEUR_MAX + " caractères.");
         }
         return propre;
+    }
+
+    /**
+     * Validation d'une pièce (règle 8) : brouillon -> validée.
+     * Une pièce validée entre dans la balance et le suivi budgétaire ; elle ne peut plus être modifiée.
+     */
+    public PieceComptableResponse valider(Long id) {
+        PieceComptable piece = pieceRepository.findAvecLignes(id)
+                .orElseThrow(() -> new RessourceIntrouvableException("Pièce comptable introuvable (id = " + id + ")."));
+        if (piece.isValidee()) {
+            throw new RegleMetierException("La pièce " + piece.getNumero() + " est déjà validée.");
+        }
+        if (piece.getExercice().isCloture()) {
+            throw new RegleMetierException("L'exercice " + piece.getExercice().getAnnee()
+                    + " est clôturé : validation impossible.");
+        }
+        piece.setValidee(true);
+        return PieceComptableResponse.depuis(piece);
     }
 
     private Utilisateur trouverUtilisateur(String email) {

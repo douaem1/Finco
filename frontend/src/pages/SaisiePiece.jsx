@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { listerComptes, saisirPiece } from '../services/ecritureApi';
 import { listerCentres } from '../services/centreCoutApi';
-import { messageErreur } from '../services/api';
+import { erreursParChamp, messageErreur } from '../services/api';
 import ChampSaisie from '../components/ChampSaisie';
 import MessageErreur from '../components/MessageErreur';
 import Chargement from '../components/Chargement';
@@ -10,9 +10,12 @@ import Balance from '../components/Balance';
 
 /* ============================================================
    Saisie d'une écriture comptable.
-   React COLLECTE les données et les ENVOIE : il ne vérifie aucune
+   React COLLECTE les données et les ENVOIE : il ne bloque aucune
    règle (équilibre, centre obligatoire en classe 6...). C'est le
-   serveur qui décide, et on affiche son message en cas de refus.
+   serveur qui décide, et on affiche son message en cas de refus,
+   en encadrant le champ concerné (date, libellé, ligne N...).
+   Seules des aides de saisie sont faites ici : date max = aujourd'hui,
+   centre de coûts grisé pour les comptes de bilan (classes 1 à 5).
    ============================================================ */
 
 let compteurLignes = 0;
@@ -31,6 +34,7 @@ export default function SaisiePiece() {
   const [lignes, setLignes] = useState(() => [nouvelleLigne('DEBIT'), nouvelleLigne('CREDIT')]);
 
   const [erreur, setErreur] = useState('');
+  const [champs, setChamps] = useState({}); // erreurs par champ renvoyées par le serveur
   const [envoi, setEnvoi] = useState(false);
 
   useEffect(() => {
@@ -40,8 +44,17 @@ export default function SaisiePiece() {
       .finally(() => setChargement(false));
   }, []);
 
+  const classeDuCompte = (compteId) => comptes.find((c) => String(c.id) === String(compteId))?.classe;
+  // Un centre de coûts ne s'impute que sur un compte de gestion : charges (6, obligatoire) ou produits (7).
+  const centreApplicable = (compteId) => !compteId || [6, 7].includes(classeDuCompte(compteId));
+
   function modifierLigne(cle, champ, valeur) {
-    setLignes((ls) => ls.map((l) => (l.cle === cle ? { ...l, [champ]: valeur } : l)));
+    setLignes((ls) => ls.map((l) => {
+      if (l.cle !== cle) return l;
+      const ligne = { ...l, [champ]: valeur };
+      if (champ === 'compteId' && !centreApplicable(valeur)) ligne.centreCoutId = '';
+      return ligne;
+    }));
   }
   const ajouterLigne = () => setLignes((ls) => [...ls, nouvelleLigne()]);
   const retirerLigne = (cle) => setLignes((ls) => ls.filter((l) => l.cle !== cle));
@@ -49,6 +62,7 @@ export default function SaisiePiece() {
   async function enregistrer(e) {
     e.preventDefault();
     setErreur('');
+    setChamps({});
     setEnvoi(true);
     try {
       const piece = await saisirPiece({
@@ -64,6 +78,7 @@ export default function SaisiePiece() {
       navigate(`/pieces/${piece.id}`, { state: { succes: `Écriture ${piece.numero} enregistrée.` } });
     } catch (err) {
       setErreur(messageErreur(err)); // message du serveur, ex. « Écriture déséquilibrée : ... »
+      setChamps(erreursParChamp(err)); // ex. { "lignes.1.centreCoutId": "..." }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setEnvoi(false);
@@ -94,10 +109,12 @@ export default function SaisiePiece() {
 
       <form onSubmit={enregistrer} className="pile-large">
         <div className="panneau grille-entete">
-          <ChampSaisie id="date" label="Date d’écriture" type="date"
-            value={dateEcriture} onChange={(e) => setDateEcriture(e.target.value)} />
-          <ChampSaisie id="libelle" label="Libellé" maxLength={255}
+          <ChampSaisie id="date" label="Date d’écriture" type="date" obligatoire max={aujourdhui()}
+            value={dateEcriture} onChange={(e) => setDateEcriture(e.target.value)}
+            erreur={champs.dateEcriture} aide="Dans un exercice ouvert, au plus tard aujourd’hui." />
+          <ChampSaisie id="libelle" label="Libellé" maxLength={255} obligatoire
             value={libelle} onChange={(e) => setLibelle(e.target.value)}
+            erreur={champs.libelle} aide="255 caractères maximum."
             placeholder="Facture Cabinet Audit F-1005" />
         </div>
 
@@ -110,20 +127,27 @@ export default function SaisiePiece() {
               </tr>
             </thead>
             <tbody>
-              {lignes.map((l, i) => (
-                <tr key={l.cle}>
+              {lignes.map((l, i) => {
+                const err = (c) => champs[`lignes.${i + 1}.${c}`];
+                const classe = classeDuCompte(l.compteId);
+                const applicable = centreApplicable(l.compteId);
+                return (
+                <tr key={l.cle} className={Object.keys(champs).some((k) => k.startsWith(`lignes.${i + 1}.`)) ? 'ligne-en-erreur' : ''}>
                   <td className="col-index texte-secondaire">{i + 1}</td>
                   <td>
-                    <select className="input" value={l.compteId} aria-label={`Compte, ligne ${i + 1}`}
+                    <select className={`input ${err('compteId') ? 'input-erreur' : ''}`} value={l.compteId} aria-label={`Compte, ligne ${i + 1}`}
+                      title={err('compteId') || undefined}
                       onChange={(e) => modifierLigne(l.cle, 'compteId', e.target.value)}>
                       <option value="">Choisir un compte</option>
                       {comptes.map((c) => <option key={c.id} value={c.id}>{c.numero} {c.libelle}</option>)}
                     </select>
                   </td>
                   <td>
-                    <select className="input" value={l.centreCoutId} aria-label={`Centre de coûts, ligne ${i + 1}`}
+                    <select className={`input ${err('centreCoutId') ? 'input-erreur' : ''}`} value={l.centreCoutId}
+                      aria-label={`Centre de coûts, ligne ${i + 1}`} disabled={!applicable}
+                      aria-required={classe === 6} title={err('centreCoutId') || undefined}
                       onChange={(e) => modifierLigne(l.cle, 'centreCoutId', e.target.value)}>
-                      <option value="">Aucun</option>
+                      <option value="">{!applicable ? 'Non applicable' : classe === 6 ? 'Obligatoire — choisir' : 'Aucun'}</option>
                       {centres.map((c) => <option key={c.id} value={c.id}>{c.code} {c.libelle}</option>)}
                     </select>
                   </td>
@@ -138,7 +162,8 @@ export default function SaisiePiece() {
                     </div>
                   </td>
                   <td>
-                    <input className="input num chiffres" type="number" step="0.01" inputMode="decimal"
+                    <input className={`input num chiffres ${err('montant') ? 'input-erreur' : ''}`} type="number" step="0.01" min="0.01" inputMode="decimal"
+                      title={err('montant') || undefined}
                       value={l.montant} placeholder="0,00" aria-label={`Montant, ligne ${i + 1}`}
                       onChange={(e) => modifierLigne(l.cle, 'montant', e.target.value)} />
                   </td>
@@ -147,11 +172,16 @@ export default function SaisiePiece() {
                       onClick={() => retirerLigne(l.cle)} disabled={lignes.length <= 1}>×</button>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
           <div className="ajout-ligne">
             <button type="button" className="bouton-texte" onClick={ajouterLigne}>+ Ajouter une ligne</button>
+            <span className="champ-aide">
+              Au moins un débit et un crédit · montants &gt; 0 avec 2 décimales max · centre de coûts obligatoire
+              en classe 6, possible en classe 7, non applicable aux comptes de bilan (classes 1 à 5).
+            </span>
           </div>
         </div>
 

@@ -26,4 +26,18 @@ public interface ExerciceRepository extends JpaRepository<Exercice, Long> {
 
     /** Liste triée par année décroissante pour l'affichage. */
     java.util.List<Exercice> findAllByOrderByAnneeDesc();
+
+    /** Deux exercices ne peuvent pas se chevaucher : existe-t-il un exercice qui recoupe [debut ; fin] ? */
+    @org.springframework.data.jpa.repository.Query("""
+            SELECT COUNT(e) > 0 FROM Exercice e
+            WHERE e.dateDebut <= :fin AND e.dateFin >= :debut
+              AND (:idExclu IS NULL OR e.id <> :idExclu)
+            """)
+    boolean chevauche(LocalDate debut, LocalDate fin, Long idExclu);
+
+    /** Reste-t-il un exercice antérieur non clôturé ? (clôture dans l'ordre chronologique) */
+    boolean existsByDateFinBeforeAndClotureFalse(LocalDate date);
+
+    /** Exercice d'une année donnée (pour savoir si son budget est encore modifiable). */
+    Optional<Exercice> findByAnnee(int annee);
 }

@@ -38,28 +38,15 @@ public class FournisseurService {
     }
 
     public FournisseurResponse create(FournisseurRequest request) {
-        validerDonnees(request);
         Fournisseur f = new Fournisseur();
-        f.setNom(request.nom().trim());
-        f.setIce(nettoyer(request.ice()));
-        f.setEmail(nettoyer(request.email()));
-        f.setTelephone(nettoyer(request.telephone()));
-        f.setRib(nettoyer(request.rib()));
-
+        appliquer(f, request, null);
         Fournisseur enregistre = fournisseurRepository.save(f);
         return FournisseurResponse.de(enregistre);
     }
 
     public FournisseurResponse update(Long id, FournisseurRequest request) {
         Fournisseur f = getFournisseurOuErreur(id);
-        validerDonnees(request);
-
-        f.setNom(request.nom().trim());
-        f.setIce(nettoyer(request.ice()));
-        f.setEmail(nettoyer(request.email()));
-        f.setTelephone(nettoyer(request.telephone()));
-        f.setRib(nettoyer(request.rib()));
-
+        appliquer(f, request, id);
         Fournisseur misAJour = fournisseurRepository.save(f);
         return FournisseurResponse.de(misAJour);
     }
@@ -78,25 +65,23 @@ public class FournisseurService {
                 .orElseThrow(() -> new RessourceIntrouvableException("Fournisseur introuvable (id = " + id + ")."));
     }
 
-    private void validerDonnees(FournisseurRequest request) {
-        if (request == null || request.nom() == null || request.nom().isBlank()) {
-            throw new RegleMetierException("Le nom du fournisseur est obligatoire.");
+    /**
+     * Contrôle puis recopie les données saisies (règles dans ReglesTiers).
+     * @param idExclu id du fournisseur modifié (null à la création), pour le contrôle d'unicité de l'ICE
+     */
+    private void appliquer(Fournisseur f, FournisseurRequest request, Long idExclu) {
+        if (request == null) {
+            throw new RegleMetierException("Aucune donnée reçue.");
         }
-        if (request.nom().trim().length() > 150) {
-            throw new RegleMetierException("Le nom ne doit pas dépasser 150 caractères.");
+        String ice = ReglesTiers.ice(request.ice());
+        if (ice != null && (idExclu == null ? fournisseurRepository.existsByIce(ice)
+                : fournisseurRepository.existsByIceAndIdNot(ice, idExclu))) {
+            throw new ConflitMetierException("ice", "Un fournisseur avec l'ICE « " + ice + " » existe déjà.");
         }
-        if (request.rib() != null && !request.rib().isBlank()) {
-            String rib = request.rib().trim();
-            if (!rib.matches("^[0-9]{24}$")) {
-                throw new RegleMetierException("Le RIB doit comporter exactement 24 chiffres.");
-            }
-        }
-    }
-
-    private String nettoyer(String valeur) {
-        if (valeur == null || valeur.isBlank()) {
-            return null;
-        }
-        return valeur.trim();
+        f.setNom(ReglesTiers.nom(request.nom(), "fournisseur"));
+        f.setIce(ice);
+        f.setEmail(ReglesTiers.email(request.email()));
+        f.setTelephone(ReglesTiers.telephone(request.telephone()));
+        f.setRib(ReglesTiers.rib(request.rib()));
     }
 }

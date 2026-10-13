@@ -52,7 +52,7 @@ public class CentreCoutService {
         String libelle = verifierLibelle(donnees);
 
         if (centreCoutRepository.existsByCode(code)) {
-            throw new ConflitMetierException("Le code « " + code + " » existe déjà.");
+            throw new ConflitMetierException("code", "Le code « " + code + " » existe déjà.");
         }
 
         CentreCout centre = new CentreCout(code, libelle, donnees.isPrincipal());
@@ -66,7 +66,7 @@ public class CentreCoutService {
 
         // Unicité en excluant le centre modifié lui-même.
         if (centreCoutRepository.existsByCodeAndIdNot(code, id)) {
-            throw new ConflitMetierException("Le code « " + code + " » est déjà utilisé par un autre centre.");
+            throw new ConflitMetierException("code", "Le code « " + code + " » est déjà utilisé par un autre centre.");
         }
 
         centre.setCode(code);
@@ -93,14 +93,14 @@ public class CentreCoutService {
     /** Règle : code obligatoire, 2 à 10 caractères (lettres majuscules, chiffres et underscore). */
     private String verifierCode(CentreCout donnees) {
         if (donnees == null || donnees.getCode() == null || donnees.getCode().isBlank()) {
-            throw new RegleMetierException("Le code du centre de coûts est obligatoire.");
+            throw new RegleMetierException("code", "Le code du centre de coûts est obligatoire.");
         }
         String code = donnees.getCode().trim().toUpperCase();
         if (code.length() < CODE_LONGUEUR_MIN || code.length() > CODE_LONGUEUR_MAX) {
-            throw new RegleMetierException("Le code doit comporter entre " + CODE_LONGUEUR_MIN + " et " + CODE_LONGUEUR_MAX + " caractères.");
+            throw new RegleMetierException("code", "Le code doit comporter entre " + CODE_LONGUEUR_MIN + " et " + CODE_LONGUEUR_MAX + " caractères.");
         }
         if (!code.matches("^[A-Z0-9_]{2,10}$")) {
-            throw new RegleMetierException("Le code ne doit contenir que des lettres majuscules, des chiffres et le caractère de soulignement.");
+            throw new RegleMetierException("code", "Le code ne doit contenir que des lettres majuscules, des chiffres et le caractère de soulignement.");
         }
         return code;
     }
@@ -108,11 +108,11 @@ public class CentreCoutService {
     /** Règle : libellé obligatoire, 100 caractères max. */
     private String verifierLibelle(CentreCout donnees) {
         if (donnees == null || donnees.getLibelle() == null || donnees.getLibelle().isBlank()) {
-            throw new RegleMetierException("Le libellé du centre de coûts est obligatoire.");
+            throw new RegleMetierException("libelle", "Le libellé du centre de coûts est obligatoire.");
         }
         String libelle = donnees.getLibelle().trim();
         if (libelle.length() > LIBELLE_LONGUEUR_MAX) {
-            throw new RegleMetierException("Le libellé ne doit pas dépasser " + LIBELLE_LONGUEUR_MAX + " caractères.");
+            throw new RegleMetierException("libelle", "Le libellé ne doit pas dépasser " + LIBELLE_LONGUEUR_MAX + " caractères.");
         }
         return libelle;
     }

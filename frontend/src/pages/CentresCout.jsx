@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { listerCentres, creerCentre, modifierCentre, supprimerCentre } from '../services/centreCoutApi';
-import { messageErreur } from '../services/api';
+import { erreursParChamp, messageErreur } from '../services/api';
 import MessageErreur from '../components/MessageErreur';
 import Chargement from '../components/Chargement';
 import Icone from '../components/Icone';
@@ -19,6 +19,7 @@ export default function CentresCout() {
   const [centreEnCours, setCentreEnCours] = useState(null); // null = création
   const [formulaire, setFormulaire] = useState({ code: '', libelle: '', principal: true });
   const [erreursChamps, setErreursChamps] = useState({});
+  const [erreurModale, setErreurModale] = useState('');
   const [chargementAction, setChargementAction] = useState(false);
 
   // Modale suppression
@@ -47,6 +48,7 @@ export default function CentresCout() {
     setCentreEnCours(null);
     setFormulaire({ code: '', libelle: '', principal: true });
     setErreursChamps({});
+    setErreurModale('');
     setModaleOuverte(true);
   }
 
@@ -54,6 +56,7 @@ export default function CentresCout() {
     setCentreEnCours(c);
     setFormulaire({ code: c.code, libelle: c.libelle, principal: c.principal });
     setErreursChamps({});
+    setErreurModale('');
     setModaleOuverte(true);
   }
 
@@ -105,7 +108,8 @@ export default function CentresCout() {
       }
       setModaleOuverte(false);
     } catch (err) {
-      setErreur(messageErreur(err));
+      setErreursChamps((prev) => ({ ...prev, ...erreursParChamp(err) }));
+      setErreurModale(messageErreur(err));
     } finally {
       setChargementAction(false);
     }
@@ -266,6 +270,7 @@ export default function CentresCout() {
 
             <form onSubmit={enregistrer}>
               <div className="modale-corps">
+                <MessageErreur message={erreurModale} onFermer={() => setErreurModale('')} />
                 <div className="champ">
                   <label className="champ-label" htmlFor="centre-code">
                     Code du centre <span style={{ color: 'var(--corail)' }}>*</span>

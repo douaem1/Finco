@@ -46,7 +46,7 @@ public class CompteGeneralService {
         String libelle = validerLibelle(request.libelle());
 
         if (compteGeneralRepository.existsByNumero(numero)) {
-            throw new ConflitMetierException("Le numéro de compte « " + numero + " » existe déjà.");
+            throw new ConflitMetierException("numero", "Le numéro de compte « " + numero + " » existe déjà.");
         }
 
         int classe = calculerClasse(numero);
@@ -63,11 +63,11 @@ public class CompteGeneralService {
         boolean numeroChange = !compte.getNumero().equals(nouveauNumero);
         if (numeroChange) {
             if (ligneEcritureRepository.existsByCompteId(id)) {
-                throw new ConflitMetierException("Le compte « " + compte.getNumero()
+                throw new ConflitMetierException("numero", "Le compte « " + compte.getNumero()
                         + " » est utilisé dans des écritures comptables : modification de son numéro impossible.");
             }
             if (compteGeneralRepository.existsByNumeroAndIdNot(nouveauNumero, id)) {
-                throw new ConflitMetierException("Le numéro de compte « " + nouveauNumero + " » est déjà utilisé par un autre compte.");
+                throw new ConflitMetierException("numero", "Le numéro de compte « " + nouveauNumero + " » est déjà utilisé par un autre compte.");
             }
         }
 
@@ -95,22 +95,22 @@ public class CompteGeneralService {
 
     private String validerNumero(String numero) {
         if (numero == null || numero.isBlank()) {
-            throw new RegleMetierException("Le numéro de compte est obligatoire.");
+            throw new RegleMetierException("numero", "Le numéro de compte est obligatoire.");
         }
         String nettoye = numero.trim();
         if (!nettoye.matches("^[1-8][0-9]{1,9}$")) {
-            throw new RegleMetierException("Le numéro de compte doit comporter entre 2 et 10 chiffres et commencer par un chiffre entre 1 et 8.");
+            throw new RegleMetierException("numero", "Le numéro de compte doit comporter entre 2 et 10 chiffres et commencer par un chiffre entre 1 et 8.");
         }
         return nettoye;
     }
 
     private String validerLibelle(String libelle) {
         if (libelle == null || libelle.isBlank()) {
-            throw new RegleMetierException("Le libellé du compte est obligatoire.");
+            throw new RegleMetierException("libelle", "Le libellé du compte est obligatoire.");
         }
         String nettoye = libelle.trim();
         if (nettoye.length() > 150) {
-            throw new RegleMetierException("Le libellé ne doit pas dépasser 150 caractères.");
+            throw new RegleMetierException("libelle", "Le libellé ne doit pas dépasser 150 caractères.");
         }
         return nettoye;
     }

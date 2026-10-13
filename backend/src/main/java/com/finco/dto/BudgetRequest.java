@@ -18,7 +18,7 @@ public record BudgetRequest(
         @DecimalMin(value = "0.00", inclusive = true, message = "Le montant prévu doit être supérieur ou égal à zéro.")
         BigDecimal montantPrevu,
 
-        @NotNull(message = "L'identifiant du centre de coûts est obligatoire.")
+        @NotNull(message = "Le centre de coûts est obligatoire.")
         Long centreCoutId
 ) {
 }

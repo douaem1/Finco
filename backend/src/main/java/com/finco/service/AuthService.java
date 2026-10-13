@@ -55,6 +55,9 @@ public class AuthService {
             throw new RegleMetierException("L'email et le mot de passe sont obligatoires.");
         }
         String email = normaliserEmail(requete.email());
+        if (!email.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            throw new RegleMetierException("email", "Adresse email invalide (ex. prenom.nom@entreprise.ma).");
+        }
 
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, requete.motDePasse()));
 
