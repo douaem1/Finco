@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { estRouteAutorisee, pageAccueilPourRole } from '../config/roleAccess';
 import { demanderCode, renvoyerCode } from '../services/authApi';
 import { messageErreur } from '../services/api';
 import { minutesSecondes } from '../utils/format';
@@ -17,7 +18,7 @@ import SaisieCode from '../components/SaisieCode';
    ============================================================ */
 
 export default function Login() {
-  const { finaliserConnexion, estConnecte } = useAuth();
+  const { finaliserConnexion, estConnecte, role } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [params] = useSearchParams();
@@ -40,7 +41,7 @@ export default function Login() {
     return () => clearInterval(minuterie);
   }, [etape]);
 
-  if (estConnecte) return <Navigate to="/pieces/nouvelle" replace />;
+  if (estConnecte) return <Navigate to={pageAccueilPourRole(role)} replace />;
 
   function recevoirOtp(reponse) {
     const t = Date.now();
@@ -66,8 +67,12 @@ export default function Login() {
     e.preventDefault();
     setErreur(''); setInfo(''); setEnvoi(true);
     try {
-      await finaliserConnexion(otp.jetonOtp, code);
-      navigate(location.state?.depuis || '/pieces/nouvelle', { replace: true });
+      const utilisateur = await finaliserConnexion(otp.jetonOtp, code);
+      const userRole = utilisateur?.role;
+      const pageParDefaut = pageAccueilPourRole(userRole);
+      const depuis = location.state?.depuis;
+      const destination = (depuis && estRouteAutorisee(depuis, userRole)) ? depuis : pageParDefaut;
+      navigate(destination, { replace: true });
     } catch (err) {
       setErreur(messageErreur(err)); // ex. « Code incorrect. Il vous reste 3 essais. »
       setCode('');

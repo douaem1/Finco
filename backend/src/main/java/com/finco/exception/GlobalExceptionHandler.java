@@ -25,6 +25,23 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    /** Conflit métier (ex. code/numéro déjà existant, suppression avec dépendances) -> 409 Conflict. */
+    @ExceptionHandler(ConflitMetierException.class)
+    public ResponseEntity<ErreurResponse> conflitMetier(ConflitMetierException e) {
+        return reponse(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    /** Données invalides détectées par @Valid -> 400 Bad Request. */
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    public ResponseEntity<ErreurResponse> validation(org.springframework.web.bind.MethodArgumentNotValidException e) {
+        java.util.List<String> erreurs = e.getBindingResult().getFieldErrors().stream()
+                .map(erreur -> erreur.getField() + " : " + (erreur.getDefaultMessage() != null ? erreur.getDefaultMessage() : "valeur invalide"))
+                .toList();
+        String messagePremier = !erreurs.isEmpty() ? erreurs.get(0) : "Données de formulaire invalides.";
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErreurResponse(messagePremier, HttpStatus.BAD_REQUEST.value(), null, erreurs));
+    }
+
     /** Règle métier violée -> 400 Bad Request. */
     @ExceptionHandler(RegleMetierException.class)
     public ResponseEntity<ErreurResponse> regleMetier(RegleMetierException e) {

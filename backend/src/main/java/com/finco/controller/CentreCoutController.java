@@ -43,9 +43,10 @@ public class CentreCoutController {
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public CentreCout ajouter(@RequestBody CentreCout centre) {
-        return centreCoutService.create(centre);
+    public org.springframework.http.ResponseEntity<CentreCout> ajouter(@RequestBody CentreCout centre) {
+        CentreCout cree = centreCoutService.create(centre);
+        java.net.URI uri = java.net.URI.create("/api/centres-cout/" + cree.getId());
+        return org.springframework.http.ResponseEntity.created(uri).body(cree);
     }
 
     @PutMapping("/{id}")

@@ -42,4 +42,7 @@ public interface PieceComptableRepository extends JpaRepository<PieceComptable, 
             WHERE p.id = :id
             """)
     Optional<PieceComptable> findAvecLignes(Long id);
+
+    /** Vérifie si des pièces existent pour un exercice donné (protection avant suppression). */
+    boolean existsByExerciceId(Long exerciceId);
 }

@@ -53,16 +53,11 @@ public class DonneesInitiales implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        if (utilisateurRepository.count() == 0) {
-            String hache = passwordEncoder.encode(MOT_DE_PASSE_DEMO);
-            // new Utilisateur(nom, prénom, email, mot de passe haché, rôle)
-            utilisateurRepository.saveAll(List.of(
-                    new Utilisateur("Alami", "Karim", "admin@finco.ma", hache, Role.ADMIN),
-                    new Utilisateur("Bennani", "Sara", "comptable@finco.ma", hache, Role.COMPTABLE),
-                    new Utilisateur("Tazi", "Youssef", "controleur@finco.ma", hache, Role.CONTROLEUR),
-                    new Utilisateur("El Idrissi", "Nadia", "daf@finco.ma", hache, Role.DIRECTEUR_FINANCIER)));
-            log.info("Utilisateurs de démonstration créés (mot de passe : {}).", MOT_DE_PASSE_DEMO);
-        }
+        String hache = passwordEncoder.encode(MOT_DE_PASSE_DEMO);
+        garantirUtilisateur("Alami", "Karim", "admin@finco.ma", Role.ADMIN, hache);
+        garantirUtilisateur("Bennani", "Sara", "comptable@finco.ma", Role.COMPTABLE, hache);
+        garantirUtilisateur("Tazi", "Youssef", "controleur@finco.ma", Role.CONTROLEUR, hache);
+        garantirUtilisateur("El Idrissi", "Nadia", "daf@finco.ma", Role.DIRECTEUR_FINANCIER, hache);
 
         if (compteRepository.count() == 0) {
             compteRepository.saveAll(List.of(
@@ -93,6 +88,13 @@ public class DonneesInitiales implements CommandLineRunner {
                     new CentreCout("COM", "Commercial", true),
                     new CentreCout("DIR", "Direction", true)));
             log.info("Centres de coûts de démonstration créés.");
+        }
+    }
+
+    private void garantirUtilisateur(String nom, String prenom, String email, Role role, String motDePasseHache) {
+        if (!utilisateurRepository.existsByEmail(email)) {
+            utilisateurRepository.save(new Utilisateur(nom, prenom, email, motDePasseHache, role));
+            log.info("Utilisateur de démonstration « {} » ({}) créé.", email, role);
         }
     }
 }

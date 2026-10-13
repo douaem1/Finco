@@ -1,0 +1,1262 @@
+{
+  "info": {
+    "_postman_id": "finco-full-crud-collection",
+    "name": "FinCo - API REST (Tiers, Plan Comptable, Centres de Coûts)",
+    "description": "Collection Postman pour tester l'authentification et les trois CRUD complets de FinCo (Tiers, Plan comptable, Centres de coûts).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0-Authentification",
+      "item": [
+        {
+          "name": "1. Login - Comptable",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test('Jeton OTP généré', function () {",
+                  "    pm.expect(data.jetonOtp).to.be.a('string');",
+                  "});",
+                  "pm.environment.set('jetonOtp', data.jetonOtp);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailComptable}}\",\n  \"motDePasse\": \"{{motDePasseComptable}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "2. Vérifier OTP - Comptable",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test('JWT et rôle COMPTABLE retournés', function () {",
+                  "    pm.expect(data.token).to.be.a('string');",
+                  "    pm.expect(data.utilisateur.role).to.eql('COMPTABLE');",
+                  "});",
+                  "pm.environment.set('tokenComptable', data.token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jetonOtp\": \"{{jetonOtp}}\",\n  \"code\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/verifier-otp",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "verifier-otp"]
+            }
+          }
+        },
+        {
+          "name": "3. Login - Contrôleur",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.environment.set('jetonOtp', data.jetonOtp);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailControleur}}\",\n  \"motDePasse\": \"{{motDePasseControleur}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "4. Vérifier OTP - Contrôleur",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test('JWT et rôle CONTROLEUR retournés', function () {",
+                  "    pm.expect(data.token).to.be.a('string');",
+                  "    pm.expect(data.utilisateur.role).to.eql('CONTROLEUR');",
+                  "});",
+                  "pm.environment.set('tokenControleur', data.token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jetonOtp\": \"{{jetonOtp}}\",\n  \"code\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/verifier-otp",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "verifier-otp"]
+            }
+          }
+        },
+        {
+          "name": "5. Login - Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.environment.set('jetonOtp', data.jetonOtp);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailAdmin}}\",\n  \"motDePasse\": \"{{motDePasseAdmin}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "6. Vérifier OTP - Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test('JWT et rôle ADMIN retournés', function () {",
+                  "    pm.expect(data.token).to.be.a('string');",
+                  "    pm.expect(data.utilisateur.role).to.eql('ADMIN');",
+                  "});",
+                  "pm.environment.set('tokenAdmin', data.token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jetonOtp\": \"{{jetonOtp}}\",\n  \"code\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/verifier-otp",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "verifier-otp"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "1-Tiers",
+      "item": [
+        {
+          "name": "Fournisseurs",
+          "item": [
+            {
+              "name": "Lister les fournisseurs (200 OK)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Code HTTP 200 OK', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test('Tableau JSON retourné', function () {",
+                      "    pm.expect(pm.response.json()).to.be.an('array');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{tokenComptable}}" }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/fournisseurs",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "fournisseurs"]
+                }
+              }
+            },
+            {
+              "name": "Créer un fournisseur (201 Created)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Code HTTP 201 Created', function () {",
+                      "    pm.response.to.have.status(201);",
+                      "});",
+                      "pm.test('En-tête Location présent', function () {",
+                      "    pm.expect(pm.response.headers.get('Location')).to.include('/api/fournisseurs/');",
+                      "});",
+                      "var data = pm.response.json();",
+                      "pm.environment.set('fournisseurId', data.id);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{tokenComptable}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nom\": \"Fournisseur Test SARL\",\n  \"ice\": \"001524368000085\",\n  \"email\": \"contact@fournisseur-test.ma\",\n  \"telephone\": \"0522112233\",\n  \"rib\": \"011780000012345678901234\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/fournisseurs",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "fournisseurs"]
+                }
+              }
+            },
+            {
+              "name": "Consulter un fournisseur par ID (200 OK)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Code HTTP 200 OK', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "var data = pm.response.json();",
+                      "pm.expect(data.id).to.eql(Number(pm.environment.get('fournisseurId')));"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{tokenComptable}}" }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/fournisseurs/{{fournisseurId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "fournisseurs", "{{fournisseurId}}"]
+                }
+              }
+            },
+            {
+              "name": "Modifier un fournisseur (200 OK)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Code HTTP 200 OK', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "var data = pm.response.json();",
+                      "pm.expect(data.nom).to.eql('Fournisseur Test SARL - Modifié');"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{tokenComptable}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nom\": \"Fournisseur Test SARL - Modifié\",\n  \"ice\": \"001524368000085\",\n  \"email\": \"modifie@fournisseur-test.ma\",\n  \"telephone\": \"0522998877\",\n  \"rib\": \"011780000012345678901234\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/fournisseurs/{{fournisseurId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "fournisseurs", "{{fournisseurId}}"]
+                }
+              }
+            },
+            {
+              "name": "Erreur 400 - Validation RIB invalide (moins de 24 chiffres)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Code HTTP 400 Bad Request', function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{tokenComptable}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nom\": \"Fournisseur Invalide\",\n  \"rib\": \"12345\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/fournisseurs",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "fournisseurs"]
+                }
+              }
+            },
+            {
+              "name": "Erreur 404 - Fournisseur inexistant",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Code HTTP 404 Not Found', function () {",
+                      "    pm.response.to.have.status(404);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{tokenComptable}}" }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/fournisseurs/999999",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "fournisseurs", "999999"]
+                }
+              }
+            },
+            {
+              "name": "Erreur 403 - Création interdite par non-comptable (Contrôleur)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Code HTTP 403 Forbidden', function () {",
+                      "    pm.response.to.have.status(403);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{tokenControleur}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nom\": \"Tentative Non Autorisée\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/fournisseurs",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "fournisseurs"]
+                }
+              }
+            },
+            {
+              "name": "Supprimer un fournisseur (204 No Content)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Code HTTP 204 No Content', function () {",
+                      "    pm.response.to.have.status(204);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{tokenComptable}}" }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/fournisseurs/{{fournisseurId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "fournisseurs", "{{fournisseurId}}"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Clients",
+          "item": [
+            {
+              "name": "Lister les clients (200 OK)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Code HTTP 200 OK', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{tokenComptable}}" }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/clients",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "clients"]
+                }
+              }
+            },
+            {
+              "name": "Créer un client (201 Created)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Code HTTP 201 Created', function () {",
+                      "    pm.response.to.have.status(201);",
+                      "});",
+                      "var data = pm.response.json();",
+                      "pm.environment.set('clientId', data.id);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{tokenComptable}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nom\": \"Client Test SA\",\n  \"ice\": \"002134567890123\",\n  \"email\": \"facturation@client-test.ma\",\n  \"telephone\": \"0537112233\",\n  \"plafondCredit\": 250000.00\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/clients",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "clients"]
+                }
+              }
+            },
+            {
+              "name": "Consulter un client par ID (200 OK)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Code HTTP 200 OK', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{tokenComptable}}" }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/clients/{{clientId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "clients", "{{clientId}}"]
+                }
+              }
+            },
+            {
+              "name": "Modifier un client (200 OK)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Code HTTP 200 OK', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "var data = pm.response.json();",
+                      "pm.expect(data.plafondCredit).to.eql(300000);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{tokenComptable}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nom\": \"Client Test SA - Modifié\",\n  \"ice\": \"002134567890123\",\n  \"email\": \"facturation@client-test.ma\",\n  \"telephone\": \"0537112233\",\n  \"plafondCredit\": 300000.00\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/clients/{{clientId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "clients", "{{clientId}}"]
+                }
+              }
+            },
+            {
+              "name": "Erreur 400 - Validation Plafond crédit négatif",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Code HTTP 400 Bad Request', function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{tokenComptable}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nom\": \"Client Plafond Négatif\",\n  \"plafondCredit\": -500.00\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/clients",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "clients"]
+                }
+              }
+            },
+            {
+              "name": "Erreur 404 - Client inexistant",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Code HTTP 404 Not Found', function () {",
+                      "    pm.response.to.have.status(404);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{tokenComptable}}" }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/clients/999999",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "clients", "999999"]
+                }
+              }
+            },
+            {
+              "name": "Supprimer un client (204 No Content)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Code HTTP 204 No Content', function () {",
+                      "    pm.response.to.have.status(204);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{tokenComptable}}" }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/clients/{{clientId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "clients", "{{clientId}}"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2-Plan comptable",
+      "item": [
+        {
+          "name": "Lister les comptes généraux (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Tableau JSON', function () {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenComptable}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/comptes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "comptes"]
+            }
+          }
+        },
+        {
+          "name": "Créer un compte général (201 Created)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.test('Classe calculée à 6', function () {",
+                  "    pm.expect(data.classe).to.eql(6);",
+                  "});",
+                  "pm.environment.set('compteId', data.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"6145\",\n  \"libelle\": \"Frais postaux et télécommunications\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/comptes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "comptes"]
+            }
+          }
+        },
+        {
+          "name": "Consulter un compte par ID (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenComptable}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/comptes/{{compteId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "comptes", "{{compteId}}"]
+            }
+          }
+        },
+        {
+          "name": "Modifier un compte général (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.expect(data.libelle).to.eql('Frais postaux et de télécommunication');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+                ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"6145\",\n  \"libelle\": \"Frais postaux et de télécommunication\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/comptes/{{compteId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "comptes", "{{compteId}}"]
+            }
+          }
+        },
+        {
+          "name": "Erreur 400 - Numéro de compte invalide (commence par 9)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"9110\",\n  \"libelle\": \"Compte Hors CGNC\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/comptes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "comptes"]
+            }
+          }
+        },
+        {
+          "name": "Erreur 404 - Compte inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 404 Not Found', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/comptes/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "comptes", "999999"]
+            }
+          }
+        },
+        {
+          "name": "Erreur 409 - Conflit numéro de compte déjà existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 409 Conflict', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"6111\",\n  \"libelle\": \"Achats\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/comptes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "comptes"]
+            }
+          }
+        },
+        {
+          "name": "Erreur 403 - Création interdite par non-admin (Comptable)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 403 Forbidden', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenComptable}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"6199\",\n  \"libelle\": \"Autre charge\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/comptes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "comptes"]
+            }
+          }
+        },
+        {
+          "name": "Supprimer un compte général (204 No Content)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 204 No Content', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/comptes/{{compteId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "comptes", "{{compteId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3-Centres de coûts",
+      "item": [
+        {
+          "name": "Lister les centres de coûts (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Tableau JSON', function () {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenComptable}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/centres-cout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "centres-cout"]
+            }
+          }
+        },
+        {
+          "name": "Créer un centre de coûts (201 Created)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.environment.set('centreId', data.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenControleur}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"LOG_NORD\",\n  \"libelle\": \"Plateforme logistique Nord\",\n  \"principal\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/centres-cout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "centres-cout"]
+            }
+          }
+        },
+        {
+          "name": "Consulter un centre par ID (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenControleur}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/centres-cout/{{centreId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "centres-cout", "{{centreId}}"]
+            }
+          }
+        },
+        {
+          "name": "Modifier un centre de coûts (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var data = pm.response.json();",
+                  "pm.expect(data.libelle).to.eql('Plateforme logistique Tanger Med');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenControleur}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"LOG_NORD\",\n  \"libelle\": \"Plateforme logistique Tanger Med\",\n  \"principal\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/centres-cout/{{centreId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "centres-cout", "{{centreId}}"]
+            }
+          }
+        },
+        {
+          "name": "Erreur 400 - Code de centre invalide",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenControleur}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"c-1!\",\n  \"libelle\": \"Invalide\",\n  \"principal\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/centres-cout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "centres-cout"]
+            }
+          }
+        },
+        {
+          "name": "Erreur 404 - Centre inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 404 Not Found', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenControleur}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/centres-cout/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "centres-cout", "999999"]
+            }
+          }
+        },
+        {
+          "name": "Erreur 409 - Conflit code déjà existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 409 Conflict', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenControleur}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"ADM\",\n  \"libelle\": \"Administration Doublon\",\n  \"principal\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/centres-cout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "centres-cout"]
+            }
+          }
+        },
+        {
+          "name": "Erreur 403 - Création interdite par non-contrôleur (Comptable)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 403 Forbidden', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenComptable}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"FRAUDE\",\n  \"libelle\": \"Non permis\",\n  \"principal\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/centres-cout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "centres-cout"]
+            }
+          }
+        },
+        {
+          "name": "Supprimer un centre de coûts (204 No Content)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Code HTTP 204 No Content', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenControleur}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/centres-cout/{{centreId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "centres-cout", "{{centreId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -452,3 +452,103 @@ input[type='number'].input::-webkit-inner-spin-button { -webkit-appearance: none
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* ---------- onglets ---------- */
+.onglets { display: flex; gap: 8px; border-bottom: var(--trait); margin-bottom: 22px; }
+.onglet {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px; border: var(--trait); border-bottom: none;
+  border-radius: var(--rayon) var(--rayon) 0 0;
+  background: var(--papier); color: var(--muet);
+  font: 600 0.92rem var(--sans); cursor: pointer;
+  transition: all 0.18s ease-out;
+  position: relative; bottom: -1.5px;
+}
+.onglet:hover:not(.actif) { background: var(--creme); color: var(--encre); }
+.onglet.actif {
+  background: var(--creme); color: var(--encre);
+  border-bottom: 1.5px solid var(--creme);
+  box-shadow: 2px -2px 0 var(--encre);
+}
+
+/* ---------- badges et boutons d'actions ---------- */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 999px; border: 1px solid var(--encre);
+  font-size: 0.78rem; font-weight: 700; white-space: nowrap;
+}
+.badge-classe { background: var(--lilas-pale); color: var(--encre); }
+.badge-principal { background: var(--sarcelle-pale); color: var(--encre); }
+.badge-auxiliaire { background: var(--jaune-pale); color: var(--encre); }
+.badge-rib { font-family: monospace; font-size: 0.8rem; background: var(--creme); padding: 2px 6px; border-radius: 4px; border: 1px dashed var(--ligne-forte); }
+
+.actions-cell { display: inline-flex; align-items: center; gap: 6px; }
+.btn-action {
+  display: inline-grid; place-items: center;
+  width: 32px; height: 32px; border-radius: 6px;
+  border: 1.5px solid var(--ligne-forte); background: var(--papier);
+  color: var(--encre); cursor: pointer;
+  transition: all 0.15s ease-out;
+}
+.btn-action:hover:not(:disabled) {
+  border-color: var(--encre); background: var(--jaune-pale);
+  transform: translate(-1px, -1px); box-shadow: 2px 2px 0 var(--encre);
+}
+.btn-action-supprimer:hover:not(:disabled) {
+  background: var(--corail-pale); border-color: var(--encre);
+}
+.btn-action:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ---------- modale de saisie / dialogue ---------- */
+.modale-fond {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(34, 29, 22, 0.55); backdrop-filter: blur(4px);
+  display: grid; place-items: center; padding: 20px;
+  animation: apparition 0.2s ease-out;
+}
+.modale-boite {
+  width: min(540px, 100%); max-height: 90vh; overflow-y: auto;
+  background: var(--papier); border: var(--trait); border-radius: var(--rayon-grand);
+  box-shadow: 6px 6px 0 var(--encre);
+  display: flex; flex-direction: column;
+}
+.modale-entete {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 18px 24px; border-bottom: var(--trait); background: var(--creme);
+}
+.modale-entete h2 { font: 600 1.25rem var(--titre); }
+.modale-corps { padding: 24px; display: grid; gap: 16px; }
+.modale-pied {
+  display: flex; justify-content: flex-end; align-items: center; gap: 12px;
+  padding: 16px 24px; border-top: var(--trait); background: var(--creme);
+}
+.champ-erreur { font-size: 0.8rem; color: var(--corail); font-weight: 600; margin-top: 2px; }
+.input-erreur { border-color: var(--corail) !important; box-shadow: 2px 2px 0 var(--corail) !important; }
+
+/* ---------- badges génériques (statuts) ---------- */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 10px; border-radius: 20px;
+  font-size: 0.78rem; font-weight: 600; letter-spacing: 0.02em;
+  border: 1.5px solid var(--encre);
+}
+.badge-succes { background: var(--sarcelle-pale); color: var(--encre); }
+.badge-neutre { background: var(--creme); color: var(--muet); }
+.badge-avertissement { background: var(--jaune-pale); color: var(--encre); }
+.badge-erreur { background: var(--corail-pale); color: var(--encre); }
+
+/* ---------- badge code technique (monospace) ---------- */
+.badge-code {
+  font-family: monospace; font-size: 0.83rem; font-weight: 700;
+  background: var(--encre); color: var(--papier);
+  padding: 1px 7px; border-radius: 4px; letter-spacing: 0.04em;
+}
+
+/* ---------- message de succès ---------- */
+.message-succes {
+  padding: 10px 16px; margin-bottom: 16px;
+  background: var(--sarcelle-pale); border: 1.5px solid var(--encre);
+  border-radius: var(--rayon); font-weight: 600; font-size: 0.9rem;
+  color: var(--encre);
+}
+

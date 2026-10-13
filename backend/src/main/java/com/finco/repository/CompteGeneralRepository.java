@@ -12,4 +12,8 @@ public interface CompteGeneralRepository extends JpaRepository<CompteGeneral, Lo
 
     /** Plan comptable trié par numéro (pour la liste déroulante de saisie). */
     List<CompteGeneral> findAllByOrderByNumeroAsc();
+
+    boolean existsByNumero(String numero);
+
+    boolean existsByNumeroAndIdNot(String numero, Long id);
 }

@@ -10,4 +10,7 @@ public interface LigneEcritureRepository extends JpaRepository<LigneEcriture, Lo
 
     /** Un centre de coûts est-il déjà utilisé dans une écriture ? (avant suppression) */
     boolean existsByCentreCoutId(Long centreCoutId);
+
+    /** Un compte général est-il déjà utilisé dans une écriture ? (avant modification/suppression) */
+    boolean existsByCompteId(Long compteId);
 }

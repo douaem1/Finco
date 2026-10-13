@@ -17,4 +17,13 @@ public interface ExerciceRepository extends JpaRepository<Exercice, Long> {
      * On passe la même date deux fois.
      */
     Optional<Exercice> findFirstByDateDebutLessThanEqualAndDateFinGreaterThanEqual(LocalDate date1, LocalDate date2);
+
+    /** Vérifie l'unicité de l'année à la création. */
+    boolean existsByAnnee(int annee);
+
+    /** Vérifie l'unicité de l'année à la modification (exclut l'id courant). */
+    boolean existsByAnneeAndIdNot(int annee, Long id);
+
+    /** Liste triée par année décroissante pour l'affichage. */
+    java.util.List<Exercice> findAllByOrderByAnneeDesc();
 }

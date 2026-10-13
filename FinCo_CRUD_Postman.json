@@ -1,0 +1,1022 @@
+{
+  "info": {
+    "name": "FinCo API — Collection Complète CRUD (Tiers, Plan Comptable, Centres de Coûts, Exercices, Budgets)",
+    "_postman_id": "finco-exercices-budgets-v1",
+    "description": "Collection Postman exhaustive pour tester toutes les fonctionnalités CRUD de FinCo : Authentification OTP, Tiers (Clients & Fournisseurs), Plan Comptable (Comptes Généraux), Centres de Coûts, Exercices Comptables et Budgets CO.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8081/api",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "exercice_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "budget_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "centre_cout_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "compte_id",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "0. Authentification",
+      "item": [
+        {
+          "name": "1. Login (email + mot de passe)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const r = pm.response.json();",
+                  "if (r.token) { pm.collectionVariables.set('jwt_token', r.token); }",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"comptable@finco.ma\",\n  \"motDePasse\": \"Finco2026!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "2. Vérifier OTP (récupérer JWT final)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const r = pm.response.json();",
+                  "if (r.token) { pm.collectionVariables.set('jwt_token', r.token); }",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"comptable@finco.ma\",\n  \"code\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/verifier-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "verifier-otp"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Exercices comptables",
+      "item": [
+        {
+          "name": "GET — Lister tous les exercices",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Réponse tableau', () => pm.expect(pm.response.json()).to.be.an('array'));",
+                  "const ex = pm.response.json();",
+                  "if (ex.length > 0) { pm.collectionVariables.set('exercice_id', ex[0].id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/exercices",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "exercices"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET — Obtenir un exercice par ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Contient annee', () => pm.expect(pm.response.json()).to.have.property('annee'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/exercices/{{exercice_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "exercices",
+                "{{exercice_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST — Créer un exercice",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const r = pm.response.json();",
+                  "pm.test('Annee correcte', () => pm.expect(r.annee).to.eql(2027));",
+                  "pm.collectionVariables.set('exercice_id', r.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"annee\": 2027,\n  \"dateDebut\": \"2027-01-01\",\n  \"dateFin\": \"2027-12-31\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/exercices",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "exercices"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST — Créer un exercice (erreur : année en double)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409 Conflict', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"annee\": 2027,\n  \"dateDebut\": \"2027-01-01\",\n  \"dateFin\": \"2027-12-31\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/exercices",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "exercices"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST — Créer un exercice (erreur : dates invalides)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 Bad Request', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"annee\": 2028,\n  \"dateDebut\": \"2028-12-31\",\n  \"dateFin\": \"2028-01-01\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/exercices",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "exercices"
+              ]
+            }
+          }
+        },
+        {
+          "name": "PUT — Modifier un exercice",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Annee correcte', () => pm.expect(pm.response.json().annee).to.eql(2027));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"annee\": 2027,\n  \"dateDebut\": \"2027-01-15\",\n  \"dateFin\": \"2027-12-31\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/exercices/{{exercice_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "exercices",
+                "{{exercice_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "PATCH — Clôturer un exercice",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('cloture = true', () => pm.expect(pm.response.json().cloture).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{base_url}}/exercices/{{exercice_id}}/cloturer",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "exercices",
+                "{{exercice_id}}",
+                "cloturer"
+              ]
+            }
+          }
+        },
+        {
+          "name": "PATCH — Clôturer deux fois (erreur métier)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{base_url}}/exercices/{{exercice_id}}/cloturer",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "exercices",
+                "{{exercice_id}}",
+                "cloturer"
+              ]
+            }
+          }
+        },
+        {
+          "name": "DELETE — Supprimer un exercice",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/exercices/{{exercice_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "exercices",
+                "{{exercice_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET — Exercice introuvable (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/exercices/99999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "exercices",
+                "99999"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Budgets CO",
+      "item": [
+        {
+          "name": "GET — Lister tous les budgets",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Réponse tableau', () => pm.expect(pm.response.json()).to.be.an('array'));",
+                  "const b = pm.response.json();",
+                  "if (b.length > 0) { pm.collectionVariables.set('budget_id', b[0].id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/budgets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "budgets"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET — Budgets d'un centre de coûts",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Réponse tableau', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/budgets/centre/{{centre_cout_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "budgets",
+                "centre",
+                "{{centre_cout_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET — Obtenir un budget par ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Contient montantPrevu', () => pm.expect(pm.response.json()).to.have.property('montantPrevu'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/budgets/{{budget_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "budgets",
+                "{{budget_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST — Créer un budget",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const r = pm.response.json();",
+                  "pm.test('Annee correcte', () => pm.expect(r.annee).to.eql(2026));",
+                  "pm.collectionVariables.set('budget_id', r.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"annee\": 2026,\n  \"montantPrevu\": 500000.00,\n  \"centreCoutId\": {{centre_cout_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/budgets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "budgets"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST — Créer un budget (erreur : doublon centre+année)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409 Conflict', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"annee\": 2026,\n  \"montantPrevu\": 750000.00,\n  \"centreCoutId\": {{centre_cout_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/budgets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "budgets"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST — Créer un budget (erreur : montant négatif)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 Bad Request', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"annee\": 2026,\n  \"montantPrevu\": -1000.00,\n  \"centreCoutId\": {{centre_cout_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/budgets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "budgets"
+              ]
+            }
+          }
+        },
+        {
+          "name": "PUT — Modifier un budget",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Montant mis à jour', () => pm.expect(pm.response.json().montantPrevu).to.eql(600000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"annee\": 2026,\n  \"montantPrevu\": 600000.00,\n  \"centreCoutId\": {{centre_cout_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/budgets/{{budget_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "budgets",
+                "{{budget_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "DELETE — Supprimer un budget",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/budgets/{{budget_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "budgets",
+                "{{budget_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Tiers (Fournisseurs & Clients)",
+      "item": [
+        {
+          "name": "GET — Lister les fournisseurs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Réponse tableau', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/fournisseurs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "fournisseurs"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET — Lister les clients",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/clients",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clients"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST — Créer un fournisseur",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Maroc Telecom\",\n  \"ice\": \"001234567000089\",\n  \"email\": \"contact@maroctelecom.ma\",\n  \"telephone\": \"05 22 00 00 00\",\n  \"rib\": \"011780000012345678901234\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/fournisseurs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "fournisseurs"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST — Créer un client",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Atlas Distribution SARL\",\n  \"ice\": \"009876543000012\",\n  \"email\": \"direction@atlas-dist.ma\",\n  \"telephone\": \"05 37 00 00 00\",\n  \"plafondCredit\": 150000.00\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/clients",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clients"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Plan Comptable (Comptes Généraux)",
+      "item": [
+        {
+          "name": "GET — Lister les comptes",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/comptes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "comptes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET — Obtenir un compte par ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/comptes/{{compte_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "comptes",
+                "{{compte_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST — Créer un compte général (6148)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"6148\",\n  \"libelle\": \"Frais de formation du personnel\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/comptes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "comptes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "PUT — Modifier un compte général",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"6148\",\n  \"libelle\": \"Frais de formation et perfectionnement\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/comptes/{{compte_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "comptes",
+                "{{compte_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "DELETE — Supprimer un compte général",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/comptes/{{compte_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "comptes",
+                "{{compte_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Centres de Coûts",
+      "item": [
+        {
+          "name": "GET — Lister les centres",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/centres-cout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "centres-cout"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET — Obtenir un centre par ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/centres-cout/{{centre_cout_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "centres-cout",
+                "{{centre_cout_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST — Créer un centre de coûts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"RND\",\n  \"libelle\": \"Recherche et Innovation\",\n  \"principal\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/centres-cout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "centres-cout"
+              ]
+            }
+          }
+        },
+        {
+          "name": "PUT — Modifier un centre de coûts",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"RND\",\n  \"libelle\": \"R et D et Innovation\",\n  \"principal\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/centres-cout/{{centre_cout_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "centres-cout",
+                "{{centre_cout_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "DELETE — Supprimer un centre de coûts",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/centres-cout/{{centre_cout_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "centres-cout",
+                "{{centre_cout_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

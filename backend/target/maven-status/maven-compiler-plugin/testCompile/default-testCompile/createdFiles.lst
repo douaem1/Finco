@@ -1,0 +1,6 @@
+com\finco\controller\TestControllerTest.class
+com\finco\service\FournisseurServiceTest.class
+com\finco\service\ClientServiceTest.class
+com\finco\service\EnvoiEmailServiceTest.class
+com\finco\service\CentreCoutServiceTest.class
+com\finco\service\CompteGeneralServiceTest.class
