@@ -12,4 +12,6 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> 
 
     /** SELECT * FROM utilisateur WHERE email = ? — utilisé à la connexion. */
     Optional<Utilisateur> findByEmail(String email);
+
+    boolean existsByEmail(String email);
 }

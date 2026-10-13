@@ -22,3 +22,9 @@ export async function listerComptes() {
   const { data } = await api.get('/comptes');
   return data;
 }
+
+/** Valide une pièce en brouillon (le serveur refuse si l'exercice est clôturé). */
+export async function validerPiece(id) {
+  const { data } = await api.patch(`/pieces/${id}/valider`);
+  return data;
+}

@@ -5,6 +5,7 @@ import {
   useScroll, useSpring, useTransform,
 } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { pageAccueilPourRole } from '../config/roleAccess';
 import { API_URL } from '../services/api';
 import Logo from '../components/Logo';
 import { EcritureAnimee } from '../components/Balance';
@@ -169,7 +170,7 @@ function CycleComptable() {
 }
 
 export default function Accueil() {
-  const { estConnecte } = useAuth();
+  const { estConnecte, role } = useAuth();
   const reduit = useReducedMotion();
   const [etatApi, setEtatApi] = useState('verification');
   const [defile, setDefile] = useState(false);
@@ -225,7 +226,8 @@ export default function Accueil() {
     sourisY.set(e.clientY - r.top);
   }
 
-  const lienEspace = estConnecte ? '/pieces/nouvelle' : '/login';
+  // Chaque rôle arrive dans SON espace (comptable, contrôleur, admin, direction).
+  const lienEspace = estConnecte ? pageAccueilPourRole(role) : '/login';
   const texteEspace = estConnecte ? 'Ouvrir mon espace' : 'Se connecter';
 
   return (

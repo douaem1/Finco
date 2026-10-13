@@ -25,10 +25,29 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    /** Conflit métier (ex. code/numéro déjà existant, suppression avec dépendances) -> 409 Conflict. */
+    @ExceptionHandler(ConflitMetierException.class)
+    public ResponseEntity<ErreurResponse> conflitMetier(ConflitMetierException e) {
+        return reponse(HttpStatus.CONFLICT, e.getMessage(), e.getChamp());
+    }
+
+    /** Données invalides détectées par @Valid -> 400 Bad Request. */
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    public ResponseEntity<ErreurResponse> validation(org.springframework.web.bind.MethodArgumentNotValidException e) {
+        // Un message lisible par champ (le premier trouvé pour chaque champ), sans nom technique.
+        java.util.Map<String, String> champs = new java.util.LinkedHashMap<>();
+        e.getBindingResult().getFieldErrors().forEach(erreur -> champs.putIfAbsent(erreur.getField(),
+                erreur.getDefaultMessage() != null ? erreur.getDefaultMessage() : "Valeur invalide."));
+        java.util.List<String> erreurs = java.util.List.copyOf(champs.values());
+        String messagePremier = !erreurs.isEmpty() ? erreurs.get(0) : "Données de formulaire invalides.";
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErreurResponse(messagePremier, HttpStatus.BAD_REQUEST.value(), null, erreurs, champs));
+    }
+
     /** Règle métier violée -> 400 Bad Request. */
     @ExceptionHandler(RegleMetierException.class)
     public ResponseEntity<ErreurResponse> regleMetier(RegleMetierException e) {
-        return reponse(HttpStatus.BAD_REQUEST, e.getMessage());
+        return reponse(HttpStatus.BAD_REQUEST, e.getMessage(), e.getChamp());
     }
 
     /** Élément introuvable -> 404 Not Found. */
@@ -89,5 +108,11 @@ public class GlobalExceptionHandler {
 
     private ResponseEntity<ErreurResponse> reponse(HttpStatus statut, String message) {
         return ResponseEntity.status(statut).body(new ErreurResponse(message));
+    }
+
+    /** Variante qui rattache le message à un champ du formulaire (si connu). */
+    private ResponseEntity<ErreurResponse> reponse(HttpStatus statut, String message, String champ) {
+        java.util.Map<String, String> champs = champ == null ? null : java.util.Map.of(champ, message);
+        return ResponseEntity.status(statut).body(new ErreurResponse(message, null, null, null, champs));
     }
 }

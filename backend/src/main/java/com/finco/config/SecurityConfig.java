@@ -34,9 +34,6 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
 
-    private static final String[] ROLES_SAISIE_COMPTABLE = {"COMPTABLE", "ADMIN"};
-    private static final String[] ROLES_CONTROLE_GESTION = {"CONTROLEUR", "ADMIN"};
-
     /**
      * Règles d'accès de l'API. Les Beans JwtAuthFilter et ReponsesSecuriteJson
      * sont injectés en paramètres de la méthode par le conteneur.
@@ -61,13 +58,35 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/test", "/error").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/verifier-otp", "/api/auth/renvoyer-otp").permitAll()
-                        // Saisie d'écritures : comptable ou admin
-                        .requestMatchers(HttpMethod.POST, "/api/pieces/**").hasAnyRole(ROLES_SAISIE_COMPTABLE)
-                        // Gestion des centres de coûts : contrôleur de gestion ou admin
-                        .requestMatchers(HttpMethod.POST, "/api/centres-cout/**").hasAnyRole(ROLES_CONTROLE_GESTION)
-                        .requestMatchers(HttpMethod.PUT, "/api/centres-cout/**").hasAnyRole(ROLES_CONTROLE_GESTION)
-                        .requestMatchers(HttpMethod.DELETE, "/api/centres-cout/**").hasAnyRole(ROLES_CONTROLE_GESTION)
-                        // Tout le reste (consultations) : il suffit d'être connecté
+
+                        // Module COMPTABILITÉ FINANCIÈRE (COMPTABLE uniquement) :
+                        // Écritures et journal des pièces
+                        .requestMatchers("/api/pieces/**").hasRole("COMPTABLE")
+                        // Tiers (clients et fournisseurs)
+                        .requestMatchers("/api/fournisseurs/**", "/api/clients/**").hasRole("COMPTABLE")
+                        // Exercices comptables (clôture de période)
+                        .requestMatchers("/api/exercices/**").hasRole("COMPTABLE")
+
+                        // Module CONTRÔLE DE GESTION (CONTROLEUR uniquement) :
+                        // Écriture centres de coûts (CUD)
+                        .requestMatchers(HttpMethod.POST, "/api/centres-cout/**").hasRole("CONTROLEUR")
+                        .requestMatchers(HttpMethod.PUT, "/api/centres-cout/**").hasRole("CONTROLEUR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/centres-cout/**").hasRole("CONTROLEUR")
+                        // Budgets CO (gestion complète)
+                        .requestMatchers("/api/budgets/**").hasRole("CONTROLEUR")
+
+                        // Module ADMINISTRATION (ADMIN uniquement) :
+                        // Écriture plan comptable (CUD comptes généraux)
+                        .requestMatchers(HttpMethod.POST, "/api/comptes/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/comptes/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/comptes/**").hasRole("ADMIN")
+
+                        // Consultations transversales (nécessaires pour les listes déroulantes de la saisie d'écritures) :
+                        // Lecture des comptes généraux et des centres de coûts : tout utilisateur authentifié
+                        .requestMatchers(HttpMethod.GET, "/api/comptes/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/centres-cout/**").authenticated()
+
+                        // Tout le reste (profil /api/auth/me, etc.) : authentifié
                         .anyRequest().authenticated())
                 // Notre filtre JWT passe avant le filtre standard login/mot de passe.
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
@@ -107,7 +126,7 @@ public class SecurityConfig {
             @Value("${app.cors.allowed-origin:http://localhost:5173}") String origineAutorisee) {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(origineAutorisee));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

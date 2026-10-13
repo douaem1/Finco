@@ -33,6 +33,10 @@ public class Exercice {
     @Column(nullable = false)
     private boolean cloture;
 
+    @jakarta.persistence.ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
+    @jakarta.persistence.JoinColumn(name = "societe_id")
+    private Societe societe;
+
     public Exercice() {
     }
 
@@ -42,7 +46,15 @@ public class Exercice {
         this.dateFin = dateFin;
     }
 
+    public Exercice(int annee, LocalDate dateDebut, LocalDate dateFin, Societe societe) {
+        this.annee = annee;
+        this.dateDebut = dateDebut;
+        this.dateFin = dateFin;
+        this.societe = societe;
+    }
+
     public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
     public int getAnnee() { return annee; }
     public void setAnnee(int annee) { this.annee = annee; }
     public LocalDate getDateDebut() { return dateDebut; }
@@ -51,4 +63,6 @@ public class Exercice {
     public void setDateFin(LocalDate dateFin) { this.dateFin = dateFin; }
     public boolean isCloture() { return cloture; }
     public void setCloture(boolean cloture) { this.cloture = cloture; }
+    public Societe getSociete() { return societe; }
+    public void setSociete(Societe societe) { this.societe = societe; }
 }

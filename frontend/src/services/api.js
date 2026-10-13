@@ -54,4 +54,12 @@ export function messageErreur(erreur) {
   return 'Une erreur inattendue est survenue.';
 }
 
+/**
+ * Erreurs rattachées à un champ, renvoyées par le serveur ({ "champs": { "ice": "..." } }).
+ * Permet d'encadrer en rouge le champ fautif du formulaire.
+ */
+export function erreursParChamp(erreur) {
+  return erreur?.response?.data?.champs || {};
+}
+
 export default api;

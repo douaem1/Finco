@@ -75,7 +75,7 @@ public class OtpService {
      */
     public Utilisateur verifier(String jeton, String code) {
         if (code == null || !code.trim().matches("\\d{6}")) {
-            throw new RegleMetierException("Le code doit contenir 6 chiffres.");
+            throw new RegleMetierException("code", "Le code doit contenir 6 chiffres.");
         }
         CodeOtp otp = trouverActif(jeton);
 

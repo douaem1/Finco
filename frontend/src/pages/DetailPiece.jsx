@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { obtenirPiece } from '../services/ecritureApi';
+import { obtenirPiece, validerPiece } from '../services/ecritureApi';
 import { messageErreur } from '../services/api';
 import { dateFr, montant } from '../utils/format';
 import MessageErreur from '../components/MessageErreur';
@@ -12,16 +12,34 @@ export default function DetailPiece() {
   const location = useLocation();
   const [piece, setPiece] = useState(null);
   const [erreur, setErreur] = useState('');
+  const [succes, setSucces] = useState(location.state?.succes || '');
+  const [validation, setValidation] = useState(false);
 
   useEffect(() => {
     obtenirPiece(id).then(setPiece).catch((e) => setErreur(messageErreur(e)));
   }, [id]);
 
+  /** Brouillon -> validée : la pièce entre dans la balance et n'est plus modifiable. */
+  async function valider() {
+    setErreur('');
+    setSucces('');
+    setValidation(true);
+    try {
+      const validee = await validerPiece(piece.id);
+      setPiece(validee);
+      setSucces(`Écriture ${validee.numero} validée : elle est désormais définitive.`);
+    } catch (e) {
+      setErreur(messageErreur(e));
+    } finally {
+      setValidation(false);
+    }
+  }
+
   return (
     <section>
       <Link to="/pieces" className="lien-retour">Retour au journal</Link>
 
-      {location.state?.succes && <p className="message-succes" role="status">{location.state.succes}</p>}
+      {succes && <p className="message-succes" role="status">{succes}</p>}
       <MessageErreur message={erreur} />
       {!piece && !erreur && <Chargement />}
 
@@ -69,6 +87,14 @@ export default function DetailPiece() {
 
           <div className="document-pied">
             <Balance debit={Number(piece.totalDebit)} credit={Number(piece.totalCredit)} compacte />
+            {!piece.validee && (
+              <div className="actions">
+                <span className="champ-aide">Une pièce validée entre dans la balance et ne peut plus être modifiée.</span>
+                <button type="button" className="btn btn-primaire" onClick={valider} disabled={validation}>
+                  {validation ? 'Validation…' : 'Valider l’écriture'}
+                </button>
+              </div>
+            )}
           </div>
         </article>
       )}

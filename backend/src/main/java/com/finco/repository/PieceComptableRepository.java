@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,4 +43,15 @@ public interface PieceComptableRepository extends JpaRepository<PieceComptable, 
             WHERE p.id = :id
             """)
     Optional<PieceComptable> findAvecLignes(Long id);
+
+    /** Vérifie si des pièces existent pour un exercice donné (protection avant suppression). */
+    boolean existsByExerciceId(Long exerciceId);
+
+    /** Reste-t-il des pièces en brouillon dans l'exercice ? (bloque la clôture) */
+    boolean existsByExerciceIdAndValideeFalse(Long exerciceId);
+
+    /** Des pièces de l'exercice tomberaient-elles hors des nouvelles dates ? */
+    boolean existsByExerciceIdAndDateEcritureBefore(Long exerciceId, LocalDate date);
+
+    boolean existsByExerciceIdAndDateEcritureAfter(Long exerciceId, LocalDate date);
 }
