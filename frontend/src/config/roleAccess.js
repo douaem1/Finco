@@ -120,7 +120,15 @@ export const PAGES = [
     dansMenu: true,
     end: false,
   },
-  // TODO [ADMIN] : /utilisateurs -> Gérer les utilisateurs
+  {
+    path: '/utilisateurs',
+    libelle: 'Utilisateurs',
+    icone: 'utilisateurs',
+    section: 'Administration',
+    roles: [ROLES.ADMIN],
+    dansMenu: true,
+    end: false,
+  },
 
   // ==========================================
   // MODULE DIRECTION FINANCIÈRE (DIRECTEUR_FINANCIER)

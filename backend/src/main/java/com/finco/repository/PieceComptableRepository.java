@@ -54,4 +54,6 @@ public interface PieceComptableRepository extends JpaRepository<PieceComptable, 
     boolean existsByExerciceIdAndDateEcritureBefore(Long exerciceId, LocalDate date);
 
     boolean existsByExerciceIdAndDateEcritureAfter(Long exerciceId, LocalDate date);
+
+    boolean existsByUtilisateurId(Long utilisateurId);
 }

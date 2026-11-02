@@ -110,6 +110,8 @@ a { color: inherit; }
 
 /* ---------- champs ---------- */
 .champ { display: grid; gap: 7px; }
+.grille-formulaire { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.case-a-cocher { display: flex; align-items: center; gap: 8px; font-size: .9rem; }
 .champ-label { font-size: 0.84rem; font-weight: 600; }
 .champ-aide { font-size: 0.8rem; color: var(--muet); }
 .input {
@@ -537,6 +539,7 @@ input[type='number'].input::-webkit-inner-spin-button { -webkit-appearance: none
   border: 1.5px solid var(--encre);
 }
 .badge-succes { background: var(--sarcelle-pale); color: var(--encre); }
+.badge-inactif { background: var(--corail-pale); color: var(--encre); }
 .badge-neutre { background: var(--creme); color: var(--muet); }
 .badge-avertissement { background: var(--jaune-pale); color: var(--encre); }
 .badge-erreur { background: var(--corail-pale); color: var(--encre); }
@@ -555,4 +558,3 @@ input[type='number'].input::-webkit-inner-spin-button { -webkit-appearance: none
   border-radius: var(--rayon); font-weight: 600; font-size: 0.9rem;
   color: var(--encre);
 }
-

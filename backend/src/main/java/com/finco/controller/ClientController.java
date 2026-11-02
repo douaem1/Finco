@@ -51,6 +51,7 @@ public class ClientController {
         return clientService.update(id, request);
     }
 
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void supprimer(@PathVariable Long id) {
