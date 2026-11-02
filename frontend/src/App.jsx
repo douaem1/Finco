@@ -10,6 +10,7 @@ import CentresCout from './pages/CentresCout.jsx';
 import Exercices from './pages/Exercices.jsx';
 import Budgets from './pages/Budgets.jsx';
 import EspaceDaf from './pages/EspaceDaf.jsx';
+import Utilisateurs from './pages/Utilisateurs.jsx';
 import RouteProtegee from './components/RouteProtegee.jsx';
 import MiseEnPageApp from './components/MiseEnPageApp.jsx';
 import { useAuth } from './context/AuthContext.jsx';
@@ -46,6 +47,7 @@ export default function App() {
 
           {/* Module Administration (ADMIN) */}
           <Route path="/comptes" element={<PlanComptable />} />
+          <Route path="/utilisateurs" element={<Utilisateurs />} />
 
           {/* Module Direction financière (DIRECTEUR_FINANCIER) */}
           <Route path="/direction" element={<EspaceDaf />} />

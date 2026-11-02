@@ -61,6 +61,7 @@ public class SecurityConfig {
 
                         // Module COMPTABILITÉ FINANCIÈRE (COMPTABLE uniquement) :
                         // Écritures et journal des pièces
+                        .requestMatchers(HttpMethod.GET, "/api/pieces/**").hasAnyRole("COMPTABLE", "DIRECTEUR_FINANCIER")
                         .requestMatchers("/api/pieces/**").hasRole("COMPTABLE")
                         // Tiers (clients et fournisseurs)
                         .requestMatchers("/api/fournisseurs/**", "/api/clients/**").hasRole("COMPTABLE")
@@ -80,6 +81,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/comptes/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/comptes/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/comptes/**").hasRole("ADMIN")
+                        .requestMatchers("/api/utilisateurs/**").hasRole("ADMIN")
+                        .requestMatchers("/api/paiements/**").hasRole("DIRECTEUR_FINANCIER")
 
                         // Consultations transversales (nécessaires pour les listes déroulantes de la saisie d'écritures) :
                         // Lecture des comptes généraux et des centres de coûts : tout utilisateur authentifié
