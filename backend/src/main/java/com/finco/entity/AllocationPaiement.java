@@ -1,40 +1,37 @@
 package com.finco.entity;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 
 import java.math.BigDecimal;
 
 /**
- * Entité d'allocation d'un paiement sur une facture (table allocation_paiement).
+ * Entité d'allocation d'un paiement sur une facture (table paiement_facture).
  * Permet à un paiement de régler plusieurs factures et à une facture d'être réglée en plusieurs fois.
  */
 @Entity
-@Table(name = "allocation_paiement", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_allocation_paiement_facture", columnNames = {"paiement_id", "facture_id"})
-})
+@Table(name = "paiement_facture")
 public class AllocationPaiement {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @EmbeddedId
+    private AllocationPaiementId id = new AllocationPaiementId();
 
     @Column(name = "montant_affecte", nullable = false, precision = 15, scale = 2)
     private BigDecimal montantAffecte;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @MapsId("paiementId")
     @JoinColumn(name = "paiement_id", nullable = false)
     private Paiement paiement;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @MapsId("factureId")
     @JoinColumn(name = "facture_id", nullable = false)
     private Facture facture;
 
@@ -45,13 +42,14 @@ public class AllocationPaiement {
         this.montantAffecte = montantAffecte;
         this.paiement = paiement;
         this.facture = facture;
+        this.id = new AllocationPaiementId(paiement.getId(), facture.getId());
     }
 
-    public Long getId() {
+    public AllocationPaiementId getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(AllocationPaiementId id) {
         this.id = id;
     }
 
@@ -69,6 +67,7 @@ public class AllocationPaiement {
 
     public void setPaiement(Paiement paiement) {
         this.paiement = paiement;
+        this.id.setPaiementId(paiement.getId());
     }
 
     public Facture getFacture() {
@@ -77,5 +76,6 @@ public class AllocationPaiement {
 
     public void setFacture(Facture facture) {
         this.facture = facture;
+        this.id.setFactureId(facture.getId());
     }
 }

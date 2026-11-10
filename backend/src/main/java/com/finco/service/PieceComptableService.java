@@ -81,6 +81,11 @@ public class PieceComptableService {
                 .orElseThrow(() -> new RessourceIntrouvableException("Pièce comptable introuvable (id = " + id + ")."));
     }
 
+    public PieceComptable findEntity(Long id) {
+        return pieceRepository.findAvecLignes(id)
+                .orElseThrow(() -> new RessourceIntrouvableException("Pièce comptable introuvable (id = " + id + ")."));
+    }
+
     /**
      * Enregistre une nouvelle écriture, en brouillon (validee = false).
      * @param emailSaisisseur email de l'utilisateur connecté (issu du jeton JWT), fourni par le controller

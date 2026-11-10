@@ -4,8 +4,6 @@ import com.finco.dto.PaiementDirectionResponse;
 import com.finco.service.PaiementDirectionService;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/paiements")
 public class PaiementDirectionController {
@@ -13,11 +11,6 @@ public class PaiementDirectionController {
 
     public PaiementDirectionController(PaiementDirectionService service) {
         this.service = service;
-    }
-
-    @GetMapping
-    public List<PaiementDirectionResponse> lister() {
-        return service.lister();
     }
 
     @PutMapping("/{id}/valider")

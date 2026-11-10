@@ -300,6 +300,21 @@ input[type='number'].input::-webkit-inner-spin-button { -webkit-appearance: none
 .date-du-jour::first-letter { text-transform: uppercase; }
 
 .panneau, .carte { background: var(--papier); border: var(--trait); border-radius: var(--rayon-grand); box-shadow: var(--ombre); }
+.panneau-actions, .filtre-rapport { padding: 18px 22px; }
+.panneau-actions { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
+.panneau-actions > div { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.filtre-rapport { display: grid; grid-template-columns: minmax(220px, 1fr) repeat(2, minmax(160px, 220px)); gap: 16px; margin-bottom: 20px; }
+.filtre-annee { width: 140px; }
+.grille-formulaire { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.ligne-allocation { display: grid; grid-template-columns: minmax(0, 1fr) minmax(130px, 0.6fr) auto; gap: 8px; align-items: center; margin: 8px 0; }
+.lien-bouton { padding: 0; border: 0; background: none; color: var(--encre); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
+.graphe-rapport { grid-template-columns: repeat(12, minmax(0, 1fr)); margin-bottom: 24px; }
+.graphe-rapport .graphe-colonne { display: flex; position: relative; align-items: flex-end; justify-content: center; gap: 3px; }
+.graphe-rapport .graphe-barre { flex: 1; min-width: 4px; min-height: 2px; }
+.graphe-rapport .graphe-barre-secondaire { background: var(--lilas-pale); }
+.graphe-rapport .graphe-jour { position: absolute; right: 0; bottom: -22px; left: 0; }
+.legende-point { display: inline-block; width: 9px; height: 9px; margin: 0 5px 0 10px; border-radius: 50%; background: var(--sarcelle); }
+.legende-point-secondaire { background: var(--lilas-pale); border: 1px solid var(--ligne-forte); }
 .carte { padding: 22px 24px; }
 .carte + .carte, .grille-tdb + .carte { margin-top: 22px; }
 .carte-entete { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; }
@@ -421,6 +436,8 @@ input[type='number'].input::-webkit-inner-spin-button { -webkit-appearance: none
 @media (max-width: 1100px) {
   .kpis { grid-template-columns: 1fr 1fr; }
   .grille-tdb { grid-template-columns: 1fr; }
+  .filtre-rapport { grid-template-columns: 1fr 1fr; }
+  .filtre-rapport .champ:first-child { grid-column: 1 / -1; }
 }
 @media (max-width: 960px) {
   .connexion { grid-template-columns: 1fr; }
@@ -452,6 +469,10 @@ input[type='number'].input::-webkit-inner-spin-button { -webkit-appearance: none
   .kpi { padding: 14px; }
   .kpi-valeur { font-size: 1.5rem; }
   .graphe-barres { gap: 4px; height: 150px; }
+  .grille-formulaire, .filtre-rapport { grid-template-columns: 1fr; }
+  .filtre-rapport .champ:first-child { grid-column: auto; }
+  .ligne-allocation { grid-template-columns: 1fr auto; }
+  .ligne-allocation select { grid-column: 1 / -1; }
   .ecriture-lignes { font-size: 0.8rem; }
   .ecriture-lignes li { grid-template-columns: 1fr auto 72px 72px; gap: 6px; }
 }

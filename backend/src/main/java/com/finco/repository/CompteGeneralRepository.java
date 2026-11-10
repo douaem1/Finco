@@ -16,4 +16,6 @@ public interface CompteGeneralRepository extends JpaRepository<CompteGeneral, Lo
     boolean existsByNumero(String numero);
 
     boolean existsByNumeroAndIdNot(String numero, Long id);
+
+    java.util.Optional<CompteGeneral> findByNumero(String numero);
 }
