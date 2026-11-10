@@ -50,12 +50,13 @@ public class CentreCoutService {
     public CentreCout create(CentreCout donnees) {
         String code = verifierCode(donnees);
         String libelle = verifierLibelle(donnees);
+        java.math.BigDecimal cleRepartition = verifierCleRepartition(donnees);
 
         if (centreCoutRepository.existsByCode(code)) {
             throw new ConflitMetierException("code", "Le code « " + code + " » existe déjà.");
         }
 
-        CentreCout centre = new CentreCout(code, libelle, donnees.isPrincipal());
+        CentreCout centre = new CentreCout(code, libelle, donnees.isPrincipal(), cleRepartition);
         return centreCoutRepository.save(centre);
     }
 
@@ -63,6 +64,7 @@ public class CentreCoutService {
         CentreCout centre = findById(id);
         String code = verifierCode(donnees);
         String libelle = verifierLibelle(donnees);
+        java.math.BigDecimal cleRepartition = verifierCleRepartition(donnees);
 
         // Unicité en excluant le centre modifié lui-même.
         if (centreCoutRepository.existsByCodeAndIdNot(code, id)) {
@@ -72,6 +74,7 @@ public class CentreCoutService {
         centre.setCode(code);
         centre.setLibelle(libelle);
         centre.setPrincipal(donnees.isPrincipal());
+        centre.setCleRepartition(cleRepartition);
         return centreCoutRepository.save(centre);
     }
 
@@ -115,5 +118,15 @@ public class CentreCoutService {
             throw new RegleMetierException("libelle", "Le libellé ne doit pas dépasser " + LIBELLE_LONGUEUR_MAX + " caractères.");
         }
         return libelle;
+    }
+
+    private java.math.BigDecimal verifierCleRepartition(CentreCout donnees) {
+        java.math.BigDecimal cle = donnees == null || donnees.getCleRepartition() == null
+                ? java.math.BigDecimal.ZERO : donnees.getCleRepartition();
+        if (cle.signum() < 0 || cle.scale() > 2 || cle.precision() - cle.scale() > 8) {
+            throw new RegleMetierException("cleRepartition",
+                    "La clé de répartition doit être positive et comporter au plus deux décimales.");
+        }
+        return cle.setScale(2);
     }
 }

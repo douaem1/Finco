@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -82,11 +83,11 @@ public class DonneesInitiales implements CommandLineRunner {
 
         if (centreCoutRepository.count() == 0) {
             centreCoutRepository.saveAll(List.of(
-                    new CentreCout("ADM", "Administration", false),
-                    new CentreCout("BAT", "Bâtiments (loyer)", false),
-                    new CentreCout("PROD", "Production", true),
-                    new CentreCout("COM", "Commercial", true),
-                    new CentreCout("DIR", "Direction", true)));
+                    new CentreCout("ADM", "Administration", false, BigDecimal.ZERO),
+                    new CentreCout("BAT", "Bâtiments (loyer)", false, BigDecimal.ZERO),
+                    new CentreCout("PROD", "Production", true, new BigDecimal("600.00")),
+                    new CentreCout("COM", "Commercial", true, new BigDecimal("250.00")),
+                    new CentreCout("DIR", "Direction", true, new BigDecimal("150.00"))));
             log.info("Centres de coûts de démonstration créés.");
         }
     }

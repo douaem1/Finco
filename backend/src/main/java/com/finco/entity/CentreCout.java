@@ -7,6 +7,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import java.math.BigDecimal;
+
 /**
  * Entité JPA « Centre de coûts » (module CO - contrôle de gestion).
  *
@@ -41,6 +43,9 @@ public class CentreCout {
     @Column(name = "principal", nullable = false)
     private boolean principal;
 
+    @Column(name = "cle_repartition", nullable = false, precision = 10, scale = 2)
+    private BigDecimal cleRepartition = BigDecimal.ZERO;
+
     /** Constructeur sans argument : obligatoire pour JPA/Hibernate. */
     public CentreCout() {
     }
@@ -49,6 +54,14 @@ public class CentreCout {
         this.code = code;
         this.libelle = libelle;
         this.principal = principal;
+        this.cleRepartition = BigDecimal.ZERO;
+    }
+
+    public CentreCout(String code, String libelle, boolean principal, BigDecimal cleRepartition) {
+        this.code = code;
+        this.libelle = libelle;
+        this.principal = principal;
+        this.cleRepartition = cleRepartition;
     }
 
     public Long getId() {
@@ -81,5 +94,13 @@ public class CentreCout {
 
     public void setPrincipal(boolean principal) {
         this.principal = principal;
+    }
+
+    public BigDecimal getCleRepartition() {
+        return cleRepartition;
+    }
+
+    public void setCleRepartition(BigDecimal cleRepartition) {
+        this.cleRepartition = cleRepartition;
     }
 }

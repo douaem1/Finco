@@ -10,7 +10,7 @@ Ce document décrit l'ensemble des endpoints REST disponibles dans l'application
 - Java 21 (ou JDK 17 minimum)
 - Maven 3.8+
 - Node.js 18+ et npm
-- MySQL 8 en cours d'exécution sur le port 3306 (base `finco`)
+- MySQL 8 en cours d'exécution sur le port 3306 (base `finco_db`)
 
 ### Démarrage du Backend (port 8081)
 Depuis la racine du projet :
@@ -38,7 +38,7 @@ FinCo utilise une authentification à deux facteurs :
 2. **Étape 2 (`POST /api/auth/verifier-otp`)** : Saisie du code à 6 chiffres.
 
 > **Note relative au code OTP en développement :**
-> Si aucun serveur SMTP externe n'est configuré dans `application.properties`, le code OTP à 6 chiffres est automatiquement affiché dans les logs console du backend :
+> Si le profil `local` n'est pas activé avec une configuration SMTP, le code OTP à 6 chiffres est automatiquement affiché dans les logs console du backend :
 > ```text
 > ================================================================
 >  [MODE DÉVELOPPEMENT] Aucun serveur email configuré.
@@ -51,10 +51,10 @@ FinCo utilise une authentification à deux facteurs :
 
 | Rôle | Email | Mot de passe | Espace (page d'arrivée) |
 |---|---|---|---|
-| **COMPTABLE** | `comptable@finco.ma` | `admin123` | Journal, Saisie d'écriture, Tiers, Exercices (`/pieces`) |
-| **CONTROLEUR** | `controleur@finco.ma` | `admin123` | Centres de coûts, Budgets CO (`/centres-cout`) |
-| **ADMIN** | `admin@finco.ma` | `admin123` | Plan comptable (`/comptes`) |
-| **DIRECTEUR_FINANCIER** | `daf@finco.ma` | `admin123` | Espace Direction (`/direction`) |
+| **COMPTABLE** | `comptable@finco.ma` | `admin123` | Journal, saisie, tiers, factures, paiements, grand livre (`/pieces`) |
+| **CONTROLEUR** | `controleur@finco.ma` | `admin123` | Centres de coûts, budgets, répartitions, rapports analytiques (`/centres-cout`) |
+| **ADMIN** | `admin@finco.ma` | `admin123` | Plan comptable, utilisateurs (`/comptes`) |
+| **DIRECTEUR_FINANCIER** | `daf@finco.ma` | `admin123` | Tableau de bord, validation des paiements (`/tableau-de-bord`) |
 
 ---
 
@@ -67,17 +67,23 @@ Un rôle non autorisé reçoit `403 Forbidden` ; une requête sans jeton reçoit
 |---|---|---|---|
 | **Auth** | POST | `/api/auth/login`, `/api/auth/verifier-otp`, `/api/auth/renvoyer-otp` | Public |
 | **Auth** | GET | `/api/auth/me` | Tout utilisateur authentifié |
-| **Écritures** | GET | `/api/pieces`, `/api/pieces/{id}` | `COMPTABLE` |
+| **Écritures** | GET | `/api/pieces`, `/api/pieces/{id}` | `COMPTABLE`, `DIRECTEUR_FINANCIER` |
 | **Écritures** | POST | `/api/pieces` | `COMPTABLE` |
 | **Écritures** | PATCH | `/api/pieces/{id}/valider` | `COMPTABLE` |
 | **Tiers** | GET, POST, PUT, DELETE | `/api/fournisseurs/**`, `/api/clients/**` | `COMPTABLE` |
 | **Exercices** | GET, POST, PUT, DELETE | `/api/exercices/**` | `COMPTABLE` |
 | **Exercices** | PATCH | `/api/exercices/{id}/cloturer` | `COMPTABLE` |
+| **Factures** | GET, POST, PUT, PATCH, DELETE | `/api/factures/**` | `COMPTABLE` |
+| **Paiements** | GET | `/api/paiements` | `COMPTABLE`, `DIRECTEUR_FINANCIER` |
+| **Paiements** | POST | `/api/paiements` | `COMPTABLE` |
+| **Paiements** | PUT | `/api/paiements/{id}/valider` | `DIRECTEUR_FINANCIER` |
 | **Plan comptable** | GET | `/api/comptes/**` | Tout utilisateur authentifié (listes déroulantes de la saisie) |
 | **Plan comptable** | POST, PUT, DELETE | `/api/comptes/**` | `ADMIN` |
 | **Centres de coûts** | GET | `/api/centres-cout/**` | Tout utilisateur authentifié (listes déroulantes) |
 | **Centres de coûts** | POST, PUT, DELETE | `/api/centres-cout/**` | `CONTROLEUR` |
 | **Budgets CO** | GET, POST, PUT, DELETE | `/api/budgets/**` | `CONTROLEUR` |
+| **Répartition analytique** | GET, POST | `/api/imputations` | `CONTROLEUR` |
+| **Rapport analytique** | GET | `/api/rapports/analytique?annee={annee}` | `CONTROLEUR` |
 
 ### Format des erreurs
 
@@ -242,7 +248,8 @@ Pour une écriture, les champs de ligne sont nommés `lignes.N.compteId`, `ligne
 {
   "code": "LOGIST",
   "libelle": "Direction Logistique et Transport",
-  "principal": true
+  "principal": true,
+  "cleRepartition": 100.00
 }
 ```
 - **Succès :** `201 Created` avec en-tête `Location: /api/centres-cout/{id}`.
@@ -261,6 +268,24 @@ Pour une écriture, les champs de ligne sont nommés `lignes.N.compteId`, `ligne
 - **Erreurs :**
   - `404 Not Found` : centre inexistant.
   - `409 Conflict` : centre rattaché à une écriture comptable OU disposant d'un budget prévisionnel.
+
+### 4.5. Factures (`/api/factures`) — rôle `COMPTABLE`
+- `GET /api/factures` : liste les factures avec montants HT/TTC, tiers, statut et pièce générée.
+- `POST /api/factures` : `{ "numero": "FAC-2026-001", "dateFacture": "2026-10-10", "type": "ACHAT", "montantHT": 1000, "tauxTVA": 20, "tiersId": 1 }` → `201 Created`, facture en brouillon. Une facture `ACHAT` exige un fournisseur ; `VENTE` exige un client.
+- `PUT /api/factures/{id}` et `DELETE /api/factures/{id}` : réservés aux brouillons.
+- `PATCH /api/factures/{id}/valider` : comptabilise et valide une pièce équilibrée en partie double. Pour un achat, le corps doit contenir `{ "centreCoutId": 2 }`. Les comptes standards sont 6111/34552/4411 pour un achat et 3421/7111/4455 pour une vente.
+- La date doit appartenir à un exercice ouvert. Le numéro est unique pour un tiers. Une facture validée ne peut plus être modifiée ou supprimée.
+
+### 4.6. Paiements (`/api/paiements`)
+- `GET /api/paiements` : accessible au `COMPTABLE` et au `DIRECTEUR_FINANCIER`.
+- `POST /api/paiements` : réservé au `COMPTABLE`. Exemple : `{ "datePaiement": "2026-10-15", "mode": "VIREMENT", "allocations": [{ "factureId": 1, "montantAffecte": 500 }] }`. Le total du paiement est calculé à partir des affectations ; seules les factures validées sont éligibles et un paiement partiel est accepté.
+- `PUT /api/paiements/{id}/valider` : réservé au `DIRECTEUR_FINANCIER`. Une facture passe à `PAYEE` lorsque la somme de ses paiements validés atteint son TTC ; sinon elle reste `VALIDEE`.
+- Les paiements en attente réservent aussi les montants affectés afin d'empêcher les dépassements de facture.
+
+### 4.7. Répartition et rapports analytiques — rôle `CONTROLEUR`
+- `GET /api/imputations?periode=AAAA-MM` : historique de la période.
+- `POST /api/imputations` : `{ "periode": "2026-10" }`. Répartit les charges nettes de classe 6 des écritures validées des centres auxiliaires vers les centres principaux, au prorata de leur `cleRepartition`. Une période/source ne peut être calculée qu'une fois.
+- `GET /api/rapports/analytique?annee=2026` : retourne les charges nettes (classe 6), produits nets (classe 7), l'évolution mensuelle et les écarts réel-budget par centre à partir des seules écritures validées. Les imputations déjà calculées réduisent le réel des centres sources et augmentent celui des centres cibles.
 
 ---
 
@@ -299,4 +324,3 @@ Les fichiers de tests Postman se trouvent dans le répertoire `postman/` :
 ### 6.3. Budgets CO (`/api/budgets`) — rôle `CONTROLEUR`
 - `POST` / `PUT` : `{ "centreCoutId": 3, "annee": 2026, "montantPrevu": 900000 }`.
 - Erreurs `400` : centre manquant ou introuvable ; année hors 2000–2099 ; montant négatif, > 2 décimales ou > 13 chiffres ; exercice de l'année **clôturé** (budget figé, aussi pour la suppression). Erreur `409` : un budget existe déjà pour ce centre et cette année.
-

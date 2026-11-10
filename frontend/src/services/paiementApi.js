@@ -9,3 +9,8 @@ export async function validerPaiement(id) {
   const { data } = await api.put(`/paiements/${id}/valider`);
   return data;
 }
+
+export async function enregistrerPaiement(paiement) {
+  const { data } = await api.post('/paiements', paiement);
+  return data;
+}

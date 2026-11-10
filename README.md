@@ -2,6 +2,13 @@
 
 Application de comptabilité financière et de contrôle de gestion, avec un backend Spring Boot, un frontend React et une base MySQL.
 
+## Espaces de l’application
+
+- **Comptabilité financière** : journal, saisie des écritures, tiers, factures comptabilisées, paiements et grand livre/balance.
+- **Contrôle de gestion** : centres de coûts avec clés de répartition, budgets, ventilation des charges auxiliaires et rapports analytiques.
+- **Administration** : plan comptable et gestion des utilisateurs.
+- **Direction financière** : tableau de bord et validation des paiements.
+
 ## Démarrage local
 
 Prérequis : JDK 21, Maven, Node.js et MySQL 8.
@@ -11,4 +18,20 @@ Prérequis : JDK 21, Maven, Node.js et MySQL 8.
 3. Démarrer le backend depuis `backend` avec `mvn spring-boot:run`.
 4. Démarrer le frontend depuis `frontend` avec `npm install` puis `npm run dev`.
 
-L’API de contrôle est disponible sur http://localhost:8080/api/test et renvoie `Backend Spring Boot opérationnel`. La page d’accueil sur http://localhost:5173 affiche aussi l’état de connexion au backend.
+L’API de contrôle est disponible sur http://localhost:8081/api/test et renvoie `Backend Spring Boot opérationnel`. La page d’accueil sur http://localhost:5173 affiche aussi l’état de connexion au backend.
+
+### Envoi des emails en local (Gmail)
+
+Sans SMTP configuré, le code OTP est affiché dans les logs du backend. Pour envoyer les emails :
+
+1. Copier `backend/src/main/resources/application-local.properties.example` vers `backend/src/main/resources/application-local.properties` (ce dernier fichier est ignoré par Git).
+2. Dans PowerShell, définir l’adresse Gmail et un **mot de passe d’application Google** (pas le mot de passe normal du compte), puis activer le profil `local` :
+   ```powershell
+   $env:MAIL_USERNAME = "votre-adresse@gmail.com"
+   $env:MAIL_PASSWORD = "votre-mot-de-passe-application"
+   $env:SPRING_PROFILES_ACTIVE = "local"
+   ```
+   Pour personnaliser l’adresse d’expédition, définir aussi `$env:MAIL_FROM`.
+3. Démarrer le backend depuis `backend` avec `mvn spring-boot:run`.
+
+Ces variables ne sont définies que dans la session PowerShell courante. Sans le profil `local`, le backend conserve le mode développement et affiche les OTP dans sa console.
