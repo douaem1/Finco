@@ -25,13 +25,12 @@ L’API de contrôle est disponible sur http://localhost:8081/api/test et renvoi
 Sans SMTP configuré, le code OTP est affiché dans les logs du backend. Pour envoyer les emails :
 
 1. Copier `backend/src/main/resources/application-local.properties.example` vers `backend/src/main/resources/application-local.properties` (ce dernier fichier est ignoré par Git).
-2. Dans PowerShell, définir l’adresse Gmail et un **mot de passe d’application Google** (pas le mot de passe normal du compte), puis activer le profil `local` :
+2. Dans PowerShell, définir l’adresse Gmail et un **mot de passe d’application Google** (pas le mot de passe normal du compte) :
    ```powershell
    $env:MAIL_USERNAME = "votre-adresse@gmail.com"
    $env:MAIL_PASSWORD = "votre-mot-de-passe-application"
-   $env:SPRING_PROFILES_ACTIVE = "local"
    ```
    Pour personnaliser l’adresse d’expédition, définir aussi `$env:MAIL_FROM`.
-3. Démarrer le backend depuis `backend` avec `mvn spring-boot:run`.
+3. Démarrer le backend depuis `backend` avec `mvn spring-boot:run`. Le fichier local SMTP est chargé automatiquement s’il existe.
 
-Ces variables ne sont définies que dans la session PowerShell courante. Sans le profil `local`, le backend conserve le mode développement et affiche les OTP dans sa console.
+Ces variables ne sont définies que dans la session PowerShell courante. Sans fichier local SMTP configuré, le backend conserve le mode développement et affiche les OTP dans sa console.

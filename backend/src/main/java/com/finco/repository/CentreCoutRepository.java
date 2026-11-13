@@ -29,6 +29,8 @@ public interface CentreCoutRepository extends JpaRepository<CentreCout, Long> {
      */
     boolean existsByCode(String code);
 
+    java.util.Optional<CentreCout> findByCode(String code);
+
     /**
      * Même vérification, mais en excluant le centre en cours de modification :
      * « ... WHERE code = ? AND id <> ? ».

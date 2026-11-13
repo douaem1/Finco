@@ -10,6 +10,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -30,5 +31,21 @@ class EnvoiEmailServiceTest {
         ArgumentCaptor<MimeMessage> envoye = ArgumentCaptor.forClass(MimeMessage.class);
         verify(sender).send(envoye.capture());
         assertThat(envoye.getValue().getSubject()).contains("123456");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void signaleUneErreurQuandLeServeurRefuseLEnvoi() {
+        JavaMailSender sender = mock(JavaMailSender.class);
+        when(sender.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
+        org.springframework.mail.MailSendException erreur = new org.springframework.mail.MailSendException("SMTP indisponible");
+        org.mockito.Mockito.doThrow(erreur).when(sender).send(org.mockito.ArgumentMatchers.any(MimeMessage.class));
+        ObjectProvider<JavaMailSender> provider = mock(ObjectProvider.class);
+        when(provider.getIfAvailable()).thenReturn(sender);
+
+        assertThatThrownBy(() -> new EnvoiEmailService(provider, "FinCo <no-reply@finco.ma>")
+                .envoyerCodeConnexion("sara@finco.ma", "Sara", "123456", 5))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Le code de vérification n'a pas pu être envoyé.");
     }
 }

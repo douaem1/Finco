@@ -1,0 +1,10 @@
+import DashboardShell from '../../components/dashboard/DashboardShell';
+
+export default function ControleurDashboard() {
+  return <DashboardShell role="CONTROLEUR" title="Contrôle de gestion" intro="Surveillez la consommation budgétaire et les centres qui nécessitent votre attention." kpiConfig={[
+    { key: 'budgetTotal', label: 'Budget total', tone: 'neutral' },
+    { key: 'reelTotal', label: 'Réel consommé', tone: 'neutral' },
+    { key: 'ecartGlobal', label: 'Écart global', tone: 'negative' },
+    { key: 'centresEnDepassement', label: 'Centres en dépassement', tone: 'negative' },
+  ]} links={[{ to: '/budgets', label: 'Gérer les budgets' }, { to: '/rapports-analytiques', label: 'Rapports analytiques' }]} />;
+}

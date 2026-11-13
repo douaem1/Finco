@@ -28,6 +28,15 @@ export const ROLES = {
  * - end : correspondance exacte du lien de navigation actif
  */
 export const PAGES = [
+  {
+    path: '/dashboard/comptable',
+    libelle: 'Tableau de bord',
+    icone: 'accueil',
+    section: 'Comptabilité financière',
+    roles: [ROLES.COMPTABLE],
+    dansMenu: true,
+    end: true,
+  },
   // ==========================================
   // MODULE COMPTABILITÉ FINANCIÈRE (COMPTABLE)
   // ==========================================
@@ -108,6 +117,15 @@ export const PAGES = [
   // MODULE CONTRÔLE DE GESTION (CONTROLEUR)
   // ==========================================
   {
+    path: '/dashboard/controleur',
+    libelle: 'Tableau de bord',
+    icone: 'accueil',
+    section: 'Contrôle de gestion',
+    roles: [ROLES.CONTROLEUR],
+    dansMenu: true,
+    end: true,
+  },
+  {
     path: '/centres-cout',
     libelle: 'Centres de coûts',
     icone: 'centres',
@@ -148,6 +166,15 @@ export const PAGES = [
   // MODULE ADMINISTRATION (ADMIN)
   // ==========================================
   {
+    path: '/dashboard/admin',
+    libelle: 'Tableau de bord',
+    icone: 'accueil',
+    section: 'Administration',
+    roles: [ROLES.ADMIN],
+    dansMenu: true,
+    end: true,
+  },
+  {
     path: '/comptes',
     libelle: 'Plan comptable',
     icone: 'comptes',
@@ -169,6 +196,15 @@ export const PAGES = [
   // ==========================================
   // MODULE DIRECTION FINANCIÈRE (DIRECTEUR_FINANCIER)
   // ==========================================
+  {
+    path: '/dashboard/directeur',
+    libelle: 'Tableau de bord',
+    icone: 'accueil',
+    section: 'Direction financière',
+    roles: [ROLES.DIRECTEUR_FINANCIER],
+    dansMenu: true,
+    end: true,
+  },
   {
     path: '/tableau-de-bord',
     libelle: 'Tableau de bord',
@@ -201,10 +237,10 @@ export const PAGES = [
  * Page d'accueil par défaut de chaque rôle (utilisée après login et lors de redirections).
  */
 export const PAGE_ACCUEIL_PAR_ROLE = {
-  [ROLES.COMPTABLE]: '/pieces',
-  [ROLES.CONTROLEUR]: '/centres-cout',
-  [ROLES.ADMIN]: '/comptes',
-  [ROLES.DIRECTEUR_FINANCIER]: '/tableau-de-bord',
+  [ROLES.COMPTABLE]: '/dashboard/comptable',
+  [ROLES.CONTROLEUR]: '/dashboard/controleur',
+  [ROLES.ADMIN]: '/dashboard/admin',
+  [ROLES.DIRECTEUR_FINANCIER]: '/dashboard/directeur',
 };
 
 /**

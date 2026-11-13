@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import Accueil from './pages/Accueil.jsx';
 import Login from './pages/Login.jsx';
@@ -17,6 +18,10 @@ import GrandLivre from './pages/GrandLivre.jsx';
 import RepartitionCouts from './pages/RepartitionCouts.jsx';
 import RapportsAnalytiques from './pages/RapportsAnalytiques.jsx';
 import ValidationPaiements from './pages/ValidationPaiements.jsx';
+const ComptableDashboard = lazy(() => import('./pages/dashboard/ComptableDashboard.jsx'));
+const ControleurDashboard = lazy(() => import('./pages/dashboard/ControleurDashboard.jsx'));
+const DirecteurDashboard = lazy(() => import('./pages/dashboard/DirecteurDashboard.jsx'));
+const AdminDashboard = lazy(() => import('./pages/dashboard/AdminDashboard.jsx'));
 import RouteProtegee from './components/RouteProtegee.jsx';
 import MiseEnPageApp from './components/MiseEnPageApp.jsx';
 import { useAuth } from './context/AuthContext.jsx';
@@ -40,6 +45,12 @@ export default function App() {
       {/* Pages connectées avec vérification du rôle (RBAC) */}
       <Route element={<RouteProtegee />}>
         <Route element={<MiseEnPageApp />}>
+          {/* Tableaux de bord dédiés à chaque rôle */}
+          <Route path="/dashboard/comptable" element={<Suspense fallback={<div className="chargement">Chargement du tableau de bord...</div>}><ComptableDashboard /></Suspense>} />
+          <Route path="/dashboard/controleur" element={<Suspense fallback={<div className="chargement">Chargement du tableau de bord...</div>}><ControleurDashboard /></Suspense>} />
+          <Route path="/dashboard/directeur" element={<Suspense fallback={<div className="chargement">Chargement du tableau de bord...</div>}><DirecteurDashboard /></Suspense>} />
+          <Route path="/dashboard/admin" element={<Suspense fallback={<div className="chargement">Chargement du tableau de bord...</div>}><AdminDashboard /></Suspense>} />
+
           {/* Module Comptabilité financière (COMPTABLE) */}
           <Route path="/pieces" element={<ListePieces />} />
           <Route path="/pieces/nouvelle" element={<SaisiePiece />} />
@@ -61,7 +72,7 @@ export default function App() {
           <Route path="/utilisateurs" element={<Utilisateurs />} />
 
           {/* Module Direction financière (DIRECTEUR_FINANCIER) */}
-          <Route path="/direction" element={<Navigate to="/tableau-de-bord" replace />} />
+          <Route path="/direction" element={<Navigate to="/dashboard/directeur" replace />} />
           <Route path="/tableau-de-bord" element={<EspaceDaf />} />
           <Route path="/validation-paiements" element={<ValidationPaiements />} />
         </Route>

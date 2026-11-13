@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.repository.query.Param;
 
 /** Accès aux pièces comptables. */
 @Repository
@@ -31,6 +32,8 @@ public interface PieceComptableRepository extends JpaRepository<PieceComptable, 
 
     /** Dernier numéro attribué pour une année, ex. préfixe "PC-2026-". */
     Optional<PieceComptable> findFirstByNumeroStartingWithOrderByNumeroDesc(String prefixe);
+
+    boolean existsByNumero(String numero);
 
     /** Une pièce avec tout son détail, en une seule requête. */
     @Query("""
@@ -56,4 +59,19 @@ public interface PieceComptableRepository extends JpaRepository<PieceComptable, 
     boolean existsByExerciceIdAndDateEcritureAfter(Long exerciceId, LocalDate date);
 
     boolean existsByUtilisateurId(Long utilisateurId);
+
+        long countByValideeFalse();
+
+        long countByDateEcritureBetweenAndValideeTrue(LocalDate debut, LocalDate fin);
+
+        @Query(value = """
+                        SELECT MONTH(p.date_ecriture) AS mois,
+                                   SUM(CASE WHEN p.validee = true THEN 1 ELSE 0 END) AS validees,
+                                   SUM(CASE WHEN p.validee = false THEN 1 ELSE 0 END) AS brouillons
+                        FROM piece_comptable p
+                        WHERE p.date_ecriture BETWEEN :debut AND :fin
+                        GROUP BY MONTH(p.date_ecriture)
+                        ORDER BY MONTH(p.date_ecriture)
+                        """, nativeQuery = true)
+        List<Object[]> compterParMois(@Param("debut") LocalDate debut, @Param("fin") LocalDate fin);
 }

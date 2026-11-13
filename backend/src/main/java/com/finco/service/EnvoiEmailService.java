@@ -1,6 +1,5 @@
 package com.finco.service;
 
-import com.finco.exception.RegleMetierException;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
@@ -58,13 +57,8 @@ public class EnvoiEmailService {
             sender.send(message);
             log.info("Code de connexion envoyé à {}", destinataire);
         } catch (MessagingException | MailException e) {
-            log.warn("""
-
-                    ================================================================
-                     [MODE DÉVELOPPEMENT] Serveur email non accessible ou non configuré.
-                     Code de connexion pour {} : {}   (valable {} min)
-                    ================================================================""",
-                    destinataire, code, validiteMinutes);
+            log.error("Échec de l'envoi du code de connexion à {}", destinataire, e);
+            throw new IllegalStateException("Le code de vérification n'a pas pu être envoyé.", e);
         }
     }
 

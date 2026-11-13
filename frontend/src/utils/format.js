@@ -1,9 +1,18 @@
 /* Affichage uniquement (aucune règle métier). */
 
 const formatMontant = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const formatMADIntl = new Intl.NumberFormat('fr-MA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export function montant(valeur) {
   return formatMontant.format(Number(valeur) || 0);
+}
+
+export function formatMAD(valeur) {
+  return `${formatMADIntl.format(Number(valeur) || 0)} MAD`;
+}
+
+export function formatPct(valeur) {
+  return `${Number(valeur || 0).toFixed(2).replace('.', ',')}%`;
 }
 
 export function dateFr(iso) {

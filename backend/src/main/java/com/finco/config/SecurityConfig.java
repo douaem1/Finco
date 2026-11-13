@@ -10,6 +10,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -32,6 +33,7 @@ import java.util.List;
  * les objets, pas notre code).
  */
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
     /**
@@ -58,6 +60,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/test", "/error").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/verifier-otp", "/api/auth/renvoyer-otp").permitAll()
+
+                        // Tableaux de bord : chaque rôle ne peut consulter que son propre espace.
+                        .requestMatchers("/api/dashboard/comptable/**").hasRole("COMPTABLE")
+                        .requestMatchers("/api/dashboard/controleur/**").hasRole("CONTROLEUR")
+                        .requestMatchers("/api/dashboard/directeur/**").hasRole("DIRECTEUR_FINANCIER")
+                        .requestMatchers("/api/dashboard/admin/**").hasRole("ADMIN")
 
                         // Module COMPTABILITÉ FINANCIÈRE (COMPTABLE uniquement) :
                         // Écritures et journal des pièces
