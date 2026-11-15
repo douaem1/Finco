@@ -1,5 +1,8 @@
 package com.finco.service;
 
+import com.finco.audit.ActionAudit;
+import com.finco.audit.AuditService;
+import com.finco.audit.DiffAudit;
 import com.finco.dto.ImputationRequest;
 import com.finco.dto.ImputationResponse;
 import com.finco.entity.CentreCout;
@@ -31,13 +34,16 @@ public class ImputationService {
     private final ImputationRepository imputationRepository;
     private final LigneEcritureRepository ligneRepository;
     private final CentreCoutRepository centreRepository;
+    private final AuditService auditService;
 
     public ImputationService(ImputationRepository imputationRepository,
                              LigneEcritureRepository ligneRepository,
-                             CentreCoutRepository centreRepository) {
+                             CentreCoutRepository centreRepository,
+                             AuditService auditService) {
         this.imputationRepository = imputationRepository;
         this.ligneRepository = ligneRepository;
         this.centreRepository = centreRepository;
+        this.auditService = auditService;
     }
 
     @Transactional(readOnly = true)
@@ -100,7 +106,14 @@ public class ImputationService {
                 }
             }
         }
-        return imputationRepository.saveAll(nouvelles).stream().map(ImputationResponse::depuis).toList();
+        List<Imputation> enregistrees = imputationRepository.saveAll(nouvelles);
+        auditService.enregistrer(ActionAudit.REPARTITION_COUTS, "REPARTITION", null, "Période " + request.periode(),
+                null,
+                DiffAudit.json(Map.of(
+                        "periode", request.periode(),
+                        "nombreImputations", enregistrees.size())),
+                "Répartition des coûts pour la période " + request.periode());
+        return enregistrees.stream().map(ImputationResponse::depuis).toList();
     }
 
     private YearMonth verifierPeriode(String valeur) {

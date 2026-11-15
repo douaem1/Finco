@@ -1,15 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { listerPieces, listerComptes } from '../services/ecritureApi';
 import { messageErreur } from '../services/api';
 import { dateFr } from '../utils/format';
 import PageHeader from '../components/ui/PageHeader';
 import AsyncState from '../components/ui/AsyncState';
-import DataTable from '../components/ui/DataTable';
+import DataTable, { BasculeDensite, MenuColonnes } from '../components/ui/DataTable';
 import Field from '../components/ui/Field';
 import Combobox from '../components/ui/Combobox';
 import Amount from '../components/ui/Amount';
 import Button from '../components/ui/Button';
+import { ExportMenu } from '../components/ui/ExportButton';
 import { useToast } from '../components/ui/ToastRegion';
 
 export default function GrandLivre() {
@@ -98,20 +99,58 @@ export default function GrandLivre() {
   ];
 
   const colonnesCompte = [
-    { key: 'dateEcriture', label: 'Date', render: (l) => <span className="chiffres">{dateFr(l.dateEcriture)}</span> },
-    { key: 'pieceNumero', label: 'Pièce', render: (l) => <Link to={`/pieces/${l.pieceId}`}>{l.pieceNumero}</Link> },
-    { key: 'pieceLibelle', label: 'Libellé' },
-    { key: 'centreCoutCode', label: 'Centre', render: (l) => l.centreCoutCode || '—' },
+    { key: 'dateEcriture', label: 'Date', nowrap: true, render: (l) => <span className="chiffres">{dateFr(l.dateEcriture)}</span> },
+    { key: 'pieceNumero', label: 'Pièce', cell: (l) => ({ principal: <Link to={`/pieces/${l.pieceId}`}>{l.pieceNumero}</Link>, secondaire: l.pieceLibelle }) },
     { key: 'debit', label: 'Débit', numeric: true, render: (l) => (l.sens === 'DEBIT' ? <Amount value={l.montant} /> : '—') },
     { key: 'credit', label: 'Crédit', numeric: true, render: (l) => (l.sens === 'CREDIT' ? <Amount value={l.montant} /> : '—') },
     { key: 'soldeCourant', label: 'Solde', numeric: true, render: (l) => <Amount value={l.soldeCourant} /> },
+    { key: 'centreCoutCode', label: 'Centre de coûts', priorite: 3, render: (l) => l.centreCoutCode || '—' },
   ];
+
+  /* En-tête de groupe collant : un bloc par compte (numéro + libellé + total). */
+  const comptesParNumero = useMemo(() => {
+    const index = new Map();
+    balance.forEach((compte) => index.set(compte.numero, compte));
+    return index;
+  }, [balance]);
+
+  const grouperCompte = useCallback((ligne) => {
+    const compte = comptesParNumero.get(ligne.compteNumero);
+    if (!compte) return null;
+    return {
+      cle: ligne.compteNumero,
+      contenu: (
+        <>
+          <strong>{compte.numero} — {compte.libelle}</strong>
+          <span className="texte-secondaire" style={{ marginLeft: 12 }}>
+            Total du compte : <Amount value={compte.solde} />
+          </span>
+        </>
+      ),
+    };
+  }, [comptesParNumero]);
+
+  const colonnesActives = compteNumero ? colonnesCompte : colonnesBalance;
+  const cleColonnesActive = compteNumero ? 'grand-livre' : 'grand-livre-balance';
+
+  const menuExport = compteNumero ? (
+    <ExportMenu options={[
+      { format: 'pdf', endpoint: '/grand-livre/export/pdf', params: { compteNumero, dateFrom: dateDebut || undefined, dateTo: dateFin || undefined } },
+      { format: 'csv', endpoint: '/grand-livre/export/csv', params: { compteNumero, dateFrom: dateDebut || undefined, dateTo: dateFin || undefined } },
+    ]} />
+  ) : (
+    <ExportMenu options={[
+      { format: 'pdf', endpoint: '/balance/export/pdf', params: { dateFrom: dateDebut || undefined, dateTo: dateFin || undefined } },
+      { format: 'csv', endpoint: '/balance/export/csv', params: { dateFrom: dateDebut || undefined, dateTo: dateFin || undefined } },
+    ]} />
+  );
 
   return (
     <section>
       <PageHeader
         title="Grand livre & balance"
         description="Consultez les mouvements validés et le solde de chaque compte."
+        actions={menuExport}
       />
 
       <AsyncState loading={chargement} error={erreur} onRetry={chargerDonnees}>
@@ -131,6 +170,10 @@ export default function GrandLivre() {
           <Field id="grand-livre-au" label="Au">
             {(p) => <input className="input" type="date" value={dateFin} onChange={(e) => setDateFin(e.target.value)} {...p} />}
           </Field>
+          <div className="ui-search-toolbar-actions" style={{ gridColumn: '1 / -1', justifyContent: 'flex-end' }}>
+            <BasculeDensite />
+            <MenuColonnes storageKey={cleColonnesActive} colonnes={colonnesActives} />
+          </div>
         </div>
 
         {!compteNumero ? (
@@ -141,7 +184,7 @@ export default function GrandLivre() {
               <div className="carte-resume-item accent"><small>Solde de la période</small><Amount value={totauxBalance.debit - totauxBalance.credit} /></div>
             </div>
             <div className="panneau">
-              <DataTable columns={colonnesBalance} rows={balance} empty="Aucun mouvement validé pour cette période." />
+              <DataTable columns={colonnesBalance} rows={balance} storageKey="grand-livre-balance" empty="Aucun mouvement validé pour cette période." />
             </div>
           </>
         ) : (
@@ -153,7 +196,7 @@ export default function GrandLivre() {
               </div>
               <Button variant="secondary" type="button" onClick={() => setCompteNumero('')}>Retour à la balance</Button>
             </header>
-            <DataTable columns={colonnesCompte} rows={lignesAvecSolde} empty="Aucun mouvement pour ce compte et cette période." />
+            <DataTable columns={colonnesCompte} rows={lignesAvecSolde} storageKey="grand-livre" grouper={grouperCompte} empty="Aucun mouvement pour ce compte et cette période." />
           </div>
         )}
       </AsyncState>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{pdf/_layout :: tete('Rapport budget vs réel', ${reference}, ${empreinte}, 'portrait')}"></head>
+<body>
+
+<div th:replace="~{pdf/_layout :: bandeau(${societe}, 'Rapport budget vs réel', ${reference}, ${periode})}"></div>
+<div th:replace="~{pdf/_layout :: metaPdf(${genereLe}, ${par}, ${exercice}, ${filtres})}"></div>
+
+<div class="carte-resume" style="display: table; width: 100%; border-collapse: separate; border-spacing: 8pt 0; margin-bottom: 8pt;">
+    <table class="etat">
+        <tfoot>
+        <tr>
+            <td>Total charges de l'exercice</td>
+            <td class="num" th:text="${fmt.nombre(totalCharges)}">0,00</td>
+        </tr>
+        <tr>
+            <td>Total produits de l'exercice</td>
+            <td class="num" th:text="${fmt.nombre(totalProduits)}">0,00</td>
+        </tr>
+        </tfoot>
+    </table>
+</div>
+
+<table class="etat">
+    <thead>
+    <tr>
+        <th style="width: 9%;">Code</th>
+        <th style="width: 23%;">Centre de coûts</th>
+        <th class="num" style="width: 13%;">Prévu</th>
+        <th class="num" style="width: 13%;">Réalisé</th>
+        <th class="num" style="width: 13%;">Écart</th>
+        <th style="width: 17%;">Consommation</th>
+        <th style="width: 12%;">Statut</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="c : ${centres}">
+        <td th:text="${c.code}">CC01</td>
+        <td th:text="${c.libelle}">Libellé</td>
+        <td class="num" th:text="${fmt.nombre(c.budget)}">0,00</td>
+        <td class="num" th:text="${fmt.nombre(c.reel)}">0,00</td>
+        <td class="num" th:classappend="${c.ecart != null and c.ecart.signum() > 0} ? 'negatif' : ''"
+            th:text="${(c.ecart != null and c.ecart.signum() > 0 ? '▲ ' : '') + fmt.nombre(c.ecart)}">0,00</td>
+        <td>
+            <span class="barre" th:classappend="${c.statutClasse}">
+                <span th:style="${'width:' + c.barrePourcent + '%'}"></span>
+            </span>
+            <span class="texte-secondaire" th:text="${' ' + c.consommation}">0 %</span>
+        </td>
+        <td>
+            <span class="badge" th:classappend="${c.statutClasse == 'depassement'} ? 'badge-echec' : (${c.statutClasse == 'attention'} ? 'badge-attention' : 'badge-succes')"
+                  th:text="${c.statut}">OK</span>
+        </td>
+    </tr>
+    </tbody>
+    <tfoot>
+    <tr>
+        <td colspan="2">TOTAUX</td>
+        <td class="num" th:text="${fmt.nombre(totalBudget)}">0,00</td>
+        <td class="num" th:text="${fmt.nombre(totalReel)}">0,00</td>
+        <td class="num" th:text="${fmt.nombre(totalReel - totalBudget)}">0,00</td>
+        <td colspan="2"></td>
+    </tr>
+    </tfoot>
+</table>
+
+<p class="note">Statut : OK (consommation &lt; 80 %) · Attention (≥ 80 %) · Dépassement (≥ 100 %).</p>
+
+<div th:replace="~{pdf/_layout :: signatures(${etabliPar}, ${etabliRole}, ${verifiePar}, ${verifieRole},
+                                                 ${approuvePar}, 'Directeur financier', null, null)}"></div>
+
+</body>
+</html>

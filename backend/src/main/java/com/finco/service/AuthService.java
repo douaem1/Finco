@@ -1,5 +1,6 @@
 package com.finco.service;
 
+import com.finco.audit.AuditService;
 import com.finco.dto.LoginRequest;
 import com.finco.dto.LoginResponse;
 import com.finco.dto.OtpEnvoyeResponse;
@@ -14,6 +15,7 @@ import com.finco.repository.UtilisateurRepository;
 import com.finco.security.JwtService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,15 +37,18 @@ public class AuthService {
     private final JwtService jwtService;
     private final OtpService otpService;
     private final UtilisateurRepository utilisateurRepository;
+    private final AuditService auditService;
 
     public AuthService(AuthenticationManager authenticationManager,
                        JwtService jwtService,
                        OtpService otpService,
-                       UtilisateurRepository utilisateurRepository) {
+                       UtilisateurRepository utilisateurRepository,
+                       AuditService auditService) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.otpService = otpService;
         this.utilisateurRepository = utilisateurRepository;
+        this.auditService = auditService;
     }
 
     /**
@@ -59,7 +64,14 @@ public class AuthService {
             throw new RegleMetierException("email", "Adresse email invalide (ex. prenom.nom@entreprise.ma).");
         }
 
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, requete.motDePasse()));
+        try {
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, requete.motDePasse()));
+        } catch (AuthenticationException e) {
+            // Journalisation de l'échec dans une transaction PROPRE : l'audit doit
+            // survivre à l'échec de connexion (email masqué si le compte n'existe pas).
+            auditService.enregistrerConnexionEchouee(email);
+            throw e;
+        }
 
         Utilisateur utilisateur = trouverParEmail(email);
         CodeOtp otp = otpService.creerEtEnvoyer(utilisateur);
@@ -73,6 +85,7 @@ public class AuthService {
         }
         Utilisateur utilisateur = otpService.verifier(requete.jetonOtp(), requete.code());
         String token = jwtService.genererToken(utilisateur.getEmail(), utilisateur.getRole().name());
+        auditService.enregistrerConnexionReussie(utilisateur);
         return new LoginResponse(token, versDto(utilisateur));
     }
 

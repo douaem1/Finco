@@ -1,5 +1,8 @@
 package com.finco.service;
 
+import com.finco.audit.ActionAudit;
+import com.finco.audit.AuditService;
+import com.finco.audit.DiffAudit;
 import com.finco.dto.UtilisateurAdministrationResponse;
 import com.finco.dto.UtilisateurCreationRequest;
 import com.finco.dto.UtilisateurModificationRequest;
@@ -22,13 +25,16 @@ public class UtilisateurAdministrationService {
     private final UtilisateurRepository utilisateurRepository;
     private final PieceComptableRepository pieceComptableRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuditService auditService;
 
     public UtilisateurAdministrationService(UtilisateurRepository utilisateurRepository,
                                             PieceComptableRepository pieceComptableRepository,
-                                            PasswordEncoder passwordEncoder) {
+                                            PasswordEncoder passwordEncoder,
+                                            AuditService auditService) {
         this.utilisateurRepository = utilisateurRepository;
         this.pieceComptableRepository = pieceComptableRepository;
         this.passwordEncoder = passwordEncoder;
+        this.auditService = auditService;
     }
 
     @Transactional(readOnly = true)
@@ -44,13 +50,30 @@ public class UtilisateurAdministrationService {
         Utilisateur utilisateur = new Utilisateur(
                 nettoyer(request.nom()), nettoyer(request.prenom()), email,
                 passwordEncoder.encode(request.motDePasse()), request.role());
-        return UtilisateurAdministrationResponse.de(utilisateurRepository.save(utilisateur));
+        Utilisateur enregistre = utilisateurRepository.save(utilisateur);
+        auditService.enregistrer(ActionAudit.UTILISATEUR_CREE, "UTILISATEUR", enregistre.getId(), enregistre.getEmail(),
+                null,
+                DiffAudit.json(java.util.Map.of(
+                        "email", enregistre.getEmail(),
+                        "role", enregistre.getRole().name(),
+                        "actif", enregistre.isActif())),
+                "Création de l'utilisateur " + enregistre.getEmail());
+        return UtilisateurAdministrationResponse.de(enregistre);
     }
 
     public UtilisateurAdministrationResponse update(Long id, UtilisateurModificationRequest request) {
         Utilisateur utilisateur = trouver(id);
         String email = normaliserEmail(request.email());
         verifierEmailDisponible(email, id);
+
+        String ancienRole = utilisateur.getRole() != null ? utilisateur.getRole().name() : "";
+        boolean ancienActif = utilisateur.isActif();
+        java.util.Map<String, Object> avant = java.util.Map.of(
+                "nom", utilisateur.getNom(),
+                "prenom", utilisateur.getPrenom(),
+                "email", utilisateur.getEmail(),
+                "role", ancienRole,
+                "actif", ancienActif);
 
         utilisateur.setNom(nettoyer(request.nom()));
         utilisateur.setPrenom(nettoyer(request.prenom()));
@@ -60,7 +83,31 @@ public class UtilisateurAdministrationService {
         if (request.motDePasse() != null && !request.motDePasse().isBlank()) {
             utilisateur.setMotDePasse(passwordEncoder.encode(request.motDePasse()));
         }
-        return UtilisateurAdministrationResponse.de(utilisateurRepository.save(utilisateur));
+        Utilisateur enregistre = utilisateurRepository.save(utilisateur);
+
+        java.util.Map<String, Object> apres = java.util.Map.of(
+                "nom", enregistre.getNom(),
+                "prenom", enregistre.getPrenom(),
+                "email", enregistre.getEmail(),
+                "role", enregistre.getRole() != null ? enregistre.getRole().name() : "",
+                "actif", enregistre.isActif());
+        DiffAudit.Diff diff = DiffAudit.comparer(avant, apres);
+        auditService.enregistrer(ActionAudit.UTILISATEUR_MODIFIE, "UTILISATEUR", enregistre.getId(), enregistre.getEmail(),
+                diff.ancienneValeur(), diff.nouvelleValeur(),
+                "Modification de l'utilisateur " + enregistre.getEmail());
+        if (!ancienRole.equals(apres.get("role"))) {
+            auditService.enregistrer(ActionAudit.ROLE_MODIFIE, "UTILISATEUR", enregistre.getId(), enregistre.getEmail(),
+                    DiffAudit.json(java.util.Map.of("role", ancienRole)),
+                    DiffAudit.json(java.util.Map.of("role", apres.get("role"))),
+                    "Changement de rôle de " + enregistre.getEmail());
+        }
+        if (ancienActif && !enregistre.isActif()) {
+            auditService.enregistrer(ActionAudit.UTILISATEUR_DESACTIVE, "UTILISATEUR", enregistre.getId(), enregistre.getEmail(),
+                    DiffAudit.json(java.util.Map.of("actif", true)),
+                    DiffAudit.json(java.util.Map.of("actif", false)),
+                    "Désactivation de l'utilisateur " + enregistre.getEmail());
+        }
+        return UtilisateurAdministrationResponse.de(enregistre);
     }
 
     public void delete(Long id) {

@@ -6,6 +6,7 @@ import { dateFr, montant } from '../utils/format';
 import MessageErreur from '../components/MessageErreur';
 import Chargement from '../components/Chargement';
 import Balance from '../components/Balance';
+import ExportButton from '../components/ui/ExportButton';
 
 export default function DetailPiece() {
   const { id } = useParams();
@@ -50,9 +51,12 @@ export default function DetailPiece() {
               <p className="document-type">Pièce comptable</p>
               <h1 className="chiffres">{piece.numero}</h1>
             </div>
-            <span className={`statut statut-grand ${piece.validee ? 'statut-validee' : 'statut-brouillon'}`}>
-              {piece.validee ? 'Validée' : 'Brouillon'}
-            </span>
+            <div className="ui-page-actions">
+              <ExportButton endpoint={`/pieces/${piece.id}/export/pdf`} format="pdf" />
+              <span className={`statut statut-grand ${piece.validee ? 'statut-validee' : 'statut-brouillon'}`}>
+                {piece.validee ? 'Validée' : 'Brouillon'}
+              </span>
+            </div>
           </header>
 
           <dl className="document-infos">

@@ -4,7 +4,7 @@ import { messageErreur } from '../services/api';
 import PageHeader from '../components/ui/PageHeader';
 import AsyncState from '../components/ui/AsyncState';
 import EmptyState from '../components/ui/EmptyState';
-import DataTable from '../components/ui/DataTable';
+import DataTable, { BasculeDensite, MenuColonnes } from '../components/ui/DataTable';
 import Amount from '../components/ui/Amount';
 import Button from '../components/ui/Button';
 import Field from '../components/ui/Field';
@@ -60,10 +60,10 @@ export default function RepartitionCouts() {
   }
 
   const colonnes = [
-    { key: 'codeSource', label: 'Centre auxiliaire', render: (i) => <><span className="code-centre">{i.codeSource}</span> — {i.libelleSource}</> },
-    { key: 'codeCible', label: 'Centre principal', render: (i) => <><span className="code-centre">{i.codeCible}</span> — {i.libelleCible}</> },
-    { key: 'montant', label: 'Montant réparti', numeric: true, render: (i) => <strong><Amount value={i.montant} /></strong> },
-    { key: 'dateCalcul', label: 'Date du calcul', render: (i) => (i.dateCalcul ? new Date(i.dateCalcul).toLocaleString('fr-FR') : '—') },
+    { key: 'codeSource', label: 'Centre auxiliaire', priorite: 1, render: (i) => <><span className="code-centre">{i.codeSource}</span> — {i.libelleSource}</> },
+    { key: 'codeCible', label: 'Centre principal', priorite: 2, render: (i) => <><span className="code-centre">{i.codeCible}</span> — {i.libelleCible}</> },
+    { key: 'montant', label: 'Montant réparti', numeric: true, priorite: 1, render: (i) => <strong><Amount value={i.montant} /></strong> },
+    { key: 'dateCalcul', label: 'Date du calcul', priorite: 3, render: (i) => (i.dateCalcul ? new Date(i.dateCalcul).toLocaleString('fr-FR') : '—') },
   ];
 
   return (
@@ -84,8 +84,15 @@ export default function RepartitionCouts() {
         </div>
         {dejaCalculee ? (
           <div className="panneau">
-            <div className="barre-outils"><h2>Imputations de {periode}</h2><strong>Total réparti : <Amount value={total} /></strong></div>
-            <DataTable columns={colonnes} rows={imputations} empty="Aucune imputation pour cette période." />
+            <div className="barre-outils">
+              <h2>Imputations de {periode}</h2>
+              <strong>Total réparti : <Amount value={total} /></strong>
+              <div className="ui-search-toolbar-actions">
+                <BasculeDensite />
+                <MenuColonnes storageKey="repartition-couts" colonnes={colonnes} />
+              </div>
+            </div>
+            <DataTable columns={colonnes} rows={imputations} storageKey="repartition-couts" empty="Aucune imputation pour cette période." />
           </div>
         ) : (
           <EmptyState

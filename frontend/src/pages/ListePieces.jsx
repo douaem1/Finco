@@ -6,11 +6,12 @@ import { useAuth } from '../context/AuthContext';
 import { dateFr } from '../utils/format';
 import PageHeader from '../components/ui/PageHeader';
 import AsyncState from '../components/ui/AsyncState';
-import DataTable from '../components/ui/DataTable';
+import DataTable, { BasculeDensite, MenuColonnes } from '../components/ui/DataTable';
 import SearchToolbar from '../components/ui/SearchToolbar';
 import StatusBadge from '../components/ui/StatusBadge';
 import Amount from '../components/ui/Amount';
 import Button from '../components/ui/Button';
+import ExportButton from '../components/ui/ExportButton';
 import Icone from '../components/Icone';
 import { useToast } from '../components/ui/ToastRegion';
 
@@ -54,12 +55,23 @@ export default function ListePieces() {
     !filtre || p.numero.toLowerCase().includes(filtre) || p.libelle.toLowerCase().includes(filtre)), [pieces, filtre]);
 
   const colonnes = [
-    { key: 'numero', label: 'Pièce', sortable: true, render: (p) => <Link to={`/pieces/${p.id}`} className="numero-piece">{p.numero}</Link> },
-    { key: 'dateEcriture', label: 'Date', sortable: true, render: (p) => <span className="chiffres">{dateFr(p.dateEcriture)}</span> },
-    { key: 'libelle', label: 'Libellé', sortable: true },
-    { key: 'saisiePar', label: 'Saisie par', sortable: true, render: (p) => <span className="texte-secondaire">{p.saisiePar}</span> },
-    { key: 'totalDebit', label: 'Montant', numeric: true, sortable: true, render: (p) => <strong><Amount value={p.totalDebit} /></strong> },
+    {
+      key: 'numero',
+      label: 'N°',
+      sortable: true,
+      cell: (p) => ({
+        principal: <Link to={`/pieces/${p.id}`} className="numero-piece">{p.numero}</Link>,
+        secondaire: `${p.libelle} · ${dateFr(p.dateEcriture)}`,
+      }),
+    },
+    { key: 'exercice', label: 'Exercice', align: 'center', sortable: true, nowrap: true, render: (p) => p.exercice },
+    { key: 'totalDebit', label: 'Débit', numeric: true, nowrap: true, sortable: true, render: (p) => <Amount value={p.totalDebit} /> },
+    { key: 'totalCredit', label: 'Crédit', numeric: true, nowrap: true, sortable: true, render: (p) => <Amount value={p.totalCredit} /> },
+    { key: 'saisiePar', label: 'Saisi par', priorite: 3, render: (p) => <span className="texte-secondaire">{p.saisiePar}</span> },
     { key: 'validee', label: 'Statut', render: (p) => <StatusBadge status={p.validee ? 'VALIDEE' : 'BROUILLON'} /> },
+    { key: 'actions', label: 'Actions', actions: true, masquable: false, render: (p) => (
+      <ExportButton endpoint={`/pieces/${p.id}/export/pdf`} format="pdf" compact />
+    ) },
   ];
 
   return (
@@ -91,8 +103,14 @@ export default function ListePieces() {
             onChange={setRecherche}
             placeholder="Rechercher un numéro ou un libellé…"
             resultCount={`${visibles.length} pièce${visibles.length > 1 ? 's' : ''}`}
+            actions={(
+              <>
+                <BasculeDensite />
+                <MenuColonnes storageKey="liste-pieces" colonnes={colonnes} />
+              </>
+            )}
           />
-          <DataTable columns={colonnes} rows={visibles} empty={`Aucune pièce ne correspond à « ${recherche} ».`} />
+          <DataTable columns={colonnes} rows={visibles} storageKey="liste-pieces" empty={`Aucune pièce ne correspond à « ${recherche} ».`} />
         </div>
       </AsyncState>
     </section>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{pdf/_layout :: tete('Liste des paiements', ${reference}, ${empreinte}, 'paysage')}"></head>
+<body>
+
+<div th:replace="~{pdf/_layout :: bandeau(${societe}, 'Liste des paiements', ${reference}, ${periode})}"></div>
+<div th:replace="~{pdf/_layout :: metaPdf(${genereLe}, ${par}, ${exercice}, ${filtres})}"></div>
+
+<table class="etat">
+    <thead>
+    <tr>
+        <th style="width: 8%;">N°</th>
+        <th style="width: 13%;">Date</th>
+        <th class="num" style="width: 15%;">Montant</th>
+        <th style="width: 14%;">Mode</th>
+        <th style="width: 12%;">Statut</th>
+        <th style="width: 18%;">Validé par</th>
+        <th style="width: 20%;">Observation</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="p : ${lignes}">
+        <td th:text="${p.id}">1</td>
+        <td th:text="${p.datePaiement}">01/01/2026</td>
+        <td class="num" th:text="${fmt.nombre(p.montant)}">0,00</td>
+        <td th:text="${p.mode}">VIREMENT</td>
+        <td>
+            <span class="badge" th:classappend="${p.statutClasse}"
+                  th:text="${p.statut}">Validé</span>
+        </td>
+        <td th:text="${p.validePar != null ? p.validePar : '—'}">—</td>
+        <td th:text="${p.observation}">—</td>
+    </tr>
+    </tbody>
+    <tfoot>
+    <tr>
+        <td colspan="2">TOTAL</td>
+        <td class="num" th:text="${fmt.nombre(total)}">0,00</td>
+        <td colspan="4"></td>
+    </tr>
+    </tfoot>
+</table>
+
+<div th:replace="~{pdf/_layout :: signatures(${etabliPar}, ${etabliRole}, ${verifiePar}, ${verifieRole},
+                                                 null, '', null, null)}"></div>
+
+</body>
+</html>

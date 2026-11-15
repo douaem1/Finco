@@ -13,6 +13,9 @@ public interface AllocationPaiementRepository extends JpaRepository<AllocationPa
     @Query("select a from AllocationPaiement a join fetch a.facture where a.paiement.id = :paiementId")
     List<AllocationPaiement> findAllByPaiementIdWithFacture(Long paiementId);
 
+    @Query("select a from AllocationPaiement a join fetch a.paiement p where a.facture.id = :factureId order by p.datePaiement")
+    List<AllocationPaiement> findAllByFactureIdWithPaiement(Long factureId);
+
     @Query("select coalesce(sum(a.montantAffecte), 0) from AllocationPaiement a where a.facture.id = :factureId")
     BigDecimal totalAffecte(Long factureId);
 

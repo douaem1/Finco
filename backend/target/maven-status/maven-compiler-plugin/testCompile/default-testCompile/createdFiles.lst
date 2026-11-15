@@ -1,9 +1,14 @@
-com\finco\controller\TestControllerTest.class
 com\finco\service\FournisseurServiceTest.class
 com\finco\service\EnvoiEmailServiceTest.class
 com\finco\service\CompteGeneralServiceTest.class
-com\finco\dashboard\DashboardServiceTest.class
+com\finco\audit\DiffAuditTest.class
 com\finco\notification\NotificationListenerTest.class
+com\finco\audit\AuditControllerTest.class
+com\finco\controller\TestControllerTest.class
+com\finco\audit\AuditImmutabiliteTest.class
+com\finco\pdf\PdfServiceTest.class
+com\finco\audit\AuditServiceTest.class
+com\finco\dashboard\DashboardServiceTest.class
 com\finco\service\ClientServiceTest.class
 com\finco\service\ReglesTiersTest.class
 com\finco\service\CentreCoutServiceTest.class

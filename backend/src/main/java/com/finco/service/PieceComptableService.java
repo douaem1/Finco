@@ -1,5 +1,8 @@
 package com.finco.service;
 
+import com.finco.audit.ActionAudit;
+import com.finco.audit.AuditService;
+import com.finco.audit.DiffAudit;
 import com.finco.dto.LigneEcritureRequest;
 import com.finco.dto.PieceComptableRequest;
 import com.finco.dto.PieceComptableResponse;
@@ -53,18 +56,21 @@ public class PieceComptableService {
     private final CentreCoutRepository centreCoutRepository;
     private final ExerciceRepository exerciceRepository;
     private final UtilisateurRepository utilisateurRepository;
+    private final AuditService auditService;
 
     /** Injection par constructeur des 5 repositories (Beans fournis par Spring Data). */
     public PieceComptableService(PieceComptableRepository pieceRepository,
                                  CompteGeneralRepository compteRepository,
                                  CentreCoutRepository centreCoutRepository,
                                  ExerciceRepository exerciceRepository,
-                                 UtilisateurRepository utilisateurRepository) {
+                                 UtilisateurRepository utilisateurRepository,
+                                 AuditService auditService) {
         this.pieceRepository = pieceRepository;
         this.compteRepository = compteRepository;
         this.centreCoutRepository = centreCoutRepository;
         this.exerciceRepository = exerciceRepository;
         this.utilisateurRepository = utilisateurRepository;
+        this.auditService = auditService;
     }
 
     @Transactional(readOnly = true)
@@ -154,6 +160,8 @@ public class PieceComptableService {
         piece.setNumero(prochainNumero(exercice.getAnnee()));
 
         PieceComptable enregistree = pieceRepository.save(piece);
+        auditService.enregistrer(ActionAudit.PIECE_CREEE, "PIECE", enregistree.getId(), enregistree.getNumero(),
+                null, null, "Pièce " + enregistree.getNumero() + " saisie (" + mad(enregistree.totalDebit()) + ")");
         return PieceComptableResponse.depuis(enregistree);
     }
 
@@ -222,6 +230,9 @@ public class PieceComptableService {
                     + " est clôturé : validation impossible.");
         }
         piece.setValidee(true);
+        DiffAudit.Diff diff = DiffAudit.comparer(java.util.Map.of("validee", false), java.util.Map.of("validee", true));
+        auditService.enregistrer(ActionAudit.PIECE_VALIDEE, "PIECE", piece.getId(), piece.getNumero(),
+                diff.ancienneValeur(), diff.nouvelleValeur(), "Pièce " + piece.getNumero() + " validée");
         return PieceComptableResponse.depuis(piece);
     }
 

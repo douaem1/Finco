@@ -1,5 +1,8 @@
 package com.finco.service;
 
+import com.finco.audit.ActionAudit;
+import com.finco.audit.AuditService;
+import com.finco.audit.DiffAudit;
 import com.finco.entity.CentreCout;
 import com.finco.exception.ConflitMetierException;
 import com.finco.exception.RegleMetierException;
@@ -27,13 +30,16 @@ public class CentreCoutService {
     private final CentreCoutRepository centreCoutRepository;
     private final LigneEcritureRepository ligneEcritureRepository;
     private final BudgetRepository budgetRepository;
+    private final AuditService auditService;
 
     public CentreCoutService(CentreCoutRepository centreCoutRepository,
                              LigneEcritureRepository ligneEcritureRepository,
-                             BudgetRepository budgetRepository) {
+                             BudgetRepository budgetRepository,
+                             AuditService auditService) {
         this.centreCoutRepository = centreCoutRepository;
         this.ligneEcritureRepository = ligneEcritureRepository;
         this.budgetRepository = budgetRepository;
+        this.auditService = auditService;
     }
 
     @Transactional(readOnly = true)
@@ -71,11 +77,26 @@ public class CentreCoutService {
             throw new ConflitMetierException("code", "Le code « " + code + " » est déjà utilisé par un autre centre.");
         }
 
+        java.util.Map<String, Object> avant = java.util.Map.of(
+                "code", centre.getCode(),
+                "libelle", centre.getLibelle() != null ? centre.getLibelle() : "",
+                "principal", centre.isPrincipal(),
+                "cleRepartition", centre.getCleRepartition() != null ? centre.getCleRepartition() : java.math.BigDecimal.ZERO);
         centre.setCode(code);
         centre.setLibelle(libelle);
         centre.setPrincipal(donnees.isPrincipal());
         centre.setCleRepartition(cleRepartition);
-        return centreCoutRepository.save(centre);
+        CentreCout enregistre = centreCoutRepository.save(centre);
+        DiffAudit.Diff diff = DiffAudit.comparer(avant, java.util.Map.of(
+                "code", enregistre.getCode(),
+                "libelle", enregistre.getLibelle() != null ? enregistre.getLibelle() : "",
+                "principal", enregistre.isPrincipal(),
+                "cleRepartition", enregistre.getCleRepartition() != null ? enregistre.getCleRepartition() : java.math.BigDecimal.ZERO));
+        auditService.enregistrer(ActionAudit.CENTRE_COUT_MODIFIE, "CENTRE_COUT", enregistre.getId(),
+                enregistre.getCode(),
+                diff.ancienneValeur(), diff.nouvelleValeur(),
+                "Modification du centre de coûts " + enregistre.getCode());
+        return enregistre;
     }
 
     public void delete(Long id) {

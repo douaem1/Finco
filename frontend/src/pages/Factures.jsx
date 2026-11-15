@@ -9,7 +9,7 @@ import { erreursParChamp, messageErreur } from '../services/api';
 import { dateFr, formatMAD } from '../utils/format';
 import PageHeader from '../components/ui/PageHeader';
 import AsyncState from '../components/ui/AsyncState';
-import DataTable from '../components/ui/DataTable';
+import DataTable, { MenuActionsLigne, BasculeDensite, MenuColonnes } from '../components/ui/DataTable';
 import SearchToolbar from '../components/ui/SearchToolbar';
 import StatusBadge from '../components/ui/StatusBadge';
 import Amount from '../components/ui/Amount';
@@ -18,6 +18,7 @@ import Combobox from '../components/ui/Combobox';
 import Button from '../components/ui/Button';
 import CrudModal from '../components/ui/CrudModal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
+import ExportButton from '../components/ui/ExportButton';
 import MessageErreur from '../components/MessageErreur';
 import Icone from '../components/Icone';
 import { useToast } from '../components/ui/ToastRegion';
@@ -200,24 +201,38 @@ export default function Factures() {
   }
 
   const colonnes = [
-    { key: 'numero', label: 'Numéro', sortable: true, render: (f) => <strong>{f.numero}</strong> },
-    { key: 'dateFacture', label: 'Date', sortable: true, render: (f) => <span className="chiffres">{dateFr(f.dateFacture)}</span> },
+    {
+      key: 'numero',
+      label: 'N°',
+      sortable: true,
+      cell: (f) => ({ principal: <strong>{f.numero}</strong>, secondaire: f.tiersNom }),
+    },
     { key: 'type', label: 'Type', render: (f) => (f.type === 'ACHAT' ? 'Achat' : 'Vente') },
-    { key: 'tiersNom', label: 'Tiers', sortable: true },
-    { key: 'montantHT', label: 'HT', numeric: true, render: (f) => <Amount value={f.montantHT} /> },
-    { key: 'montantTTC', label: 'TTC', numeric: true, render: (f) => <strong><Amount value={f.montantTTC} /></strong> },
-    { key: 'reste', label: 'Reste à payer', numeric: true, render: (f) => <Amount value={resteAPayer(f)} /> },
+    { key: 'dateFacture', label: 'Échéance', sortable: true, nowrap: true, render: (f) => dateFr(f.dateFacture) },
+    { key: 'montantHT', label: 'HT', numeric: true, nowrap: true, priorite: 2, render: (f) => <Amount value={f.montantHT} /> },
+    { key: 'montantTVA', label: 'TVA', numeric: true, nowrap: true, priorite: 2, render: (f) => <Amount value={Number(f.montantTTC) - Number(f.montantHT)} /> },
+    { key: 'montantTTC', label: 'TTC', numeric: true, nowrap: true, render: (f) => <strong><Amount value={f.montantTTC} /></strong> },
+    { key: 'reste', label: 'Reste à payer', numeric: true, nowrap: true, render: (f) => <Amount value={resteAPayer(f)} /> },
     { key: 'statut', label: 'Statut', render: (f) => <StatusBadge status={f.statut} /> },
     {
       key: 'actions',
       label: 'Actions',
-      render: (f) => f.statut === 'BROUILLON' ? (
+      actions: true,
+      masquable: false,
+      render: (f) => (
         <div className="actions-cell">
-          <button type="button" className="btn-action" onClick={() => ouvrirModification(f)} title="Modifier" aria-label="Modifier"><Icone nom="editer" taille={16} /></button>
-          <button type="button" className="btn-action" onClick={() => { setFactureAValider(f); setCentreCoutId(''); setErreurModale(''); }} title="Comptabiliser" aria-label="Comptabiliser"><Icone nom="valide" taille={16} /></button>
-          <button type="button" className="btn-action btn-action-supprimer" onClick={() => setFactureASupprimer(f)} title="Supprimer" aria-label="Supprimer"><Icone nom="supprimer" taille={16} /></button>
+          <ExportButton endpoint={`/factures/${f.id}/export/pdf`} format="pdf" compact />
+          {f.statut === 'BROUILLON' ? (
+            <MenuActionsLigne
+              actions={[
+                { label: 'Modifier', icone: 'editer', principale: true, onSelect: () => ouvrirModification(f) },
+                { label: 'Comptabiliser', icone: 'valide', onSelect: () => { setFactureAValider(f); setCentreCoutId(''); setErreurModale(''); } },
+                { label: 'Supprimer', icone: 'supprimer', danger: true, separateurAvant: true, onSelect: () => setFactureASupprimer(f) },
+              ]}
+            />
+          ) : <span className="texte-secondaire">{f.pieceNumero || 'Comptabilisée'}</span>}
         </div>
-      ) : <span className="texte-secondaire">{f.pieceNumero || 'Comptabilisée'}</span>,
+      ),
     },
   ];
 
@@ -251,8 +266,14 @@ export default function Factures() {
             ))}
           </div>
           <SearchToolbar value={recherche} onChange={setRecherche} placeholder="Rechercher une facture, un tiers…"
-            resultCount={`${facturesVisibles.length} facture${facturesVisibles.length > 1 ? 's' : ''}`} />
-          <DataTable columns={colonnes} rows={facturesVisibles} empty="Aucune facture à afficher." />
+            resultCount={`${facturesVisibles.length} facture${facturesVisibles.length > 1 ? 's' : ''}`}
+            actions={(
+              <>
+                <BasculeDensite />
+                <MenuColonnes storageKey="factures" colonnes={colonnes} />
+              </>
+            )} />
+          <DataTable columns={colonnes} rows={facturesVisibles} storageKey="factures" empty="Aucune facture à afficher." />
         </div>
       </AsyncState>
 

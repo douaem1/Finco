@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{pdf/_layout :: tete('Pièce comptable', ${reference}, ${empreinte}, 'portrait')}"></head>
+<body>
+
+<div th:replace="~{pdf/_layout :: filigrane(${brouillon})}"></div>
+<div th:replace="~{pdf/_layout :: bandeau(${societe}, 'Pièce comptable', ${reference}, ${periode})}"></div>
+<div th:replace="~{pdf/_layout :: metaPdf(${genereLe}, ${par}, ${exercice}, ${filtres})}"></div>
+
+<div class="meta">
+    <div>Numéro : <b th:text="${numero}">PC-2026-00001</b></div>
+    <div>Date d'écriture : <b th:text="${fmt.date(dateEcriture)}">01/01/2026</b></div>
+    <div>Libellé : <b th:text="${libelle}">Libellé</b></div>
+    <div>
+        Statut :
+        <span class="badge" th:classappend="${validee} ? 'badge-succes' : 'badge-attention'"
+              th:text="${statutLibelle}">Brouillon</span>
+    </div>
+    <div>Saisie par : <b th:text="${saisiePar}">Utilisateur</b></div>
+</div>
+
+<table class="etat">
+    <thead>
+    <tr>
+        <th style="width: 16%;">Compte</th>
+        <th style="width: 34%;">Libellé du compte</th>
+        <th style="width: 16%;">Centre de coûts</th>
+        <th class="num" style="width: 17%;">Débit</th>
+        <th class="num" style="width: 17%;">Crédit</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="l : ${lignes}">
+        <td th:text="${l.compteNumero}">6111</td>
+        <td th:text="${l.compteLibelle}">Libellé</td>
+        <td th:text="${l.centreCoutCode != null ? l.centreCoutCode : '—'}">CC</td>
+        <td class="num" th:text="${l.sens == 'DEBIT' ? fmt.nombre(l.montant) : '—'}">0,00</td>
+        <td class="num" th:text="${l.sens == 'CREDIT' ? fmt.nombre(l.montant) : '—'}">0,00</td>
+    </tr>
+    </tbody>
+    <tfoot>
+    <tr>
+        <td colspan="3">TOTAUX</td>
+        <td class="num" th:text="${fmt.nombre(totalDebit)}">0,00</td>
+        <td class="num" th:text="${fmt.nombre(totalCredit)}">0,00</td>
+    </tr>
+    </tfoot>
+</table>
+
+<p th:classappend="${equilibre} ? 'equilibre-ok' : 'equilibre-ko'"
+   th:text="${equilibre ? 'Écriture équilibrée (débit = crédit)' : 'Écriture NON équilibrée (écart de ' + fmt.nombre(totalDebit - totalCredit) + ' MAD)'}">
+    Écriture équilibrée
+</p>
+
+<div th:replace="~{pdf/_layout :: signatures(${saisiePar}, 'Comptable', ${verifiePar}, 'Contrôleur de gestion',
+                                                 null, '', null, null)}"></div>
+
+</body>
+</html>

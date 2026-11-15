@@ -1,5 +1,8 @@
 package com.finco.service;
 
+import com.finco.audit.ActionAudit;
+import com.finco.audit.AuditService;
+import com.finco.audit.DiffAudit;
 import com.finco.dto.CompteGeneralRequest;
 import com.finco.dto.CompteGeneralResponse;
 import com.finco.entity.CompteGeneral;
@@ -22,11 +25,14 @@ public class CompteGeneralService {
 
     private final CompteGeneralRepository compteGeneralRepository;
     private final LigneEcritureRepository ligneEcritureRepository;
+    private final AuditService auditService;
 
     public CompteGeneralService(CompteGeneralRepository compteGeneralRepository,
-                                LigneEcritureRepository ligneEcritureRepository) {
+                                LigneEcritureRepository ligneEcritureRepository,
+                                AuditService auditService) {
         this.compteGeneralRepository = compteGeneralRepository;
         this.ligneEcritureRepository = ligneEcritureRepository;
+        this.auditService = auditService;
     }
 
     @Transactional(readOnly = true)
@@ -71,11 +77,22 @@ public class CompteGeneralService {
             }
         }
 
+        java.util.Map<String, Object> avant = java.util.Map.of(
+                "numero", compte.getNumero(),
+                "libelle", compte.getLibelle() != null ? compte.getLibelle() : "",
+                "classe", compte.getClasse());
         compte.setNumero(nouveauNumero);
         compte.setLibelle(nouveauLibelle);
         compte.setClasse(calculerClasse(nouveauNumero));
 
         CompteGeneral misAJour = compteGeneralRepository.save(compte);
+        DiffAudit.Diff diff = DiffAudit.comparer(avant, java.util.Map.of(
+                "numero", misAJour.getNumero(),
+                "libelle", misAJour.getLibelle() != null ? misAJour.getLibelle() : "",
+                "classe", misAJour.getClasse()));
+        auditService.enregistrer(ActionAudit.COMPTE_COMPTABLE_MODIFIE, "COMPTE", misAJour.getId(), misAJour.getNumero(),
+                diff.ancienneValeur(), diff.nouvelleValeur(),
+                "Modification du compte comptable " + misAJour.getNumero());
         return CompteGeneralResponse.de(misAJour);
     }
 

@@ -12,6 +12,8 @@ import Field from '../components/ui/Field';
 import Combobox from '../components/ui/Combobox';
 import Button from '../components/ui/Button';
 import CrudModal from '../components/ui/CrudModal';
+import ExportButton from '../components/ui/ExportButton';
+import Tooltip from '../components/ui/Tooltip';
 import MessageErreur from '../components/MessageErreur';
 import Icone from '../components/Icone';
 import { useToast } from '../components/ui/ToastRegion';
@@ -19,6 +21,25 @@ import { useToast } from '../components/ui/ToastRegion';
 const MODES = [
   ['VIREMENT', 'Virement'], ['CHEQUE', 'Chèque'], ['ESPECES', 'Espèces'], ['EFFET', 'Effet'],
 ];
+
+const MAX_FACTURES_VISIBLES = 2;
+
+/** Factures affectées en puces ; au-delà de deux, une puce « +N » porte l'infobulle. */
+function ChipsFactures({ factures, vide = '—' }) {
+  if (!factures?.length) return vide;
+  const principales = factures.slice(0, MAX_FACTURES_VISIBLES);
+  const reste = factures.slice(MAX_FACTURES_VISIBLES);
+  return (
+    <span className="ui-search-chips">
+      {principales.map((f) => <span key={f.id} className="ui-chip">{f.numero}</span>)}
+      {reste.length > 0 && (
+        <Tooltip label={reste.map((f) => `${f.numero} (${montant(f.montantAffecte)} MAD)`).join(' · ')} side="top">
+          <span className="ui-chip">+{reste.length}</span>
+        </Tooltip>
+      )}
+    </span>
+  );
+}
 
 function aujourdhui() {
   return new Date().toLocaleDateString('sv-SE');
@@ -104,18 +125,15 @@ export default function Paiements() {
   }
 
   const colonnes = [
-    { key: 'datePaiement', label: 'Date', sortable: true, render: (p) => <span className="chiffres">{dateFr(p.datePaiement)}</span> },
     {
-      key: 'factures',
-      label: 'Factures affectées',
-      render: (p) => (p.factures?.length
-        ? p.factures.map((f, i) => (
-          <span key={f.id}>{i > 0 ? ', ' : ''}{f.numero} (<Amount value={f.montantAffecte} />)</span>
-        ))
-        : '—'),
+      key: 'datePaiement',
+      label: 'Date',
+      sortable: true,
+      nowrap: true,
+      cell: (p) => ({ principal: dateFr(p.datePaiement), secondaire: MODES.find(([code]) => code === p.mode)?.[1] || p.mode }),
     },
-    { key: 'mode', label: 'Mode', render: (p) => MODES.find(([code]) => code === p.mode)?.[1] || p.mode },
-    { key: 'montant', label: 'Montant', numeric: true, sortable: true, render: (p) => <strong><Amount value={p.montant} /></strong> },
+    { key: 'montant', label: 'Montant', numeric: true, nowrap: true, sortable: true, render: (p) => <strong><Amount value={p.montant} /></strong> },
+    { key: 'factures', label: 'Factures concernées', render: (p) => <ChipsFactures factures={p.factures} /> },
     { key: 'valide', label: 'Statut', render: (p) => <StatusBadge status={p.valide ? 'VALIDEE' : 'BROUILLON'} label={p.valide ? 'Validé' : 'À valider'} /> },
     { key: 'validePar', label: 'Validé par', render: (p) => <span className="texte-secondaire">{p.validePar || 'En attente'}</span> },
   ];
@@ -126,9 +144,12 @@ export default function Paiements() {
         title="Paiements"
         description="Enregistrez les règlements affectés aux factures validées."
         actions={(
-          <Button type="button" onClick={ouvrirCreation} disabled={facturesReglables.length === 0}>
-            <Icone nom="plus" taille={18} /> Enregistrer un paiement
-          </Button>
+          <div className="ui-page-actions">
+            <ExportButton endpoint="/paiements/export/pdf" format="pdf" />
+            <Button type="button" onClick={ouvrirCreation} disabled={facturesReglables.length === 0}>
+              <Icone nom="plus" taille={18} /> Enregistrer un paiement
+            </Button>
+          </div>
         )}
       />
 
@@ -146,7 +167,7 @@ export default function Paiements() {
         </div>
 
         <div className="panneau">
-          <DataTable columns={colonnes} rows={paiements} empty="Aucun paiement enregistré." />
+          <DataTable columns={colonnes} rows={paiements} storageKey="paiements" empty="Aucun paiement enregistré." />
         </div>
       </AsyncState>
 

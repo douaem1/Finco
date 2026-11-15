@@ -1,5 +1,9 @@
 package com.finco.config;
 
+import com.finco.audit.ActionAudit;
+import com.finco.audit.AuditEvent;
+import com.finco.audit.AuditRepository;
+import com.finco.audit.ResultatAudit;
 import com.finco.entity.CentreCout;
 import com.finco.entity.CompteGeneral;
 import com.finco.entity.Exercice;
@@ -47,6 +51,7 @@ public class DonneesInitiales implements CommandLineRunner {
     private final CentreCoutRepository centreCoutRepository;
     private final PieceComptableRepository pieceRepository;
     private final NotificationRepository notificationRepository;
+    private final AuditRepository auditRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DonneesInitiales(UtilisateurRepository utilisateurRepository,
@@ -55,6 +60,7 @@ public class DonneesInitiales implements CommandLineRunner {
                             CentreCoutRepository centreCoutRepository,
                             PieceComptableRepository pieceRepository,
                             NotificationRepository notificationRepository,
+                            AuditRepository auditRepository,
                             PasswordEncoder passwordEncoder) {
         this.utilisateurRepository = utilisateurRepository;
         this.compteRepository = compteRepository;
@@ -62,6 +68,7 @@ public class DonneesInitiales implements CommandLineRunner {
         this.centreCoutRepository = centreCoutRepository;
         this.pieceRepository = pieceRepository;
         this.notificationRepository = notificationRepository;
+        this.auditRepository = auditRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -103,6 +110,7 @@ public class DonneesInitiales implements CommandLineRunner {
 
         creerEcrituresDemonstration();
         creerNotificationsDemonstration();
+        creerAuditDemonstration();
     }
 
     private void garantirUtilisateur(String nom, String prenom, String email, Role role, String motDePasseHache) {
@@ -200,5 +208,64 @@ public class DonneesInitiales implements CommandLineRunner {
             notification.setLien(lien);
             notificationRepository.save(notification);
         });
+    }
+
+    /**
+     * Quelques événements d'audit d'exemple, un par catégorie (plus un échec de
+     * connexion), pour que le journal d'audit soit visible dès la démonstration.
+     * Insérés une seule fois (table vide).
+     */
+    private void creerAuditDemonstration() {
+        if (auditRepository.count() > 0) {
+            return;
+        }
+        evenementAudit("admin@finco.ma", ActionAudit.CONNEXION_REUSSIE, "UTILISATEUR", null,
+                "admin@finco.ma", null, null, "Connexion validée (OTP vérifié)",
+                ResultatAudit.SUCCES, "10.0.0.12");
+        evenementAudit("comptable@finco.ma", ActionAudit.PIECE_VALIDEE, "PIECE", null,
+                "DEMO-CO-2026-11-01", null, null, "Validation de la pièce de loyer",
+                ResultatAudit.SUCCES, "10.0.0.21");
+        evenementAudit("comptable@finco.ma", ActionAudit.FACTURE_CREEE, "FACTURE", null,
+                "FAC-DEMO-001", null, "{\"statut\":\"BROUILLON\"}", "Création d'une facture de démonstration",
+                ResultatAudit.SUCCES, "10.0.0.21");
+        evenementAudit("daf@finco.ma", ActionAudit.PAIEMENT_VALIDE, "PAIEMENT", null,
+                "PAI-DEMO-001", "{\"statut\":\"EN_ATTENTE\"}", "{\"statut\":\"VALIDE\"}",
+                "Validation du paiement de démonstration", ResultatAudit.SUCCES, "10.0.0.31");
+        evenementAudit("comptable@finco.ma", ActionAudit.EXERCICE_CLOTURE, "EXERCICE", null,
+                "Exercice 2025", "{\"statut\":\"OUVERTE\"}", "{\"statut\":\"CLOTUREE\"}",
+                "Clôture de l'exercice 2025", ResultatAudit.SUCCES, "10.0.0.21");
+        evenementAudit("controleur@finco.ma", ActionAudit.BUDGET_CREE, "BUDGET", null,
+                "Budget 2026 PROD", null, "{\"montant\":72000}", "Création du budget du centre PROD",
+                ResultatAudit.SUCCES, "10.0.0.41");
+        evenementAudit("admin@finco.ma", ActionAudit.UTILISATEUR_CREE, "UTILISATEUR", null,
+                "controleur@finco.ma", null, "{\"role\":\"CONTROLEUR\"}", "Création d'un utilisateur",
+                ResultatAudit.SUCCES, "10.0.0.12");
+        evenementAudit("comptable@finco.ma", ActionAudit.EXPORT_PDF, "GRAND_LIVRE", null,
+                "Grand livre", null, null, "Export PDF du grand livre",
+                ResultatAudit.SUCCES, "10.0.0.21");
+        evenementAudit(null, ActionAudit.CONNEXION_ECHOUEE, "UTILISATEUR", null,
+                "i***a@finco.ma", null, null, "Échec de connexion pour i***a@finco.ma",
+                ResultatAudit.ECHEC, "203.0.113.9");
+        log.info("Événements d'audit de démonstration créés.");
+    }
+
+    private void evenementAudit(String email, ActionAudit action, String entiteType, Long entiteId,
+                                String reference, String ancienneValeur, String nouvelleValeur,
+                                String details, ResultatAudit resultat, String adresseIp) {
+        Utilisateur utilisateur = email == null ? null
+                : utilisateurRepository.findByEmail(email).orElse(null);
+        AuditEvent evenement = AuditEvent.builder()
+                .utilisateur(utilisateur != null ? utilisateur.getId() : null,
+                        utilisateur != null ? utilisateur.getNomComplet() : null,
+                        utilisateur != null ? utilisateur.getRole().name() : null)
+                .action(action)
+                .entite(entiteType, entiteId, reference)
+                .ancienneValeur(ancienneValeur)
+                .nouvelleValeur(nouvelleValeur)
+                .details(details)
+                .resultat(resultat)
+                .adresseIp(adresseIp)
+                .build();
+        auditRepository.save(evenement);
     }
 }

@@ -201,6 +201,15 @@ export const PAGES = [
     dansMenu: true,
     end: false,
   },
+  {
+    path: '/audit',
+    libelle: "Journal d'audit",
+    icone: 'audit',
+    section: 'Administration',
+    roles: [ROLES.ADMIN],
+    dansMenu: true,
+    end: false,
+  },
 
   // ==========================================
   // MODULE DIRECTION FINANCIÈRE (DIRECTEUR_FINANCIER)

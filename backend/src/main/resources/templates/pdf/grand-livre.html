@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{pdf/_layout :: tete('Grand livre', ${reference}, ${empreinte}, 'paysage')}"></head>
+<body>
+
+<div th:replace="~{pdf/_layout :: bandeau(${societe}, 'Grand livre', ${reference}, ${periode})}"></div>
+<div th:replace="~{pdf/_layout :: metaPdf(${genereLe}, ${par}, ${exercice}, ${filtres})}"></div>
+
+<div class="bloc-compte" th:each="compte : ${comptes}">
+    <div class="bloc-compte-entete">
+        <h3 th:text="${compte.numero + ' — ' + compte.libelle}">Compte</h3>
+        <div class="texte-secondaire" th:text="${'Solde d’ouverture : ' + fmt.nombre(compte.soldeOuverture) + ' MAD'}">
+            Solde d'ouverture
+        </div>
+    </div>
+
+    <table class="etat">
+        <thead>
+        <tr>
+            <th style="width: 11%;">Date</th>
+            <th style="width: 13%;">Pièce</th>
+            <th style="width: 31%;">Libellé</th>
+            <th style="width: 9%;">Centre</th>
+            <th class="num" style="width: 12%;">Débit</th>
+            <th class="num" style="width: 12%;">Crédit</th>
+            <th class="num" style="width: 12%;">Solde cumulé</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="l : ${compte.lignes}">
+            <td th:text="${fmt.date(l.date)}">01/01/2026</td>
+            <td th:text="${l.pieceNumero}">PC-2026-00001</td>
+            <td th:text="${l.libelle}">Libellé</td>
+            <td th:text="${l.centreCode != null ? l.centreCode : '—'}">CC</td>
+            <td class="num" th:text="${l.debit != null and l.debit.signum() != 0 ? fmt.nombre(l.debit) : '—'}">0,00</td>
+            <td class="num" th:text="${l.credit != null and l.credit.signum() != 0 ? fmt.nombre(l.credit) : '—'}">0,00</td>
+            <td class="num" th:text="${fmt.nombre(l.soldeCumule)}">0,00</td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+            <td colspan="4" th:text="${'Totaux du compte ' + compte.numero}">Totaux</td>
+            <td class="num" th:text="${fmt.nombre(compte.totalDebit)}">0,00</td>
+            <td class="num" th:text="${fmt.nombre(compte.totalCredit)}">0,00</td>
+            <td class="num" th:text="${fmt.nombre(compte.soldeFinal)}">0,00</td>
+        </tr>
+        </tfoot>
+    </table>
+</div>
+
+<table class="etat">
+    <tfoot>
+    <tr>
+        <td colspan="4">TOTAUX GÉNÉRAUX</td>
+        <td class="num" th:text="${fmt.nombre(totalDebit)}">0,00</td>
+        <td class="num" th:text="${fmt.nombre(totalCredit)}">0,00</td>
+        <td class="num" th:text="${fmt.nombre(totalDebit - totalCredit)}">0,00</td>
+    </tr>
+    </tfoot>
+</table>
+
+<div th:replace="~{pdf/_layout :: signatures(${etabliPar}, ${etabliRole}, ${verifiePar}, ${verifieRole},
+                                                 null, '', null, null)}"></div>
+
+</body>
+</html>

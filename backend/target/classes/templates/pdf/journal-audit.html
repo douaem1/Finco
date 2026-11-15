@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{pdf/_layout :: tete('Journal d’audit', ${reference}, ${empreinte}, 'paysage')}"></head>
+<body>
+
+<div th:replace="~{pdf/_layout :: bandeau(${societe}, 'Journal d’audit', ${reference}, ${periode})}"></div>
+<div th:replace="~{pdf/_layout :: metaPdf(${genereLe}, ${par}, ${exercice}, ${filtres})}"></div>
+
+<table class="etat">
+    <thead>
+    <tr>
+        <th style="width: 15%;">Date et heure</th>
+        <th style="width: 17%;">Utilisateur</th>
+        <th style="width: 22%;">Action</th>
+        <th style="width: 18%;">Entité</th>
+        <th style="width: 10%;">Résultat</th>
+        <th style="width: 12%;">Adresse IP</th>
+        <th style="width: 6%;">Catégorie</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="l : ${lignes}">
+        <td th:text="${l.dateHeure}">01/01/2026 10:00:00</td>
+        <td>
+            <span th:text="${l.utilisateur}">Utilisateur</span>
+            <br/><span class="texte-secondaire" th:text="${l.role}">Rôle</span>
+        </td>
+        <td>
+            <span class="badge" th:text="${l.action}">Action</span>
+            <br/><span class="texte-secondaire" th:text="${l.entite}">Entité</span>
+            <span class="texte-secondaire" th:if="${l.reference != null and l.reference != ''}"
+                  th:text="${'· ' + l.reference}">Réf.</span>
+        </td>
+        <td th:text="${l.details}">Détails</td>
+        <td>
+            <span class="badge" th:classappend="${l.echec} ? 'badge-echec' : 'badge-succes'"
+                  th:text="${l.resultat}">Succès</span>
+        </td>
+        <td th:text="${l.adresseIp}">IP</td>
+        <td th:text="${l.categorie}">Catégorie</td>
+    </tr>
+    </tbody>
+    <tfoot>
+    <tr>
+        <td colspan="6">Total des événements exportés</td>
+        <td class="num" th:text="${total}">0</td>
+    </tr>
+    </tfoot>
+</table>
+
+<p class="note" th:if="${tronque}">
+    Export tronqué : seuls les 5 000 événements les plus récents sont affichés.
+</p>
+
+</body>
+</html>

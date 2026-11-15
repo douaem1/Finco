@@ -4,7 +4,7 @@ import { listerComptes, creerCompte, modifierCompte, supprimerCompte } from '../
 import { erreursParChamp, messageErreur } from '../services/api';
 import PageHeader from '../components/ui/PageHeader';
 import AsyncState from '../components/ui/AsyncState';
-import DataTable from '../components/ui/DataTable';
+import DataTable, { BasculeDensite, MenuColonnes, MenuActionsLigne } from '../components/ui/DataTable';
 import SearchToolbar from '../components/ui/SearchToolbar';
 import Button from '../components/ui/Button';
 import Field from '../components/ui/Field';
@@ -163,11 +163,13 @@ export default function PlanComptable() {
   const classeCalculee = /^[1-8]$/.test(premierChiffre) ? Number(premierChiffre) : null;
 
   const colonnes = [
-    { key: 'numero', label: 'Numéro', sortable: true, render: (c) => <strong className="numero-compte">{c.numero}</strong> },
-    { key: 'libelle', label: 'Libellé', sortable: true },
+    { key: 'numero', label: 'Numéro', sortable: true, priorite: 1, render: (c) => <strong className="numero-compte">{c.numero}</strong> },
+    { key: 'libelle', label: 'Libellé', sortable: true, priorite: 1, truncate: true },
     {
       key: 'classe',
       label: 'Classe',
+      priorite: 2,
+      align: 'center',
       render: (c) => (
         <span className="badge badge-classe" title={NOMS_CLASSES[c.classe] || ''}>Classe {c.classe}</span>
       ),
@@ -175,15 +177,16 @@ export default function PlanComptable() {
     ...(estAdmin ? [{
       key: 'actions',
       label: 'Actions',
+      actions: true,
+      masquable: false,
       render: (c) => (
-        <div className="actions-cell">
-          <button type="button" className="btn-action" onClick={() => ouvrirModification(c)} title="Modifier ce compte" aria-label="Modifier ce compte">
-            <Icone nom="editer" taille={16} />
-          </button>
-          <button type="button" className="btn-action btn-action-supprimer" onClick={() => setCompteASupprimer(c)} title="Supprimer ce compte" aria-label="Supprimer ce compte">
-            <Icone nom="supprimer" taille={16} />
-          </button>
-        </div>
+        <MenuActionsLigne
+          label="Actions pour ce compte"
+          actions={[
+            { label: 'Modifier', icone: 'editer', principale: true, onSelect: () => ouvrirModification(c) },
+            { label: 'Supprimer', icone: 'supprimer', danger: true, separateurAvant: true, onSelect: () => setCompteASupprimer(c) },
+          ]}
+        />
       ),
     }] : []),
   ];
@@ -217,8 +220,9 @@ export default function PlanComptable() {
             onChange={setRecherche}
             placeholder="Rechercher par numéro ou libellé…"
             resultCount={`${comptesVisibles.length} compte${comptesVisibles.length > 1 ? 's' : ''}`}
+            actions={<><BasculeDensite /><MenuColonnes storageKey="plan-comptable" colonnes={colonnes} /></>}
           />
-          <DataTable columns={colonnes} rows={comptesVisibles} empty={`Aucun compte ne correspond à « ${recherche} ».`} />
+          <DataTable columns={colonnes} rows={comptesVisibles} storageKey="plan-comptable" empty={`Aucun compte ne correspond à « ${recherche} ».`} />
         </div>
       </AsyncState>
 

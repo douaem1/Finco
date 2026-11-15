@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<body>
+
+<!-- ============================================================
+     EN-TÊTE : polices, variables de marque et règles @page
+     (thème d'impression TOUJOURS clair, indépendant de l'interface)
+     ============================================================ -->
+<head th:fragment="tete(titreDocument, referenceCss, empreinte, orientation)">
+    <meta charset="UTF-8" />
+    <title th:text="${titreDocument}">Document FinCo</title>
+    <style th:inline="text">
+        @page {
+            size: A4 [[${orientation == 'paysage' ? 'landscape' : 'portrait'}]];
+            margin: 18mm 18mm 22mm 18mm;
+            @bottom-left {
+                content: "FinCo — Comptabilité financière et contrôle de gestion";
+                font-family: 'FinCo Sans', Helvetica, Arial, sans-serif;
+                font-size: 7.5pt; color: #6B6455;
+                border-top: 0.6pt solid #12A5A0; padding-top: 3pt;
+            }
+            @bottom-center {
+                content: "Page " counter(page) " / " counter(pages);
+                font-family: 'FinCo Sans', Helvetica, Arial, sans-serif;
+                font-size: 7.5pt; color: #6B6455;
+                border-top: 0.6pt solid #12A5A0; padding-top: 3pt;
+            }
+            @bottom-right {
+                content: "Réf. [[${referenceCss}]] · Empreinte [[${empreinte}]]";
+                font-family: 'FinCo Sans', Helvetica, Arial, sans-serif;
+                font-size: 7.5pt; color: #6B6455;
+                border-top: 0.6pt solid #12A5A0; padding-top: 3pt;
+            }
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'FinCo Sans', Helvetica, Arial, sans-serif;
+            font-size: 9.5pt; color: #221D16; background: #FFFDF7; margin: 0;
+        }
+        h1, h2, h3, .serif {
+            font-family: 'FinCo Serif', Georgia, 'Times New Roman', serif;
+            color: #221D16; margin: 0;
+        }
+        .texte-secondaire { color: #6B6455; }
+        .chiffres { font-variant-numeric: tabular-nums; }
+
+        /* --- Bandeau d'en-tête --- */
+        .bandeau { width: 100%; margin-bottom: 6pt; }
+        .bandeau table { width: 100%; border-collapse: collapse; }
+        .bandeau td { vertical-align: top; }
+        .logo-pastilles { width: 46pt; }
+        .pastille { height: 9pt; border-radius: 6pt; margin-bottom: 3pt; }
+        .pastille-corail { background: #FF6B57; width: 39pt; }
+        .pastille-jaune { background: #FFC53D; width: 28.5pt; }
+        .pastille-sarcelle { background: #12A5A0; width: 18pt; }
+        .marque { font-family: 'FinCo Serif', Georgia, 'Times New Roman', serif; font-weight: 700; font-size: 18pt; }
+        .soulignement { margin-top: 2pt; }
+        .soulignement span { display: inline-block; height: 3pt; border-radius: 1.5pt; }
+        .soulignement .s1 { background: #FF6B57; width: 22pt; }
+        .soulignement .s2 { background: #FFC53D; width: 12pt; }
+        .soulignement .s3 { background: #12A5A0; width: 8pt; }
+        .bandeau-droite { text-align: right; }
+        .bandeau-societe { font-size: 10pt; color: #6B6455; }
+        .bandeau-titre { font-size: 15pt; font-weight: 700; }
+        .bandeau-reference { font-size: 9pt; color: #6B6455; }
+        .ligne-couleurs { margin: 4pt 0 10pt 0; }
+        .ligne-couleurs span { display: inline-block; height: 2.4pt; }
+        .ligne-couleurs .c1 { background: #FF6B57; width: 33%; }
+        .ligne-couleurs .c2 { background: #FFC53D; width: 33%; }
+        .ligne-couleurs .c3 { background: #12A5A0; width: 33%; }
+
+        /* --- bloc de métadonnées --- */
+        .meta {
+            background: #FBF6EC; border: 0.6pt solid #EDE6D6; border-radius: 6pt;
+            padding: 7pt 9pt; margin-bottom: 10pt; font-size: 8.5pt; color: #6B6455;
+        }
+        .meta b { color: #221D16; }
+
+        /* --- tableaux --- */
+        table.etat { width: 100%; border-collapse: collapse; margin-bottom: 10pt; }
+        table.etat thead th {
+            background: #D9F2F0; color: #221D16; font-weight: 700; font-size: 8pt;
+            text-transform: uppercase; letter-spacing: 0.3pt; text-align: left;
+            padding: 5pt 6pt; border-bottom: 0.6pt solid #B6E3E0;
+            display: table-cell;
+        }
+        table.etat thead { display: table-header-group; }
+        table.etat tbody td {
+            padding: 4pt 6pt; border-bottom: 0.5pt solid #EFECE3;
+            font-size: 9.5pt; page-break-inside: avoid;
+        }
+        table.etat tr { page-break-inside: avoid; }
+        table.etat td.num, table.etat th.num { text-align: right; font-variant-numeric: tabular-nums; }
+        table.etat tfoot td {
+            border-top: 1.5pt solid #221D16; font-weight: 700; padding: 5pt 6pt; font-size: 9.5pt;
+        }
+        table.etat tfoot td.num { text-align: right; font-variant-numeric: tabular-nums; }
+        .negatif { color: #C0341F; }
+        .positif { color: #0C6549; }
+
+        .bloc-compte { margin-bottom: 14pt; page-break-inside: avoid; }
+        .bloc-compte-entete {
+            background: #FBF6EC; border-left: 3pt solid #12A5A0; padding: 5pt 8pt; margin-bottom: 4pt;
+        }
+        .bloc-compte-entete h3 { font-size: 10.5pt; }
+
+        .badge {
+            display: inline-block; padding: 1.5pt 6pt; border-radius: 6pt;
+            font-size: 8pt; font-weight: 700; border: 0.6pt solid #C9C2B2; color: #221D16; background: #EFECE3;
+        }
+        .badge-succes { background: #DCF3EA; color: #0C6549; border-color: #B6E3E0; }
+        .badge-echec { background: #FFE3DE; color: #C0341F; border-color: #F6C3B9; }
+        .badge-attention { background: #FFF0CC; color: #8A5700; border-color: #F2DCA6; }
+
+        .barre { display: inline-block; width: 90pt; height: 6pt; background: #EFECE3; border-radius: 3pt; vertical-align: middle; }
+        .barre span { display: inline-block; height: 6pt; border-radius: 3pt; background: #12A5A0; }
+        .barre.attention span { background: #8A5700; }
+        .barre.depassement span { background: #C0341F; }
+
+        /* --- signatures --- */
+        .signatures { width: 100%; border-collapse: separate; border-spacing: 8pt 0; margin-top: 12pt; page-break-inside: avoid; }
+        .signatures td {
+            width: 33%; border: 0.6pt solid #C9C2B2; border-radius: 6pt; padding: 8pt; vertical-align: top;
+            height: 90pt;
+        }
+        .signature-titre { font-size: 8.5pt; font-weight: 700; text-transform: uppercase; color: #221D16; }
+        .signature-role, .signature-nom, .signature-date { font-size: 8pt; color: #6B6455; }
+        .signature-zone { border-top: 0.5pt solid #C9C2B2; margin-top: 26pt; padding-top: 3pt; font-size: 7.5pt; color: #6B6455; }
+        .etiquette-signature {
+            display: inline-block; margin-top: 4pt; padding: 2pt 6pt; border-radius: 6pt;
+            background: #D9F2F0; color: #0A7570; font-size: 7.5pt; font-weight: 700;
+        }
+
+        /* --- filigrane --- */
+        .filigrane {
+            position: fixed; top: 260pt; left: 40pt; font-family: 'FinCo Serif', Georgia, serif;
+            font-size: 90pt; font-weight: 700; color: #221D16; opacity: 0.08;
+            transform: rotate(-28deg); z-index: -1;
+        }
+        .note { font-size: 8.5pt; color: #6B6455; font-style: italic; margin-top: 4pt; }
+        .equilibre-ok { font-weight: 700; color: #0C6549; }
+        .equilibre-ko { font-weight: 700; color: #C0341F; }
+    </style>
+</head>
+
+<!-- ============================================================
+     BANDEAU DE MARQUE (logo dessiné en HTML/CSS, sans image)
+     ============================================================ -->
+<div th:fragment="bandeau(societe, titre, reference, periode)" class="bandeau">
+    <table>
+        <tr>
+            <td class="logo-pastilles" style="width: 46pt;">
+                <div class="pastille pastille-corail"></div>
+                <div class="pastille pastille-jaune"></div>
+                <div class="pastille pastille-sarcelle"></div>
+                <div class="marque">FinCo</div>
+                <div class="soulignement"><span class="s1"></span><span class="s2"></span><span class="s3"></span></div>
+            </td>
+            <td class="bandeau-droite">
+                <div class="bandeau-societe" th:text="${societe}">Société</div>
+                <div class="bandeau-titre serif" th:text="${titre}">Titre du document</div>
+                <div class="bandeau-reference" th:text="${reference}">Référence</div>
+                <div class="bandeau-reference" th:if="${periode != null and periode != ''}" th:text="${periode}">Période</div>
+            </td>
+        </tr>
+    </table>
+    <div class="ligne-couleurs"><span class="c1"></span><span class="c2"></span><span class="c3"></span></div>
+</div>
+
+<!-- ============================================================
+     BLOC DE MÉTADONNÉES
+     ============================================================ -->
+<div th:fragment="metaPdf(genereLe, par, exercice, filtres)" class="meta">
+    <span>Généré le <b th:text="${genereLe}">date</b></span> ·
+    <span>Par <b th:text="${par}">utilisateur</b></span>
+    <span th:if="${exercice != null and exercice != ''}"> · Exercice <b th:text="${exercice}">2026</b></span>
+    <div th:if="${filtres != null and filtres != ''}">Filtres appliqués : <b th:text="${filtres}">aucun</b></div>
+</div>
+
+<!-- ============================================================
+     FILIGRANE « BROUILLON »
+     ============================================================ -->
+<div th:fragment="filigrane(visible)" th:if="${visible}" class="filigrane">BROUILLON</div>
+
+<!-- ============================================================
+     BLOC DE SIGNATURES
+     ============================================================ -->
+<div th:fragment="signatures(etabliPar, etabliRole, verifiePar, verifieRole,
+                            approuvePar, approuveRole, approuveDate, signeElectroniquement)">
+    <table class="signatures">
+        <tr>
+            <td>
+                <div class="signature-titre">Établi par</div>
+                <div class="signature-role" th:text="${etabliRole}">Comptable</div>
+                <div class="signature-nom" th:text="${etabliPar != null and etabliPar != '' ? etabliPar : '_ _ _ _ _ _ _ _'}">Nom</div>
+                <div class="signature-zone">Signature</div>
+            </td>
+            <td>
+                <div class="signature-titre">Vérifié par</div>
+                <div class="signature-role" th:text="${verifieRole}">Contrôleur de gestion</div>
+                <div class="signature-nom" th:text="${verifiePar != null and verifiePar != '' ? verifiePar : '_ _ _ _ _ _ _ _'}">Nom</div>
+                <div class="signature-zone">Signature</div>
+            </td>
+            <td>
+                <div class="signature-titre">Approuvé par (Directeur financier)</div>
+                <div class="signature-role" th:text="${approuveRole}">Directeur financier</div>
+                <div class="signature-nom" th:text="${approuvePar != null and approuvePar != '' ? approuvePar : '_ _ _ _ _ _ _ _'}">Nom</div>
+                <div class="signature-zone">Cachet</div>
+                <div class="etiquette-signature" th:if="${signeElectroniquement != null and signeElectroniquement != ''}"
+                     th:text="${'Signé électroniquement par ' + signeElectroniquement}">Signé électroniquement</div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+</body>
+</html>

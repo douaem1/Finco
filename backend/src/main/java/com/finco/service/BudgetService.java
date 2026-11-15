@@ -1,5 +1,8 @@
 package com.finco.service;
 
+import com.finco.audit.ActionAudit;
+import com.finco.audit.AuditService;
+import com.finco.audit.DiffAudit;
 import com.finco.dto.BudgetRequest;
 import com.finco.dto.BudgetResponse;
 import com.finco.entity.Budget;
@@ -29,13 +32,16 @@ public class BudgetService {
     private final BudgetRepository budgetRepository;
     private final CentreCoutRepository centreCoutRepository;
     private final ExerciceRepository exerciceRepository;
+    private final AuditService auditService;
 
     public BudgetService(BudgetRepository budgetRepository,
                          CentreCoutRepository centreCoutRepository,
-                         ExerciceRepository exerciceRepository) {
+                         ExerciceRepository exerciceRepository,
+                         AuditService auditService) {
         this.budgetRepository = budgetRepository;
         this.centreCoutRepository = centreCoutRepository;
         this.exerciceRepository = exerciceRepository;
+        this.auditService = auditService;
     }
 
     @Transactional(readOnly = true)
@@ -71,7 +77,16 @@ public class BudgetService {
                             + " » et l'année « " + req.annee() + " » existe déjà.");
         }
         Budget b = new Budget(req.annee(), req.montantPrevu().setScale(2), centre);
-        return BudgetResponse.de(budgetRepository.save(b));
+        Budget enregistre = budgetRepository.save(b);
+        auditService.enregistrer(ActionAudit.BUDGET_CREE, "BUDGET", enregistre.getId(),
+                "Budget " + centre.getCode() + " " + enregistre.getAnnee(),
+                null,
+                DiffAudit.json(java.util.Map.of(
+                        "annee", enregistre.getAnnee(),
+                        "centreCode", centre.getCode(),
+                        "montantPrevu", enregistre.getMontantPrevu())),
+                "Création du budget du centre " + centre.getCode());
+        return BudgetResponse.de(enregistre);
     }
 
     public BudgetResponse update(Long id, BudgetRequest req) {
@@ -84,10 +99,23 @@ public class BudgetService {
                     "Un budget pour le centre « " + centre.getCode()
                             + " » et l'année « " + req.annee() + " » existe déjà.");
         }
+        java.util.Map<String, Object> avant = java.util.Map.of(
+                "annee", b.getAnnee(),
+                "centreCode", b.getCentreCout() != null ? b.getCentreCout().getCode() : "",
+                "montantPrevu", b.getMontantPrevu());
         b.setAnnee(req.annee());
         b.setMontantPrevu(req.montantPrevu().setScale(2));
         b.setCentreCout(centre);
-        return BudgetResponse.de(budgetRepository.save(b));
+        Budget enregistre = budgetRepository.save(b);
+        DiffAudit.Diff diff = DiffAudit.comparer(avant, java.util.Map.of(
+                "annee", enregistre.getAnnee(),
+                "centreCode", centre.getCode(),
+                "montantPrevu", enregistre.getMontantPrevu()));
+        auditService.enregistrer(ActionAudit.BUDGET_MODIFIE, "BUDGET", enregistre.getId(),
+                "Budget " + centre.getCode() + " " + enregistre.getAnnee(),
+                diff.ancienneValeur(), diff.nouvelleValeur(),
+                "Modification du budget du centre " + centre.getCode());
+        return BudgetResponse.de(enregistre);
     }
 
     public void delete(Long id) {

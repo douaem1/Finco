@@ -1,5 +1,6 @@
 package com.finco.service;
 
+import com.finco.audit.AuditService;
 import com.finco.dto.CompteGeneralRequest;
 import com.finco.dto.CompteGeneralResponse;
 import com.finco.entity.CompteGeneral;
@@ -28,11 +29,14 @@ class CompteGeneralServiceTest {
     @Mock
     private LigneEcritureRepository ligneEcritureRepository;
 
+    @Mock
+    private AuditService auditService;
+
     private CompteGeneralService service;
 
     @BeforeEach
     void setup() {
-        service = new CompteGeneralService(compteGeneralRepository, ligneEcritureRepository);
+        service = new CompteGeneralService(compteGeneralRepository, ligneEcritureRepository, auditService);
     }
 
     @Test

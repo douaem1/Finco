@@ -4,14 +4,37 @@ import { messageErreur } from '../services/api';
 import { dateFr, montant } from '../utils/format';
 import PageHeader from '../components/ui/PageHeader';
 import AsyncState from '../components/ui/AsyncState';
-import DataTable from '../components/ui/DataTable';
+import DataTable, { MenuActionsLigne } from '../components/ui/DataTable';
 import Amount from '../components/ui/Amount';
 import StatusBadge from '../components/ui/StatusBadge';
 import Field from '../components/ui/Field';
 import Button from '../components/ui/Button';
 import CrudModal from '../components/ui/CrudModal';
-import Icone from '../components/Icone';
+import Tooltip from '../components/ui/Tooltip';
 import { useToast } from '../components/ui/ToastRegion';
+
+const MODES = [
+  ['VIREMENT', 'Virement'], ['CHEQUE', 'Chèque'], ['ESPECES', 'Espèces'], ['EFFET', 'Effet'],
+];
+
+const MAX_FACTURES_VISIBLES = 2;
+
+/** Factures affectées en puces ; au-delà de deux, une puce « +N » porte l'infobulle. */
+function ChipsFactures({ factures, vide = '—' }) {
+  if (!factures?.length) return vide;
+  const principales = factures.slice(0, MAX_FACTURES_VISIBLES);
+  const reste = factures.slice(MAX_FACTURES_VISIBLES);
+  return (
+    <span className="ui-search-chips">
+      {principales.map((f) => <span key={f.id} className="ui-chip">{f.numero}</span>)}
+      {reste.length > 0 && (
+        <Tooltip label={reste.map((f) => `${f.numero} (${montant(f.montantAffecte)} MAD)`).join(' · ')} side="top">
+          <span className="ui-chip">+{reste.length}</span>
+        </Tooltip>
+      )}
+    </span>
+  );
+}
 
 export default function ValidationPaiements() {
   const { showToast } = useToast();
@@ -74,18 +97,15 @@ export default function ValidationPaiements() {
   const enAttente = paiements.filter((p) => !p.valide && !p.rejete);
 
   const colonnes = [
-    { key: 'datePaiement', label: 'Date', sortable: true, render: (p) => <span className="chiffres">{dateFr(p.datePaiement)}</span> },
     {
-      key: 'factures',
-      label: 'Factures',
-      render: (p) => (p.factures?.length
-        ? p.factures.map((f, i) => (
-          <span key={f.id}>{i > 0 ? ', ' : ''}{f.numero} (<Amount value={f.montantAffecte} />)</span>
-        ))
-        : 'Non affecté'),
+      key: 'datePaiement',
+      label: 'Date',
+      sortable: true,
+      nowrap: true,
+      cell: (p) => ({ principal: dateFr(p.datePaiement), secondaire: MODES.find(([code]) => code === p.mode)?.[1] || p.mode }),
     },
-    { key: 'mode', label: 'Mode' },
-    { key: 'montant', label: 'Montant', numeric: true, sortable: true, render: (p) => <strong><Amount value={p.montant} /></strong> },
+    { key: 'montant', label: 'Montant', numeric: true, nowrap: true, sortable: true, render: (p) => <strong><Amount value={p.montant} /></strong> },
+    { key: 'factures', label: 'Factures concernées', render: (p) => <ChipsFactures factures={p.factures} vide="Non affecté" /> },
     {
       key: 'valide',
       label: 'Statut',
@@ -98,18 +118,18 @@ export default function ValidationPaiements() {
     {
       key: 'actions',
       label: 'Action',
+      actions: true,
+      masquable: false,
       render: (p) => {
         if (p.valide) return <span className="texte-secondaire">Par {p.validePar}</span>;
         if (p.rejete) return <span className="texte-secondaire">Rejeté par {p.rejetePar} — {p.motifRejet}</span>;
         return (
-          <div className="actions-cell">
-            <Button type="button" onClick={() => approuver(p)} loading={action === p.id} disabled={action !== null}>
-              <Icone nom="valide" taille={16} /> Valider
-            </Button>
-            <Button variant="danger" type="button" onClick={() => ouvrirRejet(p)} disabled={action !== null}>
-              Rejeter
-            </Button>
-          </div>
+          <MenuActionsLigne
+            actions={[
+              { label: 'Valider', icone: 'valide', principale: true, onSelect: () => approuver(p) },
+              { label: 'Rejeter', icone: 'croix', danger: true, separateurAvant: true, onSelect: () => ouvrirRejet(p) },
+            ]}
+          />
         );
       },
     },
@@ -132,7 +152,7 @@ export default function ValidationPaiements() {
         emptyDescription="Les règlements enregistrés par la comptabilité apparaîtront ici."
       >
         <div className="panneau">
-          <DataTable columns={colonnes} rows={paiements} empty="Aucun paiement soumis à validation." />
+          <DataTable columns={colonnes} rows={paiements} storageKey="validation-paiements" empty="Aucun paiement soumis à validation." />
         </div>
       </AsyncState>
 

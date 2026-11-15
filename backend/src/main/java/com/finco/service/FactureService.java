@@ -1,5 +1,8 @@
 package com.finco.service;
 
+import com.finco.audit.ActionAudit;
+import com.finco.audit.AuditService;
+import com.finco.audit.DiffAudit;
 import com.finco.dto.FactureRequest;
 import com.finco.dto.FactureResponse;
 import com.finco.dto.FactureValidationRequest;
@@ -40,15 +43,17 @@ public class FactureService {
     private final CentreCoutRepository centreCoutRepository;
     private final CompteGeneralRepository compteRepository;
     private final PieceComptableService pieceService;
+    private final AuditService auditService;
 
     public FactureService(FactureRepository factureRepository, TiersRepository tiersRepository,
                           CentreCoutRepository centreCoutRepository, CompteGeneralRepository compteRepository,
-                          PieceComptableService pieceService) {
+                          PieceComptableService pieceService, AuditService auditService) {
         this.factureRepository = factureRepository;
         this.tiersRepository = tiersRepository;
         this.centreCoutRepository = centreCoutRepository;
         this.compteRepository = compteRepository;
         this.pieceService = pieceService;
+        this.auditService = auditService;
     }
 
     @Transactional(readOnly = true)
@@ -76,7 +81,17 @@ public class FactureService {
         if (factureRepository.existsByTiersIdAndNumero(tiers.getId(), numero)) {
             throw new ConflitMetierException("numero", "Ce numéro de facture existe déjà pour ce tiers.");
         }
-        return FactureResponse.depuis(factureRepository.save(new Facture(numero, date, type, ht, tva, tiers)));
+        Facture facture = factureRepository.save(new Facture(numero, date, type, ht, tva, tiers));
+        auditService.enregistrer(ActionAudit.FACTURE_CREEE, "FACTURE", facture.getId(), facture.getNumero(),
+                null,
+                DiffAudit.json(java.util.Map.of(
+                        "numero", facture.getNumero(),
+                        "type", facture.getType().name(),
+                        "montantHT", facture.getMontantHT(),
+                        "tauxTVA", facture.getTauxTVA(),
+                        "statut", facture.getStatut().name())),
+                "Création de la facture " + facture.getNumero());
+        return FactureResponse.depuis(facture);
     }
 
     public FactureResponse modifier(Long id, FactureRequest request) {
@@ -135,7 +150,14 @@ public class FactureService {
         pieceService.valider(piece.id());
         facture.setPieceComptable(pieceService.findEntity(piece.id()));
         facture.setStatut(StatutFacture.VALIDEE);
-        return FactureResponse.depuis(factureRepository.save(facture));
+        Facture enregistree = factureRepository.save(facture);
+        DiffAudit.Diff diff = DiffAudit.comparer(
+                java.util.Map.of("statut", StatutFacture.BROUILLON.name()),
+                java.util.Map.of("statut", StatutFacture.VALIDEE.name()));
+        auditService.enregistrer(ActionAudit.FACTURE_VALIDEE, "FACTURE", enregistree.getId(), enregistree.getNumero(),
+                diff.ancienneValeur(), diff.nouvelleValeur(),
+                "Validation de la facture " + enregistree.getNumero());
+        return FactureResponse.depuis(enregistree);
     }
 
     public void supprimer(Long id) {

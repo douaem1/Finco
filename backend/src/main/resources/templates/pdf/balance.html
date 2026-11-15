@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{pdf/_layout :: tete('Balance des comptes', ${reference}, ${empreinte}, 'portrait')}"></head>
+<body>
+
+<div th:replace="~{pdf/_layout :: bandeau(${societe}, 'Balance des comptes', ${reference}, ${periode})}"></div>
+<div th:replace="~{pdf/_layout :: metaPdf(${genereLe}, ${par}, ${exercice}, ${filtres})}"></div>
+
+<table class="etat">
+    <thead>
+    <tr>
+        <th style="width: 14%;">Compte</th>
+        <th style="width: 30%;">Libellé</th>
+        <th class="num" style="width: 14%;">Total débit</th>
+        <th class="num" style="width: 14%;">Total crédit</th>
+        <th class="num" style="width: 14%;">Solde débiteur</th>
+        <th class="num" style="width: 14%;">Solde créditeur</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="c : ${comptes}">
+        <td th:text="${c.numero}">6111</td>
+        <td th:text="${c.libelle}">Libellé</td>
+        <td class="num" th:text="${fmt.nombre(c.totalDebit)}">0,00</td>
+        <td class="num" th:text="${fmt.nombre(c.totalCredit)}">0,00</td>
+        <td class="num" th:text="${c.soldeDebiteur != null and c.soldeDebiteur.signum() != 0 ? fmt.nombre(c.soldeDebiteur) : '—'}">0,00</td>
+        <td class="num" th:text="${c.soldeCrediteur != null and c.soldeCrediteur.signum() != 0 ? fmt.nombre(c.soldeCrediteur) : '—'}">0,00</td>
+    </tr>
+    </tbody>
+    <tfoot>
+    <tr>
+        <td colspan="2">TOTAUX GÉNÉRAUX</td>
+        <td class="num" th:text="${fmt.nombre(totalDebit)}">0,00</td>
+        <td class="num" th:text="${fmt.nombre(totalCredit)}">0,00</td>
+        <td colspan="2"></td>
+    </tr>
+    </tfoot>
+</table>
+
+<p th:classappend="${equilibree} ? 'equilibre-ok' : 'equilibre-ko'"
+   th:text="${equilibree ? 'Balance équilibrée (total débit = total crédit)' : 'Balance NON équilibrée (écart de ' + fmt.nombre(totalDebit - totalCredit) + ' MAD)'}">
+    Balance équilibrée
+</p>
+
+<div th:replace="~{pdf/_layout :: signatures(${etabliPar}, ${etabliRole}, ${verifiePar}, ${verifieRole},
+                                                 null, '', null, null)}"></div>
+
+</body>
+</html>

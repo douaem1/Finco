@@ -1,5 +1,6 @@
 package com.finco.service;
 
+import com.finco.audit.AuditService;
 import com.finco.entity.CentreCout;
 import com.finco.exception.ConflitMetierException;
 import com.finco.exception.RegleMetierException;
@@ -30,11 +31,14 @@ class CentreCoutServiceTest {
     @Mock
     private BudgetRepository budgetRepository;
 
+    @Mock
+    private AuditService auditService;
+
     private CentreCoutService service;
 
     @BeforeEach
     void setup() {
-        service = new CentreCoutService(centreCoutRepository, ligneEcritureRepository, budgetRepository);
+        service = new CentreCoutService(centreCoutRepository, ligneEcritureRepository, budgetRepository, auditService);
     }
 
     @Test

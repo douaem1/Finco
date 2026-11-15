@@ -8,7 +8,8 @@ import { erreursParChamp, messageErreur } from '../services/api';
 import { dateFr } from '../utils/format';
 import PageHeader from '../components/ui/PageHeader';
 import AsyncState from '../components/ui/AsyncState';
-import DataTable from '../components/ui/DataTable';
+import DataTable, { BasculeDensite, MenuColonnes, MenuActionsLigne } from '../components/ui/DataTable';
+import SearchToolbar from '../components/ui/SearchToolbar';
 import StatusBadge from '../components/ui/StatusBadge';
 import Button from '../components/ui/Button';
 import Field from '../components/ui/Field';
@@ -27,6 +28,7 @@ export default function Exercices() {
   const [exercices, setExercices] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState('');
+  const [recherche, setRecherche] = useState('');
 
   // Modale création / modification
   const [modaleOuverte, setModaleOuverte] = useState(false);
@@ -180,32 +182,31 @@ export default function Exercices() {
   const ouverts = useMemo(() => exercices.filter(e => !e.cloture).length, [exercices]);
   const clotures = useMemo(() => exercices.filter(e => e.cloture).length, [exercices]);
 
+  const filtre = recherche.trim().toLowerCase();
+  const exercicesVisibles = useMemo(
+    () => exercices.filter((ex) => !filtre || `${ex.annee} ${ex.dateDebut} ${ex.dateFin}`.toLowerCase().includes(filtre)),
+    [exercices, filtre],
+  );
+
   const colonnes = [
-    { key: 'annee', label: 'Année', render: (ex) => <strong>{ex.annee}</strong> },
-    { key: 'dateDebut', label: 'Date de début', render: (ex) => <span className="chiffres">{dateFr(ex.dateDebut)}</span> },
-    { key: 'dateFin', label: 'Date de fin', render: (ex) => <span className="chiffres">{dateFr(ex.dateFin)}</span> },
-    { key: 'statut', label: 'Statut', render: (ex) => <StatusBadge status={ex.cloture ? 'CLOTURE' : 'OUVERT'} /> },
+    { key: 'annee', label: 'Année', priorite: 1, render: (ex) => <strong>{ex.annee}</strong> },
+    { key: 'dateDebut', label: 'Date de début', priorite: 2, render: (ex) => <span className="chiffres">{dateFr(ex.dateDebut)}</span> },
+    { key: 'dateFin', label: 'Date de fin', priorite: 3, render: (ex) => <span className="chiffres">{dateFr(ex.dateFin)}</span> },
+    { key: 'statut', label: 'Statut', priorite: 1, render: (ex) => <StatusBadge status={ex.cloture ? 'CLOTURE' : 'OUVERT'} /> },
     ...((peutEcrire || peutAdmin) ? [{
       key: 'actions',
       label: 'Actions',
+      actions: true,
+      masquable: false,
       render: (ex) => (
-        <div className="actions-cell">
-          {peutEcrire && !ex.cloture && (
-            <button type="button" className="btn-action" onClick={() => ouvrirModification(ex)} title="Modifier" aria-label="Modifier">
-              <Icone nom="editer" taille={16} />
-            </button>
-          )}
-          {peutAdmin && !ex.cloture && (
-            <button type="button" className="btn-action" onClick={() => setElementACloturer(ex)} title="Clôturer" aria-label="Clôturer">
-              <Icone nom="verrou" taille={16} />
-            </button>
-          )}
-          {peutAdmin && (
-            <button type="button" className="btn-action btn-action-supprimer" onClick={() => setElementASupprimer(ex)} title="Supprimer" aria-label="Supprimer">
-              <Icone nom="supprimer" taille={16} />
-            </button>
-          )}
-        </div>
+        <MenuActionsLigne
+          label={`Actions pour l'exercice ${ex.annee}`}
+          actions={[
+            ...(peutEcrire && !ex.cloture ? [{ label: 'Modifier', icone: 'editer', principale: true, onSelect: () => ouvrirModification(ex) }] : []),
+            ...(peutAdmin && !ex.cloture ? [{ label: 'Clôturer', icone: 'verrou', onSelect: () => setElementACloturer(ex) }] : []),
+            ...(peutAdmin ? [{ label: 'Supprimer', icone: 'supprimer', danger: true, separateurAvant: true, onSelect: () => setElementASupprimer(ex) }] : []),
+          ]}
+        />
       ),
     }] : []),
   ];
@@ -234,7 +235,14 @@ export default function Exercices() {
         )}
       >
         <div className="panneau">
-          <DataTable columns={colonnes} rows={exercices} empty="Aucun exercice à afficher." />
+          <SearchToolbar
+            value={recherche}
+            onChange={setRecherche}
+            placeholder="Rechercher par année ou date…"
+            resultCount={`${exercicesVisibles.length} exercice${exercicesVisibles.length > 1 ? 's' : ''}`}
+            actions={<><BasculeDensite /><MenuColonnes storageKey="exercices" colonnes={colonnes} /></>}
+          />
+          <DataTable columns={colonnes} rows={exercicesVisibles} storageKey="exercices" empty="Aucun exercice à afficher." />
         </div>
       </AsyncState>
 

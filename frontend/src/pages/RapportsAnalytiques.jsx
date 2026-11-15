@@ -4,9 +4,10 @@ import { messageErreur } from '../services/api';
 import { montant } from '../utils/format';
 import PageHeader from '../components/ui/PageHeader';
 import AsyncState from '../components/ui/AsyncState';
-import DataTable from '../components/ui/DataTable';
+import DataTable, { BasculeDensite, MenuColonnes } from '../components/ui/DataTable';
 import Amount from '../components/ui/Amount';
 import Button from '../components/ui/Button';
+import ExportButton from '../components/ui/ExportButton';
 
 export default function RapportsAnalytiques() {
   const [annee, setAnnee] = useState(new Date().getFullYear());
@@ -32,9 +33,9 @@ export default function RapportsAnalytiques() {
   const valeurMax = Math.max(1, ...(rapport?.evolution || []).flatMap((m) => [Number(m.charges), Number(m.produits)]));
 
   const colonnesCentres = useMemo(() => [
-    { key: 'code', label: 'Centre', sortable: true, render: (centre) => <><span className="code-centre">{centre.code}</span> — {centre.libelle}</> },
+    { key: 'code', label: 'Centre', cell: (centre) => ({ principal: centre.code, secondaire: centre.libelle }) },
     { key: 'budget', label: 'Budget', numeric: true, render: (centre) => <Amount value={centre.budget} /> },
-    { key: 'reel', label: 'Réel', numeric: true, render: (centre) => <Amount value={centre.reel} /> },
+    { key: 'reel', label: 'Réel', numeric: true, priorite: 2, render: (centre) => <Amount value={centre.reel} /> },
     { key: 'ecart', label: 'Écart réel - budget', numeric: true, render: (centre) => <strong><Amount value={centre.ecart} /></strong> },
   ], []);
 
@@ -45,11 +46,14 @@ export default function RapportsAnalytiques() {
         description="Suivi des charges, produits et budgets à partir des écritures validées."
         actions={(
           <>
+            <BasculeDensite />
+            <MenuColonnes storageKey="rapports-analytiques" colonnes={colonnesCentres} />
             <label className="champ filtre-annee">
               <span className="champ-label">Exercice</span>
               <input className="input" type="number" min="2000" max="2099" value={annee} onChange={(e) => setAnnee(Number(e.target.value))} />
             </label>
             <Button variant="secondary" type="button" onClick={recharger} loading={chargement}>Actualiser</Button>
+            <ExportButton endpoint="/rapports/analytique/export/pdf" format="pdf" params={{ annee }} />
           </>
         )}
       />
@@ -80,7 +84,7 @@ export default function RapportsAnalytiques() {
               </article>
               <article className="carte">
                 <header className="carte-entete"><h2>Réel par centre et budget</h2></header>
-                <DataTable columns={colonnesCentres} rows={rapport.centres} rowKey="centreId" empty="Aucun budget défini pour cet exercice." />
+                <DataTable columns={colonnesCentres} rows={rapport.centres} rowKey="centreId" storageKey="rapports-analytiques" empty="Aucun budget défini pour cet exercice." />
               </article>
             </div>
           </>

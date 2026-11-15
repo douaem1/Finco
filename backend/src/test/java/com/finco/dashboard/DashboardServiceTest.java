@@ -66,8 +66,6 @@ class DashboardServiceTest {
                 .thenReturn(List.<Object[]>of());
         when(paiementRepository.totauxParMois(exercice.getDateDebut(), exercice.getDateFin()))
                 .thenReturn(List.<Object[]>of());
-        when(factureRepository.compterParStatutEntre(exercice.getDateDebut(), exercice.getDateFin()))
-                .thenReturn(List.<Object[]>of());
         when(budgetRepository.findAllByOrderByCentreCoutCodeAscAnneeDesc()).thenReturn(List.of(budget));
 
         ControleurDashboardDto result = service.controleur(1L, null, null, null);

@@ -7,7 +7,7 @@ import {
 import { erreursParChamp, messageErreur } from '../services/api';
 import PageHeader from '../components/ui/PageHeader';
 import AsyncState from '../components/ui/AsyncState';
-import DataTable from '../components/ui/DataTable';
+import DataTable, { MenuActionsLigne, BasculeDensite, MenuColonnes } from '../components/ui/DataTable';
 import SearchToolbar from '../components/ui/SearchToolbar';
 import Amount from '../components/ui/Amount';
 import Button from '../components/ui/Button';
@@ -232,25 +232,33 @@ export default function Tiers() {
   }, [listeActive, filtre]);
 
   const colonnes = [
-    { key: 'nom', label: 'Nom', sortable: true, render: (item) => <strong>{item.nom}</strong> },
-    { key: 'ice', label: 'ICE', render: (item) => <span className="chiffres">{item.ice || '—'}</span> },
-    { key: 'email', label: 'Email', render: (item) => item.email || '—' },
-    { key: 'telephone', label: 'Téléphone', render: (item) => item.telephone || '—' },
+    {
+      key: 'nom',
+      label: 'Nom',
+      sortable: true,
+      priorite: 1,
+      cell: (item) => ({
+        principal: <strong>{item.nom}</strong>,
+        secondaire: item.ice ? `ICE ${item.ice}` : undefined,
+      }),
+    },
+    { key: 'email', label: 'Email', priorite: 2, render: (item) => item.email || '—' },
+    { key: 'telephone', label: 'Téléphone', nowrap: true, priorite: 3, render: (item) => item.telephone || '—' },
     estFournisseurs
-      ? { key: 'rib', label: 'RIB bancaire', render: (item) => (item.rib ? <span className="badge-rib">{item.rib}</span> : '—') }
-      : { key: 'plafondCredit', label: 'Plafond crédit (MAD)', numeric: true, render: (item) => <Amount value={item.plafondCredit} /> },
+      ? { key: 'rib', label: 'RIB bancaire', nowrap: true, priorite: 2, render: (item) => (item.rib ? <span className="badge-rib">{item.rib}</span> : '—') }
+      : { key: 'plafondCredit', label: 'Plafond crédit (MAD)', numeric: true, nowrap: true, priorite: 2, render: (item) => <Amount value={item.plafondCredit} /> },
     ...(peutModifier ? [{
       key: 'actions',
       label: 'Actions',
+      actions: true,
+      masquable: false,
       render: (item) => (
-        <div className="actions-cell">
-          <button type="button" className="btn-action" onClick={() => ouvrirModification(item)} title="Modifier" aria-label="Modifier">
-            <Icone nom="editer" taille={16} />
-          </button>
-          <button type="button" className="btn-action btn-action-supprimer" onClick={() => setElementASupprimer(item)} title="Supprimer" aria-label="Supprimer">
-            <Icone nom="supprimer" taille={16} />
-          </button>
-        </div>
+        <MenuActionsLigne
+          actions={[
+            { label: 'Modifier', icone: 'editer', onSelect: () => ouvrirModification(item), principale: true },
+            { label: 'Supprimer', icone: 'supprimer', onSelect: () => setElementASupprimer(item), danger: true, separateurAvant: true },
+          ]}
+        />
       ),
     }] : []),
   ];
@@ -302,8 +310,9 @@ export default function Tiers() {
             onChange={setRecherche}
             placeholder={`Rechercher un ${typeSingulier} par nom, ICE ou email…`}
             resultCount={`${donneesVisibles.length} ${typeSingulier}${donneesVisibles.length > 1 ? 's' : ''}`}
+            actions={<><BasculeDensite /><MenuColonnes storageKey="tiers" colonnes={colonnes} /></>}
           />
-          <DataTable columns={colonnes} rows={donneesVisibles} empty={`Aucun résultat correspondant à « ${recherche} ».`} />
+          <DataTable columns={colonnes} rows={donneesVisibles} storageKey="tiers" empty={`Aucun résultat correspondant à « ${recherche} ».`} />
         </div>
       </AsyncState>
 

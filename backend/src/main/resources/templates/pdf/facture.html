@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{pdf/_layout :: tete('Facture', ${reference}, ${empreinte}, 'portrait')}"></head>
+<body>
+
+<div th:replace="~{pdf/_layout :: filigrane(${brouillon})}"></div>
+<div th:replace="~{pdf/_layout :: bandeau(${societe}, 'Facture', ${reference}, ${periode})}"></div>
+<div th:replace="~{pdf/_layout :: metaPdf(${genereLe}, ${par}, ${exercice}, ${filtres})}"></div>
+
+<div class="meta">
+    <div>Tiers : <b th:text="${tiersNom}">Tiers</b></div>
+    <div>Numéro : <b th:text="${numero}">F-2026-001</b></div>
+    <div>Date : <b th:text="${fmt.date(dateFacture)}">01/01/2026</b></div>
+    <div>Type : <b th:text="${type == 'ACHAT' ? 'Achat (fournisseur)' : 'Vente (client)'}">Achat</b></div>
+    <div>
+        Statut :
+        <span class="badge" th:classappend="${statut == 'BROUILLON'} ? 'badge-attention' : (${statut == 'PAYEE'} ? 'badge-succes' : '')"
+              th:text="${statutLibelle}">Statut</span>
+    </div>
+    <div th:if="${pieceNumero != null}">Pièce comptable : <b th:text="${pieceNumero}">PC-2026-00001</b></div>
+</div>
+
+<table class="etat">
+    <thead>
+    <tr>
+        <th style="width: 50%;">Élément</th>
+        <th class="num" style="width: 25%;">Base</th>
+        <th class="num" style="width: 25%;">Montant</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>Montant HT</td>
+        <td class="num">—</td>
+        <td class="num" th:text="${fmt.nombre(montantHT)}">0,00</td>
+    </tr>
+    <tr>
+        <td th:text="${'TVA (' + fmt.nombre(tauxTVA) + ' %)'}">TVA (20,00 %)</td>
+        <td class="num" th:text="${fmt.nombre(montantHT)}">0,00</td>
+        <td class="num" th:text="${fmt.nombre(montantTVA)}">0,00</td>
+    </tr>
+    </tbody>
+    <tfoot>
+    <tr>
+        <td colspan="2">MONTANT TTC</td>
+        <td class="num" th:text="${fmt.nombre(montantTTC)}">0,00</td>
+    </tr>
+    </tfoot>
+</table>
+
+<table class="etat">
+    <tfoot>
+    <tr>
+        <td>Total réglé (paiements validés)</td>
+        <td class="num" th:text="${fmt.nombre(totalAffecte)}">0,00</td>
+    </tr>
+    <tr>
+        <td>Reste à payer</td>
+        <td class="num" th:text="${fmt.nombre(resteAPayer)}">0,00</td>
+    </tr>
+    </tfoot>
+</table>
+
+<div th:if="${!paiements.isEmpty()}">
+    <h3 class="serif" style="font-size: 11pt; margin-bottom: 4pt;">Paiements affectés</h3>
+    <table class="etat">
+        <thead>
+        <tr>
+            <th style="width: 25%;">Date</th>
+            <th class="num" style="width: 25%;">Montant affecté</th>
+            <th style="width: 25%;">Mode / statut</th>
+            <th style="width: 25%;">Validé par</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="p : ${paiements}">
+            <td th:text="${fmt.date(p.date)}">01/01/2026</td>
+            <td class="num" th:text="${fmt.nombre(p.montant)}">0,00</td>
+            <td th:text="${p.statut}">Validé</td>
+            <td th:text="${p.validePar != null ? p.validePar : '—'}">—</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div th:replace="~{pdf/_layout :: signatures(${etabliPar}, ${etabliRole}, ${verifiePar}, ${verifieRole},
+                                                 ${validePar}, 'Directeur financier', ${dateValidation}, null)}"></div>
+
+</body>
+</html>

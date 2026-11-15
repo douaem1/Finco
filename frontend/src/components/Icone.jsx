@@ -29,6 +29,15 @@ const TRACES = {
   lune: <><path d="M20.5 14.8A8.6 8.6 0 019.2 3.5a8.6 8.6 0 1011.3 11.3z" /></>,
   ecran: <><rect x="3" y="4" width="18" height="13" rx="2" /><path d="M9 21h6M12 17v4" /></>,
   coche: <><path d="M5 12.5l4.5 4.5L19 7" /></>,
+  audit: <><path d="M9 4h6a1 1 0 011 1v1h2.5A1.5 1.5 0 0120 7.5V19a1.5 1.5 0 01-1.5 1.5h-13A1.5 1.5 0 014 19V7.5A1.5 1.5 0 015.5 6H8V5a1 1 0 011-1z" /><path d="M9 13.5l2 2 4-4.2" /></>,
+  telecharger: <><path d="M12 3.5v11" /><path d="M8 10.5l4 4 4-4" /><path d="M4.5 19.5h15" /></>,
+  fichier: <><path d="M7 3.5h7l4 4v13H7z" /><path d="M14 3.5v4h4" /></>,
+  tableur: <><rect x="4" y="4.5" width="16" height="15" rx="2" /><path d="M4 9.5h16M4 14.5h16M10 4.5v15" /></>,
+  colonnes: <><rect x="3.5" y="4.5" width="17" height="15" rx="2" /><path d="M9.5 4.5v15M15 4.5v15" /></>,
+  dense: <><path d="M4 6.5h16M4 10.5h16M4 14.5h16M4 18.5h16" /></>,
+  aere: <><path d="M4 7h16M4 12h16M4 17h16" /></>,
+  plussoins: <><circle cx="12" cy="12" r="8.5" /><path d="M12 8.5v7M8.5 12h7" /></>,
+  flecheBas: <><path d="M6 9l6 6 6-6" /></>,
 };
 
 export default function Icone({ nom, taille = 20, className = '' }) {

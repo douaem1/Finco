@@ -1,5 +1,8 @@
 package com.finco.service;
 
+import com.finco.audit.ActionAudit;
+import com.finco.audit.AuditService;
+import com.finco.audit.DiffAudit;
 import com.finco.dto.ExerciceRequest;
 import com.finco.dto.ExerciceResponse;
 import com.finco.entity.Exercice;
@@ -45,15 +48,18 @@ public class ExerciceService {
     private final PieceComptableRepository pieceComptableRepository;
     private final SocieteRepository societeRepository;
     private final ApplicationEventPublisher evenementPublisher;
+    private final AuditService auditService;
 
     public ExerciceService(ExerciceRepository exerciceRepository,
                            PieceComptableRepository pieceComptableRepository,
                            SocieteRepository societeRepository,
-                           ApplicationEventPublisher evenementPublisher) {
+                           ApplicationEventPublisher evenementPublisher,
+                           AuditService auditService) {
         this.exerciceRepository = exerciceRepository;
         this.pieceComptableRepository = pieceComptableRepository;
         this.societeRepository = societeRepository;
         this.evenementPublisher = evenementPublisher;
+        this.auditService = auditService;
     }
 
     @Transactional(readOnly = true)
@@ -124,6 +130,13 @@ public class ExerciceService {
                 null,
                 List.of(NotificationEvenement.Cible.role(Role.CONTROLEUR),
                         NotificationEvenement.Cible.role(Role.DIRECTEUR_FINANCIER))));
+        DiffAudit.Diff diff = DiffAudit.comparer(
+                java.util.Map.of("cloture", false),
+                java.util.Map.of("cloture", true));
+        auditService.enregistrer(ActionAudit.EXERCICE_CLOTURE, "EXERCICE", ex.getId(),
+                "Exercice " + ex.getAnnee(),
+                diff.ancienneValeur(), diff.nouvelleValeur(),
+                "Clôture de l'exercice " + ex.getAnnee());
         return reponse;
     }
 

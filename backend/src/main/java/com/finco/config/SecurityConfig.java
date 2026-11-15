@@ -82,6 +82,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/paiements/**").hasRole("COMPTABLE")
                         .requestMatchers(HttpMethod.PUT, "/api/paiements/*/valider").hasRole("DIRECTEUR_FINANCIER")
                         .requestMatchers(HttpMethod.PATCH, "/api/paiements/*/rejeter").hasRole("DIRECTEUR_FINANCIER")
+                        // Grand livre et balance des comptes (consultation et export)
+                        .requestMatchers(HttpMethod.GET, "/api/grand-livre/**", "/api/balance/**")
+                        .hasAnyRole("COMPTABLE", "DIRECTEUR_FINANCIER")
 
                         // Module CONTRÔLE DE GESTION (CONTROLEUR uniquement) :
                         // Écriture centres de coûts (CUD)
@@ -98,6 +101,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/comptes/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/comptes/**").hasRole("ADMIN")
                         .requestMatchers("/api/utilisateurs/**").hasRole("ADMIN")
+                        // Journal d'audit : ADMIN uniquement (jamais exposé aux autres rôles)
+                        .requestMatchers("/api/admin/audit/**").hasRole("ADMIN")
                         // Consultations transversales (nécessaires pour les listes déroulantes de la saisie d'écritures) :
                         // Lecture des comptes généraux et des centres de coûts : tout utilisateur authentifié
                         .requestMatchers(HttpMethod.GET, "/api/comptes/**").authenticated()

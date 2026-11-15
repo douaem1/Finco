@@ -7,7 +7,7 @@ import { listerCentres } from '../services/centreCoutApi';
 import { erreursParChamp, messageErreur } from '../services/api';
 import PageHeader from '../components/ui/PageHeader';
 import AsyncState from '../components/ui/AsyncState';
-import DataTable from '../components/ui/DataTable';
+import DataTable, { MenuActionsLigne, BasculeDensite, MenuColonnes } from '../components/ui/DataTable';
 import SearchToolbar from '../components/ui/SearchToolbar';
 import Amount from '../components/ui/Amount';
 import Field from '../components/ui/Field';
@@ -174,20 +174,47 @@ export default function Budgets() {
   );
 
   const colonnes = [
-    { key: 'codeCenter', label: 'Centre de coûts', sortable: true, render: (b) => <code className="badge-code">{b.codeCenter}</code> },
-    { key: 'libelleCenter', label: 'Libellé', sortable: true },
-    { key: 'annee', label: 'Année', sortable: true, render: (b) => <span className="chiffres">{b.annee}</span> },
-    { key: 'montantPrevu', label: 'Montant prévu (MAD)', numeric: true, sortable: true, render: (b) => <strong><Amount value={b.montantPrevu} /></strong> },
+    {
+      key: 'codeCenter',
+      label: 'Centre de coûts',
+      sortable: true,
+      priorite: 1,
+      cell: (b) => ({
+        principal: <code className="badge-code">{b.codeCenter}</code>,
+        secondaire: b.libelleCenter,
+      }),
+    },
+    {
+      key: 'annee',
+      label: 'Exercice',
+      sortable: true,
+      nowrap: true,
+      priorite: 2,
+      render: (b) => <span className="chiffres">{b.annee}</span>,
+    },
+    {
+      key: 'montantPrevu',
+      label: 'Montant prévu (MAD)',
+      numeric: true,
+      sortable: true,
+      nowrap: true,
+      priorite: 1,
+      render: (b) => <strong><Amount value={b.montantPrevu} /></strong>,
+    },
   ];
   if (peutModifier) {
     colonnes.push({
       key: 'actions',
       label: 'Actions',
+      actions: true,
+      masquable: false,
       render: (b) => (
-        <div className="actions-cell">
-          <button type="button" className="btn-action" onClick={() => ouvrirModification(b)} title="Modifier" aria-label="Modifier"><Icone nom="editer" taille={16} /></button>
-          <button type="button" className="btn-action btn-action-supprimer" onClick={() => setElementASupprimer(b)} title="Supprimer" aria-label="Supprimer"><Icone nom="supprimer" taille={16} /></button>
-        </div>
+        <MenuActionsLigne
+          actions={[
+            { label: 'Modifier', icone: 'editer', onSelect: () => ouvrirModification(b), principale: true },
+            { label: 'Supprimer', icone: 'supprimer', onSelect: () => setElementASupprimer(b), danger: true, separateurAvant: true },
+          ]}
+        />
       ),
     });
   }
@@ -228,6 +255,7 @@ export default function Budgets() {
             onChange={setRecherche}
             placeholder="Rechercher par code ou libellé de centre…"
             resultCount={`${donneesFiltrees.length} budget${donneesFiltrees.length > 1 ? 's' : ''}`}
+            actions={<><BasculeDensite /><MenuColonnes storageKey="budgets" colonnes={colonnes} /></>}
           >
             <select
               className="input filtre-annee"
@@ -241,7 +269,7 @@ export default function Budgets() {
               ))}
             </select>
           </SearchToolbar>
-          <DataTable columns={colonnes} rows={donneesFiltrees} empty="Aucun résultat pour les filtres sélectionnés." />
+          <DataTable columns={colonnes} rows={donneesFiltrees} storageKey="budgets" empty="Aucun résultat pour les filtres sélectionnés." />
         </div>
       </AsyncState>
 

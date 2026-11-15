@@ -1,5 +1,8 @@
 package com.finco.service;
 
+import com.finco.audit.ActionAudit;
+import com.finco.audit.AuditService;
+import com.finco.audit.DiffAudit;
 import com.finco.dto.PaiementDirectionResponse;
 import com.finco.dto.PaiementRequest;
 import com.finco.dto.AllocationPaiementRequest;
@@ -49,17 +52,20 @@ public class PaiementDirectionService {
     private final UtilisateurRepository utilisateurRepository;
     private final FactureRepository factureRepository;
     private final ApplicationEventPublisher evenementPublisher;
+    private final AuditService auditService;
 
     public PaiementDirectionService(PaiementRepository paiementRepository,
                                     AllocationPaiementRepository allocationRepository,
                                     UtilisateurRepository utilisateurRepository,
                                     FactureRepository factureRepository,
-                                    ApplicationEventPublisher evenementPublisher) {
+                                    ApplicationEventPublisher evenementPublisher,
+                                    AuditService auditService) {
         this.paiementRepository = paiementRepository;
         this.allocationRepository = allocationRepository;
         this.utilisateurRepository = utilisateurRepository;
         this.factureRepository = factureRepository;
         this.evenementPublisher = evenementPublisher;
+        this.auditService = auditService;
     }
 
     @Transactional(readOnly = true)
@@ -128,6 +134,15 @@ public class PaiementDirectionService {
                 paiement.getId(),
                 null,
                 List.of(NotificationEvenement.Cible.role(Role.DIRECTEUR_FINANCIER))));
+        auditService.enregistrer(ActionAudit.PAIEMENT_CREE, "PAIEMENT", paiement.getId(),
+                "Paiement du " + paiement.getDatePaiement().format(FORMAT_DATE),
+                null,
+                DiffAudit.json(Map.of(
+                        "montant", paiement.getMontant(),
+                        "mode", paiement.getMode().name(),
+                        "datePaiement", paiement.getDatePaiement().toString(),
+                        "nombreFactures", allocations.size())),
+                "Création d'un paiement de " + montant(total) + " MAD");
         return PaiementDirectionResponse.depuis(paiement, allocations);
     }
 
@@ -185,7 +200,17 @@ public class PaiementDirectionService {
                         facture.getId(),
                         valideur.getId(),
                         List.of(NotificationEvenement.Cible.role(Role.COMPTABLE))));
+                auditService.enregistrer(ActionAudit.FACTURE_PAYEE, "FACTURE", facture.getId(), facture.getNumero(),
+                        null, DiffAudit.json(Map.of("statut", StatutFacture.PAYEE.name())),
+                        "Facture " + facture.getNumero() + " soldée par le paiement #" + paiement.getId());
             }
+            DiffAudit.Diff diff = DiffAudit.comparer(
+                    Map.of("valide", false),
+                    Map.of("valide", true, "validePar", valideur.getNomComplet()));
+            auditService.enregistrer(ActionAudit.PAIEMENT_VALIDE, "PAIEMENT", paiement.getId(),
+                    "Paiement du " + paiement.getDatePaiement().format(FORMAT_DATE),
+                    diff.ancienneValeur(), diff.nouvelleValeur(),
+                    "Validation d'un paiement de " + montant(paiement.getMontant()) + " MAD");
         }
         return PaiementDirectionResponse.depuis(paiement, allocations(paiement));
     }
@@ -219,6 +244,13 @@ public class PaiementDirectionService {
                 paiement.getId(),
                 rejeteur.getId(),
                 List.of(NotificationEvenement.Cible.role(Role.COMPTABLE))));
+        DiffAudit.Diff diff = DiffAudit.comparer(
+                Map.of("rejete", false),
+                Map.of("rejete", true, "motifRejet", motif, "rejetePar", rejeteur.getNomComplet()));
+        auditService.enregistrer(ActionAudit.PAIEMENT_REJETE, "PAIEMENT", paiement.getId(),
+                "Paiement du " + paiement.getDatePaiement().format(FORMAT_DATE),
+                diff.ancienneValeur(), diff.nouvelleValeur(),
+                "Rejet du paiement : " + motif);
         return PaiementDirectionResponse.depuis(paiement, allocations(paiement));
     }
 

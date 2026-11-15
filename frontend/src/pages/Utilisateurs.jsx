@@ -7,7 +7,7 @@ import MessageErreur from '../components/MessageErreur';
 import Icone from '../components/Icone';
 import PageHeader from '../components/ui/PageHeader';
 import AsyncState from '../components/ui/AsyncState';
-import DataTable from '../components/ui/DataTable';
+import DataTable, { BasculeDensite, MenuColonnes, MenuActionsLigne } from '../components/ui/DataTable';
 import SearchToolbar from '../components/ui/SearchToolbar';
 import StatusBadge from '../components/ui/StatusBadge';
 import Button from '../components/ui/Button';
@@ -111,18 +111,27 @@ export default function Utilisateurs() {
   const visibles = useMemo(() => utilisateurs.filter((u) => !filtre || `${u.nom} ${u.prenom} ${u.email} ${u.role}`.toLowerCase().includes(filtre)), [utilisateurs, filtre]);
 
   const colonnes = [
-    { key: 'nom', label: 'Utilisateur', sortable: true, render: (u) => <strong>{u.prenom} {u.nom}</strong> },
-    { key: 'email', label: 'Email', sortable: true },
-    { key: 'role', label: 'Rôle', render: (u) => roleLabel(u.role) },
-    { key: 'actif', label: 'Statut', render: (u) => <StatusBadge status={u.actif ? 'OUVERT' : 'CLOTURE'} label={u.actif ? 'Actif' : 'Désactivé'} /> },
+    {
+      key: 'nom',
+      label: 'Utilisateur',
+      sortable: true,
+      cell: (u) => ({ principal: <strong>{u.prenom} {u.nom}</strong>, secondaire: u.email }),
+    },
+    { key: 'role', label: 'Rôle', priorite: 2, render: (u) => roleLabel(u.role) },
+    { key: 'actif', label: 'Statut', priorite: 3, render: (u) => <StatusBadge status={u.actif ? 'OUVERT' : 'CLOTURE'} label={u.actif ? 'Actif' : 'Désactivé'} /> },
     {
       key: 'actions',
       label: 'Actions',
+      actions: true,
+      masquable: false,
       render: (u) => (
-        <div className="actions-cell">
-          <button type="button" className="btn-action" onClick={() => ouvrirModification(u)} title="Modifier" aria-label={`Modifier ${u.prenom} ${u.nom}`}><Icone nom="editer" taille={16} /></button>
-          <button type="button" className="btn-action btn-action-supprimer" onClick={() => setASupprimer(u)} disabled={u.email === utilisateurConnecte?.email} title={u.email === utilisateurConnecte?.email ? 'Votre compte ne peut pas être supprimé' : 'Supprimer'} aria-label={`Supprimer ${u.prenom} ${u.nom}`}><Icone nom="supprimer" taille={16} /></button>
-        </div>
+        <MenuActionsLigne
+          label={`Actions pour ${u.prenom} ${u.nom}`}
+          actions={[
+            { label: 'Modifier', icone: 'editer', principale: true, onSelect: () => ouvrirModification(u) },
+            { label: 'Supprimer', icone: 'supprimer', danger: true, separateurAvant: true, desactive: u.email === utilisateurConnecte?.email, onSelect: () => setASupprimer(u) },
+          ]}
+        />
       ),
     },
   ];
@@ -136,8 +145,14 @@ export default function Utilisateurs() {
       />
       <AsyncState loading={chargement} error={erreur} onRetry={charger}>
         <div className="panneau pile">
-          <SearchToolbar value={recherche} onChange={setRecherche} placeholder="Rechercher par nom, email ou rôle…" resultCount={`${visibles.length} utilisateur${visibles.length > 1 ? 's' : ''}`} />
-          <DataTable columns={colonnes} rows={visibles} empty="Aucun utilisateur ne correspond à cette recherche." />
+          <SearchToolbar
+            value={recherche}
+            onChange={setRecherche}
+            placeholder="Rechercher par nom, email ou rôle…"
+            resultCount={`${visibles.length} utilisateur${visibles.length > 1 ? 's' : ''}`}
+            actions={<><BasculeDensite /><MenuColonnes storageKey="utilisateurs" colonnes={colonnes} /></>}
+          />
+          <DataTable columns={colonnes} rows={visibles} storageKey="utilisateurs" empty="Aucun utilisateur ne correspond à cette recherche." />
         </div>
       </AsyncState>
 

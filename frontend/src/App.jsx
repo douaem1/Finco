@@ -16,6 +16,7 @@ import Paiements from './pages/Paiements.jsx';
 import GrandLivre from './pages/GrandLivre.jsx';
 import RepartitionCouts from './pages/RepartitionCouts.jsx';
 import RapportsAnalytiques from './pages/RapportsAnalytiques.jsx';
+import JournalAudit from './pages/JournalAudit.jsx';
 import ValidationPaiements from './pages/ValidationPaiements.jsx';
 import Kit from './pages/Kit.jsx';
 import AccesInterdit from './pages/AccesInterdit.jsx';
@@ -55,6 +56,7 @@ export default function App() {
       <Route path="/rapports-analytiques" element={<RapportsAnalytiques />} />
       <Route path="/comptes" element={<PlanComptable />} />
       <Route path="/utilisateurs" element={<Utilisateurs />} />
+      <Route path="/audit" element={<JournalAudit />} />
       <Route path="/direction" element={<Navigate to="/dashboard/directeur" replace />} />
       <Route path="/tableau-de-bord" element={<Navigate to="/dashboard/directeur" replace />} />
       <Route path="/validation-paiements" element={<ValidationPaiements />} />
