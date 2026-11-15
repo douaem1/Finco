@@ -6,6 +6,7 @@ import { demanderCode, renvoyerCode } from '../services/authApi';
 import { messageErreur } from '../services/api';
 import { minutesSecondes } from '../utils/format';
 import Logo from '../components/Logo';
+import ThemeToggle from '../components/ThemeToggle';
 import { EcritureAnimee } from '../components/Balance';
 import Field from '../components/ui/Field';
 import Button from '../components/ui/Button';
@@ -102,6 +103,7 @@ export default function Login() {
 
   return (
     <div className="connexion">
+      <div className="connexion-theme-flottant"><ThemeToggle /></div>
       <aside className="connexion-registre" aria-hidden="true">
         <Logo />
         <div className="registre-contenu">

@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { pageAccueilPourRole } from '../config/roleAccess';
 import { API_URL } from '../services/api';
 import Logo from '../components/Logo';
+import ThemeToggle from '../components/ThemeToggle';
 import { EcritureAnimee } from '../components/Balance';
 import {
   CurseurPersonnalise, EASE_EXPO, Inclinable, Magnetique, SPRING_DOUX, TitreMots, TitreRevele,
@@ -244,7 +245,10 @@ export default function Accueil() {
             </a>
           ))}
         </nav>
-        <Magnetique><Link to={lienEspace} className="btn btn-primaire">{texteEspace}</Link></Magnetique>
+        <div className="ac-nav-actions">
+          <ThemeToggle />
+          <Magnetique><Link to={lienEspace} className="btn btn-primaire">{texteEspace}</Link></Magnetique>
+        </div>
       </header>
 
       <main>
@@ -347,7 +351,7 @@ export default function Accueil() {
       </main>
 
       <footer className="ac-pied">
-        <Logo avecSlogan={false} taille={28} />
+        <Logo taille={28} />
         <p>Projet académique inspiré de SAP FI/CO — Spring Boot, React et MySQL.</p>
         <p className={`ac-api ac-api-${etatApi}`}>
           {etatApi === 'operationnel' ? 'Serveur disponible' : etatApi === 'indisponible' ? 'Serveur indisponible' : 'Vérification du serveur…'}

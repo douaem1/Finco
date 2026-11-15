@@ -6,10 +6,25 @@
     <meta name="theme-color" content="#FBF6EC" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>FinCo — Comptabilité & contrôle de gestion</title>
-    <script type="module" crossorigin src="/assets/index-716kK3cc.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-CC23XFMA.css">
+    <script>
+      /* Applique le thème avant le rendu React pour éviter tout flash. */
+      (function () {
+        try {
+          var mode = localStorage.getItem('finco-theme');
+          var sombre = mode === 'sombre'
+            || ((!mode || mode === 'systeme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.setAttribute('data-theme', sombre ? 'dark' : 'light');
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', sombre ? '#17140F' : '#FBF6EC');
+        } catch (e) {
+          /* préférences indisponibles : thème clair par défaut */
+        }
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-DlcKT5hS.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BfwqDKXs.css">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"></div>
   </body>
 </html>

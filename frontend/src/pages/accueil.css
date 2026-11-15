@@ -19,6 +19,7 @@
 .ac-nav-defile { background: var(--papier-voile); backdrop-filter: blur(14px) saturate(1.2); box-shadow: var(--ombre-carte); }
 .ac-nav-logo { text-decoration: none; }
 .ac-nav-liens { display: flex; gap: 30px; flex: 1; }
+.ac-nav-actions { display: flex; align-items: center; gap: 12px; }
 .ac-nav-liens a { position: relative; padding: 6px 0; color: var(--texte); font-weight: 500; text-decoration: none; transition: color 0.15s ease-out; }
 .ac-nav-liens a:hover { color: var(--texte-2); }
 .ac-souligne { position: absolute; left: -4px; bottom: -8px; width: calc(100% + 8px); height: 10px; overflow: visible; }
@@ -61,10 +62,13 @@
 .mot { display: inline-block; transform-origin: 0 100%; will-change: transform; }
 
 /* ---------- ruban ---------- */
-.ac-ruban { overflow: hidden; border-top: 1px solid var(--bordure); border-bottom: 1px solid var(--bordure); background: var(--encre); color: var(--creme); }
+.ac-ruban { overflow: hidden; border-top: 1px solid var(--bordure); border-bottom: 1px solid var(--bordure); background: var(--surface-inversee); color: var(--texte-inverse); }
 .ac-ruban-piste { display: flex; width: max-content; padding: 13px 0; animation: ruban 60s linear infinite; }
 .ac-ruban-piste span { display: inline-flex; align-items: center; gap: 22px; padding-right: 22px; font: 500 1rem var(--titre); white-space: nowrap; }
 .ac-ruban-piste i { font-style: normal; color: var(--jaune); font-size: 0.8rem; }
+/* le ruban est inversé : en thème sombre le fond devient crème, le
+   séparateur jaune n'est plus lisible → il suit la couleur du texte. */
+[data-theme='dark'] .ac-ruban-piste i { color: currentColor; opacity: 0.66; }
 @keyframes ruban { to { translate: -33.333% 0; } }
 
 /* ---------- sections ---------- */
@@ -123,7 +127,7 @@
 /* Étapes (version sans animation) */
 .ac-etapes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 0; list-style: none; counter-reset: etape; }
 .ac-etapes li { padding: 24px 22px; border: 1px solid var(--bordure); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--ombre-carte); counter-increment: etape; }
-.ac-etapes li::before { content: counter(etape); display: grid; place-items: center; width: 34px; height: 34px; margin-bottom: 14px; border-radius: 50%; border: 1px solid var(--bordure); background: var(--jaune); font-weight: 700; }
+.ac-etapes li::before { content: counter(etape); display: grid; place-items: center; width: 34px; height: 34px; margin-bottom: 14px; border-radius: 50%; border: 1px solid var(--bordure); background: var(--jaune); color: var(--sur-marque); font-weight: 700; }
 .ac-etapes h3 { font: 600 1.2rem var(--titre); }
 .ac-etapes p { margin-top: 6px; color: var(--texte-2); font-size: 0.95rem; }
 
@@ -146,7 +150,7 @@
 .ac-cycle-anneau-fond { stroke: var(--ligne); }
 .ac-cycle-anneau-trace { stroke: var(--sarcelle); }
 .ac-cycle-etape { display: grid; gap: 8px; justify-items: center; max-width: 250px; text-align: center; }
-.ac-cycle-numero { display: grid; place-items: center; width: 62px; height: 62px; margin-bottom: 8px; border-radius: 50%; border: 1px solid var(--bordure); background: var(--jaune); font: 700 1.6rem var(--titre); }
+.ac-cycle-numero { display: grid; place-items: center; width: 62px; height: 62px; margin-bottom: 8px; border-radius: 50%; border: 1px solid var(--bordure); background: var(--jaune); color: var(--sur-marque); font: 700 1.6rem var(--titre); }
 .ac-cycle-etape strong { font: 600 2rem var(--titre); letter-spacing: -0.02em; }
 .ac-cycle-etape span:last-child { color: var(--texte-2); }
 
@@ -154,10 +158,10 @@
 .ac-appel {
   display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap;
   max-width: 1132px; margin: 0 auto 96px; padding: 40px 44px;
-  border: 1px solid var(--bordure); border-radius: var(--radius-lg); background: var(--encre); color: var(--creme); box-shadow: var(--ombre-douce);
+  border: 1px solid var(--bordure); border-radius: var(--radius-lg); background: var(--surface-inversee); color: var(--texte-inverse); box-shadow: var(--ombre-douce);
 }
 .ac-appel h2 { font: 600 clamp(1.5rem, 2.6vw, 2.1rem)/1.15 var(--titre); letter-spacing: -0.02em; }
-.ac-appel p { margin-top: 8px; color: var(--creme-70); max-width: 52ch; }
+.ac-appel p { margin-top: 8px; color: var(--texte-inverse-2); max-width: 52ch; }
 
 /* ---------- pied ---------- */
 .ac-pied {
@@ -180,7 +184,7 @@
   border: 1.5px solid var(--encre);
   transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1), height 0.28s cubic-bezier(0.16, 1, 0.3, 1), margin 0.28s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s;
 }
-.curseur-anneau span { font-size: 0.72rem; font-weight: 700; color: var(--encre); opacity: 0; transition: opacity 0.15s; }
+.curseur-anneau span { font-size: 0.72rem; font-weight: 700; color: var(--sur-marque); opacity: 0; transition: opacity 0.15s; }
 .curseur-bouton { width: 56px; height: 56px; margin: -28px 0 0 -28px; background: var(--jaune-35); }
 .curseur-voir { width: 70px; height: 70px; margin: -35px 0 0 -35px; background: var(--jaune); }
 .curseur-voir span { opacity: 1; }
@@ -189,7 +193,7 @@
 @media (max-width: 960px) {
   .ac-nav { gap: 16px; height: 64px; }
   .ac-nav-liens { display: none; }
-  .ac-nav .magnetique { margin-left: auto; }
+  .ac-nav-actions { margin-left: auto; }
   .ac main > .ac-heros { grid-template-columns: 1fr; gap: 52px; padding: 48px 16px 64px; }
   .ac-heros::before { width: 200px; height: 200px; right: -90px; top: 20px; }
   .ac-section { padding: 64px 16px; }
@@ -204,7 +208,7 @@
   .ac-pied { padding: 24px 16px; }
 }
 @media (max-width: 520px) {
-  .ac-nav .logo-slogan, .ac-apercu-barre .texte-secondaire { display: none; }
+  .ac-apercu-barre .texte-secondaire { display: none; }
   .ac-etapes { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {

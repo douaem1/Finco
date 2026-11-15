@@ -21,6 +21,75 @@
 - Step 21 (NOTIF PARTIE 3 — rejet de paiement): `Paiement` étendu (`motif_rejet` 500, `date_rejet`, `rejete_par` ManyToOne LAZY + `isRejete()`), `PaiementDirectionResponse` expose `rejete/motifRejet/dateRejet/rejetePar` ; `PATCH /api/paiements/{id}/rejeter` (corps `{motif}` obligatoire 5–500 via `RejetPaiementRequest`, réservé DIRECTEUR_FINANCIER dans `SecurityConfig`) ; paiement déjà validé ou rejeté → 409 `ConflitMetierException` ; aucune écriture comptable, factures inchangées ; événement PAIEMENT_REJETE CRITICAL → COMPTABLE (créateur inconnu), lien `/paiements`. `mvn -q test-compile` OK.
 - Step 22 (NOTIF PARTIE 4 — frontend, cloche câblée): `services/notificationApi.js` (instance axios unique : liste, compteur, marquer lue, tout lire), hook `useNotifications` (compteur toutes les 30 s seulement si `document.visibilityState === 'visible'`, nettoyage au démontage, liste chargée à l'ouverture, mise à jour optimiste + rollback, erreurs silencieuses), `NotificationBell` branché (badge corail « 9+ » masqué à 0, icône + libellé accessible par sévérité, temps relatif FR, point non lu, clic = marquer lu + navigation, « Tout marquer comme lu », vide « Aucune notification »), `MiseEnPageApp` consomme le hook, `ValidationPaiements.jsx` branché sur `PATCH /api/paiements/{id}/rejeter` (`rejeterPaiement(id, motif)`, statut Rejeté + motif, toast + rechargement), tokens CSS `notification-icone-{info,warning,critical}`. `npm run build` OK.
 - Step 23 (NOTIF PARTIE 5 — tests & démo): `NotificationServiceTest` (7 tests : comptage, isolation entre utilisateurs, marquage lu nominal/403/404, `toutMarquerLu`, `creerPourRole` ×2) et `NotificationListenerTest` (3 tests : création paiement → notif DAF, erreur jamais remontée, pas d'auto-notification) — 10/10 verts. `DonneesInitiales.creerNotificationsDemonstration()` ajoute 4 notifications d'exemple (DAF warning/critical, COMPTABLE info, CONTROLEUR info) si la table est vide. `mvn test` : seul échec = `DashboardServiceTest` (UnnecessaryStubbing pré-existant, non lié aux notifications).
+- Step 24 (THÈME STEP 1 — nouveau logo « design E »): `components/Logo.jsx` réécrit (props `variante` "complet"|"icone" défaut "complet", `taille` défaut 40 ; icône SVG 0 0 56 56 = 3 pastilles rx 6 hauteur 12 largeurs 52/38/24 en corail/jaune/sarcelle ; marque HTML « FinCo » Fraunces 700 `font-size = 0.9 × taille` couleur `var(--texte)`, soulignement 3 pastilles 0.18em/1.16-0.74-0.42em ; `role="img"` + `aria-label="FinCo"`, décor `aria-hidden`) ; `public/favicon.svg` recréé (3 pastilles hex figés, fond transparent) + `index.html` ; usages migrés (sidebar dépliée/repliée, 403/404, ErrorBoundary, login, en-tête/pied du landing) ; suppression de `.logo-slogan`/`.lateral-marque-nom`. Build passes.
+- Step 25 (THÈME STEP 2 — infra clair/sombre/système): `:root { color-scheme: light }` + bloc `[data-theme="dark"]` complet dans `app.css` (surfaces #17140F/#1F1B15/#2A251D, texte #F5EFE3 / #B8AE9B, bordures rgba crème .12/.24, primaire sarcelle+encre inchangée, liens #3FC9C3, corail #FF8F80, jaune #FFD36B, lilas #CDBBFF, fonds de statut translucides ~16 %, ombres allégées, palette graphiques + alias legacy inversés) ; `context/ThemeContext.jsx` (`{ mode, resolved, setMode }`, défaut "systeme", localStorage `finco-theme` sous try/catch, `matchMedia` live, `data-theme` + `<meta name="theme-color">`) ; script inline anti-flash dans `index.html` ; `ThemeToggle` (bouton fantôme 40 px, icône soleil/lune, `aria-label`/`aria-pressed` FR, tooltip) placé entre la puce exercice et la cloche, + items RadioGroup « Thème » (Clair/Sombre/Système) dans le menu profil, + toggle flottant login et en-tête du landing ; transitions 150 ms (coque seule) activées après le 1er rendu, désactivées sous `prefers-reduced-motion`. Build passes.
+- Step 26 (THÈME STEP 3 — balayage dark mode): grep complet `src/**/*.{css,jsx,js}` → plus aucune couleur en dur hors tokens (seuls les hex de marque du logo/favicon et le `<meta name="theme-color">` restent) ; nouveaux tokens d'aplat inversé thème-aware `--surface-inversee` / `--texte-inverse` / `--texte-inverse-2` et `--ombre-couleur` (ombre décalée : encre en clair, rgba(0,0,0,.45) en sombre) ; conversions appliquées : `.modale-boite`, `.btn-action:hover`, `.onglet.actif`, `.numero-piece:hover` (+ `color: var(--sur-marque)` sur fond jaune), `.kpi-vedette`, `.lien-saut`, `.ui-tooltip`, `.ac-ruban`, `.ac-appel`, `.dashboard-skeleton` ; sélection (jaune/encre figée), `scrollbar-color` token, impression forcée en clair via `@media print { [data-theme='dark'] }` ; illustrations déjà tokenisées (`Balance.jsx`/`Mouvement.jsx` en variables CSS, motif pointillé login `var(--encre-10)`) ; séparateur du ruban du landing rendu `currentColor` en thème sombre (fond crème inversé). Aucun changement de layout/comportement/copie. Build passes.
+- Step 27 (THÈME STEP 4 — ECharts): `DashboardShell.jsx` construit un thème ECharts depuis les variables CSS au rendu (`--chart-series-1..5`, `--chart-texte`, `--chart-grille`, `--surface-inversee`, `--texte-inverse`) appliqué aux 4 options (axes `axisLine`/`axisTick`/`axisLabel`/`splitLine`, légende, infobulles avec fond/bordure/texte du thème) ; `resolved` de `useTheme()` ajouté aux dépendances des `useMemo` → les 4 dashboards (Comptable, Contrôleur, DAF, Admin) se repeignent au changement de thème sans rechargement ; tooltips MAD formatés conservés. `ThemeContext` applique `data-theme` pendant le rendu (avant les enfants) pour que la lecture des variables soit immédiate. Build passes.
+- Step 28 (THÈME STEP 5 — landing & login): aucune couleur en dur à reprendre — `.ac-*` (navigation, héros, cartes, ruban, appel final, pied) et `.connexion-*` (panneau, registre, encart d'écritures) consomment déjà les tokens ; en sombre le fond chaud `--surface-page` s'applique, le motif pointillé du login (`--encre-10`) devient des points crème basse alpha et les panneaux inversés (`--surface-inversee`/`--texte-inverse`) basculent proprement ; identité papier/encre du mode clair inchangée, aucun changement de layout/copie.
+- Step 29 (THÈME STEP 6 — rapport de contraste): calcul des ratios pour les deux thèmes ; 3 correctifs appliqués (survol du bouton primaire, anneau de focus, placeholder). Détail ci-dessous.
+
+## Rapport de contraste (WCAG 2.1 — AA)
+
+Seuils : 4,5:1 pour le texte, 3:1 pour les composants d'interface et les grands textes.
+
+### Corrections appliquées
+
+| Correctif | Avant | Après | Motif |
+| --- | --- | --- | --- |
+| `--primaire-survol` (clair) | `#0E8F8A` → encre 4,23:1 ✗ | `#0E9A94` → 4,83:1 ✓ | le texte encre du bouton primaire passait sous 4,5:1 au survol |
+| `--focus` | `0 0 0 3px rgba(sarcelle, .35)` → 1,43:1 ✗ | `0 0 0 3px var(--focus-contour)` opaque → clair 4,93:1 / sombre 9,06:1 ✓ | anneau de focus invisible sur le fond de page |
+| `--focus-contour` | `var(--sarcelle)` (#12A5A0) | clair `#0A7570` / sombre `#3FC9C3` | anneau opaque ≥ 3:1 |
+| `.input::placeholder` | `--muet-75` → 3,37:1 ✗ | `--muet` plein → 5,77:1 ✓ | placeholder sous 4,5:1 |
+
+### Thème clair (page `#FBF6EC`, carte `#FFFDF7`)
+
+| Élément | Couleurs | Ratio | Verdict |
+| --- | --- | --- | --- |
+| Texte principal sur page | `#221D16` / `#FBF6EC` | 15,5:1 | ✓ |
+| Texte principal sur carte | `#221D16` / `#FFFDF7` | 16,4:1 | ✓ |
+| Texte secondaire sur carte | `#6B6455` / `#FFFDF7` | 5,77:1 | ✓ |
+| Bouton primaire (encre sur sarcelle) | `#221D16` / `#12A5A0` | 5,51:1 | ✓ |
+| Bouton primaire au survol | `#221D16` / `#0E9A94` | 4,83:1 | ✓ (corrigé) |
+| Lien sarcelle sur carte | `#0A7874` / `#FFFDF7` | 5,22:1 | ✓ |
+| Texte corail (danger) | `#C0341F` / `#FFFDF7` | 5,50:1 | ✓ |
+| Texte avertissement | `#8A5700` / `#FFFDF7` | 6,00:1 | ✓ |
+| StatusBadge positive | `#0C6549` / `#DCF3EA` | 6,07:1 | ✓ |
+| StatusBadge negative | `#C0341F` / `#FFE3DE` | 4,61:1 | ✓ |
+| StatusBadge warning | `#8A5700` / `#FFF0CC` | 5,40:1 | ✓ |
+| StatusBadge neutral | `#221D16` / `#EFECE3` | 14,2:1 | ✓ |
+| Item actif de sidebar | `#0A7570` / `#D9F2F0` | 4,72:1 | ✓ |
+| Entête de tableau | `#6B6455` / `#EFECE3` | 4,97:1 | ✓ |
+| Placeholder de champ | `#6B6455` / `#FFFDF7` | 5,77:1 | ✓ (corrigé) |
+| Anneau de focus vs page | `#0A7570` / `#FBF6EC` | 4,93:1 | ✓ (corrigé) |
+| Chip sévérité info | `#0A7874` / `#D9F2F0` | 4,53:1 | ✓ |
+| Chip sévérité warning | `#8A5700` / `#FFF0CC` | 5,40:1 | ✓ |
+| Chip sévérité critical | `#C0341F` / `#FFE3DE` | 4,61:1 | ✓ |
+
+### Thème sombre (page `#17140F`, carte `#1F1B15`)
+
+| Élément | Couleurs | Ratio | Verdict |
+| --- | --- | --- | --- |
+| Texte principal sur page | `#F5EFE3` / `#17140F` | 16,0:1 | ✓ |
+| Texte principal sur carte | `#F5EFE3` / `#1F1B15` | 15,0:1 | ✓ |
+| Texte secondaire sur carte | `#B8AE9B` / `#1F1B15` | 7,80:1 | ✓ |
+| Bouton primaire (encre sur sarcelle) | `#221D16` / `#12A5A0` | 5,51:1 | ✓ |
+| Lien sarcelle sur carte | `#3FC9C3` / `#1F1B15` | 8,45:1 | ✓ |
+| Texte corail (danger) | `#FF8F80` / `#1F1B15` | 7,74:1 | ✓ |
+| Texte avertissement | `#FFD36B` / `#1F1B15` | 12,1:1 | ✓ |
+| StatusBadge positive | `#6FE0BC` / sarcelle 16 % | 8,55:1 | ✓ |
+| StatusBadge negative | `#FF8F80` / corail 16 % | 6,09:1 | ✓ |
+| StatusBadge warning | `#FFD36B` / jaune 16 % | 8,28:1 | ✓ |
+| StatusBadge neutral | `#F5EFE3` / crème 6 % | 12,8:1 | ✓ |
+| Item actif de sidebar | `#7FE3DD` / sarcelle 18 % | 8,83:1 | ✓ |
+| Entête de tableau | `#B8AE9B` / crème 6 % | 6,66:1 | ✓ |
+| Placeholder de champ | `#B8AE9B` / `#1F1B15` | 7,80:1 | ✓ |
+| Anneau de focus vs page | `#3FC9C3` / `#17140F` | 9,06:1 | ✓ (corrigé) |
+| Chip sévérité info | `#3FC9C3` / sarcelle 18 % | 6,56:1 | ✓ |
+| Chip sévérité warning | `#FFD36B` / jaune 16 % | 8,28:1 | ✓ |
+| Chip sévérité critical | `#FF8F80` / corail 16 % | 6,09:1 | ✓ |
+
+Aucun échec restant (texte ≥ 4,5:1, composants/UI ≥ 3:1) après les 3 correctifs ci-dessus ; en thème sombre tous les ratios étaient déjà conformes.
+
 
 
 ## Backend needs

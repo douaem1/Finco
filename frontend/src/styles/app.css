@@ -9,6 +9,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 :root {
+  color-scheme: light;
   /* ============================================================
      SOURCE UNIQUE — palette de marque (identique à l'accueil/connexion).
      Valeurs de marque figées ; tous les rôles sémantiques en découlent.
@@ -26,6 +27,9 @@
   --lilas-pale: #EDE6FF;
   --muet: #6B6455;
 
+  /* texte posé sur un aplat de marque (corail, sarcelle, jaune) : encre figée */
+  --sur-marque: #221D16;
+
   /* canaux RVB : base de toutes les transparences dérivées */
   --encre-rgb: 34, 29, 22;
   --creme-rgb: 251, 246, 236;
@@ -40,6 +44,7 @@
   --surface-page: var(--creme);
   --surface: var(--papier);
   --surface-alt: #FFFFFF;
+  --survol: var(--creme);
   --texte: var(--encre);
   --texte-2: var(--muet);
   --bordure: rgba(var(--encre-rgb), 0.12);
@@ -47,10 +52,11 @@
 
   /* action primaire : texte encre sur fond sarcelle (>= 4,5:1) */
   --primaire: var(--sarcelle);
-  --primaire-survol: #0E8F8A;
-  --primaire-texte: var(--encre);
-  --focus: 0 0 0 3px rgba(var(--sarcelle-rgb), 0.35);
-  --focus-contour: var(--sarcelle);
+  --primaire-survol: #0E9A94;
+  --primaire-texte: var(--sur-marque);
+  /* anneau de focus opaque : >= 3:1 sur tous les fonds clairs */
+  --focus: 0 0 0 3px var(--focus-contour);
+  --focus-contour: #0A7570;
 
   /* petit texte / lien sarcelle sur fond clair (>= 4,5:1) */
   --lien: #0A7874;
@@ -98,6 +104,8 @@
   --trait: 1.5px solid var(--encre);
   --ombre: 4px 4px 0 var(--encre);
   --ombre-petite: 3px 3px 0 var(--encre);
+  /* couleur des ombres décalées ponctuelles (devient sombre en thème sombre) */
+  --ombre-couleur: var(--encre);
   --ombre-douce: 0 1px 0 rgba(var(--encre-rgb), 0.04), 0 12px 28px -18px rgba(var(--encre-rgb), 0.35);
   --ombre-carte: 0 1px 2px rgba(var(--encre-rgb), 0.06), 0 4px 12px rgba(var(--encre-rgb), 0.04);
   --voile: rgba(var(--encre-rgb), 0.42);
@@ -119,6 +127,11 @@
   --jaune-35: rgba(var(--jaune-rgb), 0.35);
   --clarte-18: rgba(255, 255, 255, 0.18);
 
+  /* aplats inversés (bandeau, KPI vedette, infobulle) : sombre en clair, clair en sombre */
+  --surface-inversee: var(--encre);
+  --texte-inverse: var(--creme);
+  --texte-inverse-2: var(--creme-70);
+
   /* typographie, rayons, échelle moderne */
   --rayon: 10px;
   --rayon-grand: 16px;
@@ -132,6 +145,139 @@
   --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px;
   --shadow-sm: var(--ombre-carte); --shadow-md: 0 8px 20px rgba(var(--encre-rgb), 0.14);
   --z-dialog: 40; --z-toast: 50;
+}
+
+/* ================================================================
+   THÈME SOMBRE — palette chaude (jamais de noir pur). Tous les
+   rôles sémantiques sont redéfinis ; les couleurs de marque des
+   pastilles du logo restent figées.
+   ================================================================ */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* alias rétro-compatibles : les anciens noms restent fonctionnels */
+  --encre: #F5EFE3;
+  --creme: rgba(251, 246, 236, 0.06);
+  --papier: #1F1B15;
+
+  /* surfaces */
+  --surface-page: #17140F;
+  --surface: #1F1B15;
+  --surface-alt: #2A251D;
+  --survol: rgba(251, 246, 236, 0.06);
+
+  /* aplats inversés : clairs en thème sombre */
+  --surface-inversee: #F5EFE3;
+  --texte-inverse: #1F1B15;
+  --texte-inverse-2: rgba(31, 27, 21, 0.72);
+
+  /* texte */
+  --texte: #F5EFE3;
+  --texte-2: #B8AE9B;
+  --muet: #B8AE9B;
+
+  /* bordures */
+  --bordure: rgba(251, 246, 236, 0.12);
+  --bordure-forte: rgba(251, 246, 236, 0.24);
+
+  /* action primaire : inchangée (encre sur sarcelle), focus plus clair */
+  --focus: 0 0 0 3px var(--focus-contour);
+  --focus-contour: #3FC9C3;
+
+  /* liens / petits textes colorés */
+  --lien: #3FC9C3;
+  --lien-survol: #F5EFE3;
+
+  /* destructif */
+  --danger-texte: #FF8F80;
+  --danger-survol: #E0674F;
+  --danger-fond: rgba(255, 107, 87, 0.16);
+
+  /* avertissement */
+  --avertissement-texte: #FFD36B;
+  --avertissement-fond: rgba(255, 197, 61, 0.16);
+
+  /* info */
+  --info-texte: #CDBBFF;
+  --info-fond: rgba(183, 156, 255, 0.16);
+
+  /* favorable */
+  --favorable: #3FC9A0;
+  --favorable-texte: #6FE0BC;
+  --favorable-fond: rgba(18, 165, 160, 0.16);
+
+  /* fonds neutres et pâles : teintes translucides de marque */
+  --neutre-fond: rgba(251, 246, 236, 0.06);
+  --corail-pale: rgba(255, 107, 87, 0.16);
+  --sarcelle-pale: rgba(18, 165, 160, 0.18);
+  --jaune-pale: rgba(255, 197, 61, 0.16);
+  --lilas-pale: rgba(183, 156, 255, 0.16);
+
+  /* élément actif de la sidebar : sarcelle clair sur fond pâle sombre */
+  --sarcelle-fonce: #7FE3DD;
+
+  /* traits, ombres, voiles */
+  --trait: 1.5px solid var(--bordure-forte);
+  --ombre: 4px 4px 0 rgba(0, 0, 0, 0.45);
+  --ombre-petite: 3px 3px 0 rgba(0, 0, 0, 0.4);
+  --ombre-douce: 0 1px 0 rgba(0, 0, 0, 0.3), 0 12px 28px -18px rgba(0, 0, 0, 0.7);
+  --ombre-carte: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+  --ombre-couleur: rgba(0, 0, 0, 0.45);
+  --shadow-sm: var(--ombre-carte);
+  --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.55);
+  --voile: rgba(0, 0, 0, 0.6);
+  --voile-fort: rgba(0, 0, 0, 0.72);
+  --papier-voile: rgba(31, 27, 21, 0.9);
+  --papier-voile-clair: rgba(31, 27, 21, 0.94);
+  --creme-70: rgba(251, 246, 236, 0.7);
+
+  /* transparences dérivées (inversées pour rester lisibles) */
+  --encre-80: rgba(245, 239, 227, 0.84);
+  --encre-50: rgba(245, 239, 227, 0.5);
+  --encre-22: rgba(245, 239, 227, 0.22);
+  --encre-10: rgba(245, 239, 227, 0.1);
+  --encre-05: rgba(245, 239, 227, 0.06);
+  --muet-75: rgba(184, 174, 155, 0.75);
+  --sarcelle-35: rgba(18, 165, 160, 0.35);
+  --sarcelle-00: rgba(18, 165, 160, 0);
+  --jaune-22: rgba(255, 197, 61, 0.22);
+  --jaune-35: rgba(255, 197, 61, 0.35);
+  --clarte-18: rgba(255, 255, 255, 0.08);
+
+  /* palette de graphiques : série 5 (encre) devient claire */
+  --chart-series-5: #F5EFE3;
+  --chart-series-5-pale: rgba(245, 239, 227, 0.18);
+  --chart-grille: rgba(251, 246, 236, 0.14);
+  --chart-texte: #B8AE9B;
+}
+
+/* Transitions douces lors du changement de thème — activées par JS
+   après le premier rendu pour éviter tout flash au chargement. */
+.theme-transitions body,
+.theme-transitions .contenu,
+.theme-transitions .carte,
+.theme-transitions .panneau,
+.theme-transitions .ac,
+.theme-transitions .ac-nav,
+.theme-transitions .ac-section,
+.theme-transitions .connexion,
+.theme-transitions .connexion-registre,
+.theme-transitions .connexion-panneau {
+  transition: background-color 0.15s ease-out, color 0.15s ease-out, border-color 0.15s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .theme-transitions body,
+  .theme-transitions .contenu,
+  .theme-transitions .carte,
+  .theme-transitions .panneau,
+  .theme-transitions .ac,
+  .theme-transitions .ac-nav,
+  .theme-transitions .ac-section,
+  .theme-transitions .connexion,
+  .theme-transitions .connexion-registre,
+  .theme-transitions .connexion-panneau {
+    transition: none;
+  }
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -154,17 +300,19 @@ a { color: inherit; }
 .pile { display: grid; gap: 18px; }
 .pile-large { display: grid; gap: 20px; }
 .visuellement-cache { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-.lien-saut { position: absolute; left: 16px; top: -60px; z-index: 20; padding: 10px 14px; border-radius: 8px; background: var(--encre); color: var(--papier); font-weight: 700; text-decoration: none; transition: top .15s ease-out; }
+.lien-saut { position: absolute; left: 16px; top: -60px; z-index: 20; padding: 10px 14px; border-radius: 8px; background: var(--surface-inversee); color: var(--texte-inverse); font-weight: 700; text-decoration: none; transition: top .15s ease-out; }
 .lien-saut:focus { top: 16px; }
 .icone { flex: none; }
 
 /* ---------- logo ---------- */
-.logo { display: inline-flex; align-items: center; gap: 11px; color: var(--encre); text-decoration: none; }
-.logo-texte { display: grid; line-height: 1.1; }
-.logo-nom { font: 700 1.3rem var(--titre); letter-spacing: -0.01em; }
-.logo-slogan { font-size: 0.72rem; color: var(--muet); font-weight: 500; }
-.logo-inverse { color: var(--papier); }
-.logo-inverse .logo-slogan { color: var(--creme-70); }
+.logo-finco { display: inline-flex; align-items: center; text-decoration: none; color: var(--texte); }
+.logo-finco-marque { display: inline-flex; flex-direction: column; align-items: flex-start; line-height: 1; }
+.logo-finco-nom { font-family: var(--titre); font-weight: 700; letter-spacing: -0.01em; line-height: 1; }
+.logo-finco-souligne { display: flex; gap: 0.13em; margin-top: 0.15em; }
+.logo-finco-pastille { display: block; height: 0.18em; border-radius: 0.09em; }
+.logo-finco-pastille-corail { width: 1.16em; background: var(--corail); }
+.logo-finco-pastille-jaune { width: 0.74em; background: var(--jaune); }
+.logo-finco-pastille-sarcelle { width: 0.42em; background: var(--sarcelle); }
 
 /* ---------- boutons ---------- */
 .btn {
@@ -180,8 +328,8 @@ a { color: inherit; }
 .btn:disabled { cursor: not-allowed; opacity: 0.5; }
 .btn-primaire { background: var(--primaire); border-color: var(--primaire); color: var(--primaire-texte); }
 .btn-primaire:hover:not(:disabled) { background: var(--primaire-survol); border-color: var(--primaire-survol); }
-.btn-primaire:disabled { background: var(--sarcelle); border-color: var(--sarcelle); color: var(--encre); opacity: 0.55; }
-.btn-danger { background: var(--danger); border-color: var(--danger); color: var(--encre); }
+.btn-primaire:disabled { background: var(--sarcelle); border-color: var(--sarcelle); color: var(--primaire-texte); opacity: 0.55; }
+.btn-danger { background: var(--danger); border-color: var(--danger); color: var(--sur-marque); }
 .btn-danger:hover:not(:disabled) { background: var(--danger-texte); border-color: var(--danger-texte); color: var(--papier); }
 .btn-secondaire { background: var(--surface); }
 .btn-large { min-height: 48px; width: 100%; font-size: 1rem; }
@@ -220,7 +368,7 @@ a { color: inherit; }
 }
 .input:hover { border-color: var(--encre-50); }
 .input:focus { outline: none; border-color: var(--encre); box-shadow: var(--focus); }
-.input::placeholder { color: var(--muet-75); font-weight: 400; }
+.input::placeholder { color: var(--muet); font-weight: 400; }
 select.input { cursor: pointer; }
 .obligatoire { color: var(--danger-texte); }
 .cell-actions { width: 90px; text-align: center; }
@@ -289,7 +437,7 @@ input[type='number'].input::-webkit-inner-spin-button { -webkit-appearance: none
 .ui-button-secondary:hover:not(:disabled) { background: var(--creme); }
 .ui-button-ghost { background: transparent; color: var(--texte); border-color: transparent; box-shadow: none; }
 .ui-button-ghost:hover:not(:disabled) { background: var(--creme); box-shadow: none; }
-.ui-button-danger { background: var(--danger); color: var(--encre); border-color: var(--danger); }
+.ui-button-danger { background: var(--danger); color: var(--sur-marque); border-color: var(--danger); }
 .ui-button-danger:hover:not(:disabled) { background: var(--danger-texte); border-color: var(--danger-texte); color: var(--papier); }
 .ui-spinner { width: 14px; height: 14px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: tourner .8s linear infinite; }
 .ui-field { display: grid; gap: 7px; }
@@ -346,8 +494,8 @@ input[type='number'].input::-webkit-inner-spin-button { -webkit-appearance: none
 .ui-combobox li[aria-selected='true'] .ui-combobox-option { color: var(--lien); font-weight: 600; }
 .ui-combobox li.ui-combobox-actif .ui-combobox-option { background: var(--neutre-fond); }
 .ui-combobox-vide { padding: 10px; color: var(--muet); font-size: .88rem; }
-.ui-tooltip { z-index: 60; padding: 6px 10px; border-radius: var(--radius-md); background: var(--encre); color: var(--papier); font: 600 .78rem var(--sans); box-shadow: var(--shadow-md); }
-.ui-tooltip-fleche { fill: var(--encre); }
+.ui-tooltip { z-index: 60; padding: 6px 10px; border-radius: var(--radius-md); background: var(--surface-inversee); color: var(--texte-inverse); font: 600 .78rem var(--sans); box-shadow: var(--shadow-md); }
+.ui-tooltip-fleche { fill: var(--surface-inversee); }
 @media (max-width: 620px) { .ui-page-header { display: grid; } .ui-page-actions { width: 100%; justify-content: flex-start; } .ui-page-actions > * { flex: 1; } .ui-dialog-content { padding: 22px; } }
 @media (prefers-reduced-motion: reduce) { .ui-button, .ui-dialog-overlay, .ui-toast, .lien-saut { transition: none; animation: none; } }
 
@@ -374,7 +522,6 @@ input[type='number'].input::-webkit-inner-spin-button { -webkit-appearance: none
   color: var(--encre-80);
 }
 .lateral-marque { display: flex; align-items: center; gap: 10px; min-height: 64px; padding: 0 18px; border-bottom: 1px solid var(--bordure); }
-.lateral-marque-nom { font: 700 1.15rem var(--titre); color: var(--encre); letter-spacing: -0.01em; }
 .lateral-menu { display: grid; align-content: start; gap: 4px; flex: 1; padding: 14px 12px; }
 .lateral-section { margin: 12px 10px 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muet); }
 .lateral-section-trait { display: none; height: 1px; margin: 8px 6px; background: var(--bordure); }
@@ -404,7 +551,6 @@ input[type='number'].input::-webkit-inner-spin-button { -webkit-appearance: none
 .coque-replie .lateral-bascule svg { transform: rotate(180deg); }
 .coque-replie .lateral-bascule-texte { display: none; }
 .coque-replie .lateral-marque { justify-content: center; padding: 0; }
-.coque-replie .lateral-marque-nom { display: none; }
 .coque-replie .lateral-menu { padding: 14px 10px; }
 .coque-replie .lateral-menu a { justify-content: center; padding: 0; }
 .coque-replie .lateral-libelle { display: none; }
@@ -448,12 +594,20 @@ input[type='number'].input::-webkit-inner-spin-button { -webkit-appearance: none
   background: transparent; color: var(--encre); cursor: pointer;
   transition: background-color .15s ease-out;
 }
-.cloche:hover { background: var(--creme); }
+.cloche:hover { background: var(--survol); }
 .cloche:focus-visible { outline: none; box-shadow: var(--focus); }
+.theme-toggle {
+  display: grid; place-items: center; width: 40px; height: 40px;
+  border: 0; border-radius: 50%; background: transparent; color: var(--texte);
+  cursor: pointer; transition: background-color .15s ease-out;
+}
+.theme-toggle:hover { background: var(--survol); }
+.theme-toggle:focus-visible { outline: none; box-shadow: var(--focus); }
+.connexion-theme-flottant { position: fixed; top: 18px; right: 18px; z-index: 30; }
 .cloche-badge {
   position: absolute; top: 2px; right: 2px;
   display: grid; place-items: center; min-width: 18px; height: 18px; padding: 0 4px;
-  border-radius: 999px; background: var(--corail); color: var(--encre);
+  border-radius: 999px; background: var(--corail); color: var(--sur-marque);
   font: 700 11px/1 var(--sans); box-shadow: 0 0 0 2px var(--papier);
 }
 .notifications {
@@ -524,6 +678,9 @@ input[type='number'].input::-webkit-inner-spin-button { -webkit-appearance: none
 .profil-item-danger { color: var(--danger-texte); }
 .profil-item-danger:hover, .profil-item-danger:focus-visible { background: var(--danger-fond); }
 .profil-item .icone { flex: none; }
+.profil-etiquette { padding: 6px 10px 2px; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muet); }
+.profil-item-theme { position: relative; padding-right: 30px; }
+.profil-theme-coche { position: absolute; right: 10px; display: inline-flex; color: var(--sarcelle-fonce); }
 
 .page-erreur { display: grid; place-items: center; min-height: 100vh; padding: 24px; text-align: center; }
 .page-erreur .carte { display: grid; justify-items: center; gap: 16px; width: min(520px, 100%); }
@@ -537,7 +694,6 @@ input[type='number'].input::-webkit-inner-spin-button { -webkit-appearance: none
   .coque-replie .lateral-section { display: block; }
   .coque-replie .lateral-section-trait { display: none; }
   .coque-replie .lateral-marque { justify-content: flex-start; padding: 0 18px; }
-  .coque-replie .lateral-marque-nom { display: inline; }
   .lateral-bascule { display: none; }
   .coque-voile { display: block; position: fixed; inset: 0; z-index: 24; border: 0; background: var(--voile); }
   .barre-sup { padding: 0 16px; }
@@ -574,7 +730,7 @@ input[type='number'].input::-webkit-inner-spin-button { -webkit-appearance: none
 .dashboard-chart-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(320px, .8fr); gap: 20px; }
 .dashboard-chart-card { min-width: 0; }
 .dashboard-subtitle { margin-top: 4px; font-size: .82rem; }
-.dashboard-skeleton { min-height: 280px; border-radius: var(--rayon); background: linear-gradient(90deg, var(--ligne), rgba(var(--papier-rgb), 0.55), var(--ligne)); background-size: 200% 100%; animation: dashboard-shimmer 1.2s infinite; }
+.dashboard-skeleton { min-height: 280px; border-radius: var(--rayon); background: linear-gradient(90deg, var(--ligne), var(--surface-alt), var(--ligne)); background-size: 200% 100%; animation: dashboard-shimmer 1.2s infinite; }
 .dashboard-skeleton-large { min-height: 420px; }
 @keyframes dashboard-shimmer { to { background-position: -200% 0; } }
 .dashboard-centre-list { display: grid; gap: 8px; }
@@ -623,7 +779,7 @@ input[type='number'].input::-webkit-inner-spin-button { -webkit-appearance: none
   transition: background-color 0.4s, color 0.4s;
 }
 .balance-ecart .balance-etat { background: var(--jaune-pale); }
-.balance-ok .balance-etat { background: var(--sarcelle); color: var(--encre); }
+.balance-ok .balance-etat { background: var(--sarcelle); color: var(--sur-marque); }
 .balance .balance-etat-icone { flex: none; width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 .balance-compacte { grid-template-columns: 112px minmax(0, 1fr); align-items: center; gap: 18px; max-width: 480px; }
 .balance-compacte svg { max-height: 80px; }
@@ -759,9 +915,9 @@ input[type='number'].input::-webkit-inner-spin-button { -webkit-appearance: none
 .kpi-valeur { font: 600 1.75rem/1.2 var(--titre); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
 .kpi-valeur small { font: 600 0.82rem var(--sans); color: var(--muet); }
 .kpi-note { margin-top: 2px; font-size: 0.78rem; color: var(--muet); }
-.kpi-vedette { background: var(--encre); color: var(--creme); box-shadow: 4px 4px 0 var(--corail); }
-.kpi-vedette .kpi-icone { background: var(--corail); border-color: var(--creme); color: var(--encre); }
-.kpi-vedette .kpi-libelle, .kpi-vedette .kpi-note, .kpi-vedette .kpi-valeur small { color: var(--creme-70); }
+.kpi-vedette { background: var(--surface-inversee); color: var(--texte-inverse); box-shadow: 4px 4px 0 var(--corail); }
+.kpi-vedette .kpi-icone { background: var(--corail); border-color: var(--texte-inverse); color: var(--sur-marque); }
+.kpi-vedette .kpi-libelle, .kpi-vedette .kpi-note, .kpi-vedette .kpi-valeur small { color: var(--texte-inverse-2); }
 .kpi-vedette .kpi-valeur { font-size: 2.15rem; }
 
 .grille-tdb { display: grid; grid-template-columns: 1.6fr 1fr; gap: 22px; }
@@ -1005,7 +1161,7 @@ input[type='number'].input::-webkit-inner-spin-button { -webkit-appearance: none
 .modale-boite {
   width: min(540px, 100%); max-height: 90vh; overflow-y: auto;
   background: var(--papier); border: var(--trait); border-radius: var(--rayon-grand);
-  box-shadow: 6px 6px 0 var(--encre);
+  box-shadow: 6px 6px 0 var(--ombre-couleur);
   display: flex; flex-direction: column;
 }
 .modale-entete {
@@ -1047,4 +1203,39 @@ input[type='number'].input::-webkit-inner-spin-button { -webkit-appearance: none
   background: var(--sarcelle-pale); border: 1.5px solid var(--encre);
   border-radius: var(--rayon); font-weight: 600; font-size: 0.9rem;
   color: var(--encre);
+}
+
+/* ================================================================
+   SÉLECTION, BARRES DE DÉFILEMENT, IMPRESSION
+   ================================================================ */
+::selection { background: var(--jaune); color: var(--sur-marque); }
+html { scrollbar-color: var(--bordure-forte) transparent; }
+/* Les contrôles natifs (barres, icône du sélecteur de date) suivent
+   `color-scheme`, déjà basculé avec le thème. */
+input[type='date']::-webkit-calendar-picker-indicator { cursor: pointer; }
+
+/* L'impression reste toujours claire, même en thème sombre. */
+@media print {
+  [data-theme='dark'] {
+    color-scheme: light;
+    --surface-page: #FFFFFF;
+    --surface: #FFFFFF;
+    --surface-alt: #FFFFFF;
+    --survol: #FBF6EC;
+    --neutre-fond: #EFECE3;
+    --creme: #FBF6EC;
+    --papier: #FFFDF7;
+    --encre: #221D16;
+    --texte: #221D16;
+    --texte-2: #6B6455;
+    --muet: #6B6455;
+    --bordure: rgba(34, 29, 22, 0.12);
+    --bordure-forte: rgba(34, 29, 22, 0.28);
+    --surface-inversee: #221D16;
+    --texte-inverse: #FBF6EC;
+    --texte-inverse-2: rgba(251, 246, 236, 0.7);
+    --ombre-carte: none;
+    --shadow-sm: none;
+    --shadow-md: none;
+  }
 }

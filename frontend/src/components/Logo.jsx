@@ -1,32 +1,46 @@
 /**
- * Logo FinCo.
- * Tampon corail bordé d'encre (style « papier & encre »). Le « F » est fait
- * de deux barres de même longueur : un signe « = » (débit = crédit).
- * Le point sarcelle évoque un solde à zéro.
+ * Logo FinCo — design « E ».
+ * Icône : trois pastilles horizontales alignées à gauche (corail / jaune / sarcelle).
+ * Marque : « FinCo » en Fraunces 700 suivi d'un soulignement de trois pastilles.
+ * Variante « icone » : uniquement les pastilles (sidebar repliée, favicon).
  */
-export function LogoMarque({ taille = 36, inverse = false }) {
+
+const PASTILLES = [
+  { y: 0, largeur: 52, rembourrage: 'var(--corail)' },
+  { y: 22, largeur: 38, rembourrage: 'var(--jaune)' },
+  { y: 44, largeur: 24, rembourrage: 'var(--sarcelle)' },
+];
+
+function IconePastilles({ taille }) {
   return (
-    <svg width={taille} height={taille} viewBox="0 0 40 40" aria-hidden="true" focusable="false">
-      {/* ombre décalée (encre), puis tampon corail bordé d'encre */}
-      <rect x="4" y="4" width="34" height="34" rx="9" fill="var(--encre)" />
-      <rect x="1.5" y="1.5" width="34" height="34" rx="9" fill={inverse ? 'var(--papier)' : 'var(--corail)'} stroke="var(--encre)" strokeWidth="2" />
-      <rect x="11" y="9" width="4.6" height="19" rx="1.2" fill={inverse ? 'var(--encre)' : 'var(--papier)'} />
-      <rect x="11" y="9" width="15.5" height="4.6" rx="1.2" fill={inverse ? 'var(--encre)' : 'var(--papier)'} />
-      <rect x="11" y="16.6" width="15.5" height="4.6" rx="1.2" fill={inverse ? 'var(--encre)' : 'var(--papier)'} />
-      <circle cx="25" cy="26" r="2.5" fill="var(--sarcelle)" stroke="var(--encre)" strokeWidth="1.2" />
+    <svg width={taille} height={taille} viewBox="0 0 56 56" aria-hidden="true" focusable="false">
+      {PASTILLES.map((p) => (
+        <rect key={p.y} x="0" y={p.y} width={p.largeur} height="12" rx="6" fill={p.rembourrage} />
+      ))}
     </svg>
   );
 }
 
-export default function Logo({ variante = 'clair', avecSlogan = true, taille = 36 }) {
-  const inverse = variante === 'inverse';
+export default function Logo({ variante = 'complet', taille = 40, className = '' }) {
+  const iconeSeule = variante === 'icone';
   return (
-    <span className={`logo ${inverse ? 'logo-inverse' : ''}`}>
-      <LogoMarque taille={taille} inverse={inverse} />
-      <span className="logo-texte">
-        <span className="logo-nom">FinCo</span>
-        {avecSlogan && <span className="logo-slogan">Finance &amp; contrôle de gestion</span>}
-      </span>
+    <span
+      className={`logo-finco ${iconeSeule ? 'logo-finco-icone' : ''} ${className}`.trim()}
+      role="img"
+      aria-label="FinCo"
+      style={{ gap: iconeSeule ? undefined : `calc(0.6 * ${taille}px)` }}
+    >
+      <IconePastilles taille={taille} />
+      {!iconeSeule && (
+        <span className="logo-finco-marque" aria-hidden="true" style={{ fontSize: `calc(0.9 * ${taille}px)` }}>
+          <span className="logo-finco-nom">FinCo</span>
+          <span className="logo-finco-souligne">
+            <span className="logo-finco-pastille logo-finco-pastille-corail" />
+            <span className="logo-finco-pastille logo-finco-pastille-jaune" />
+            <span className="logo-finco-pastille logo-finco-pastille-sarcelle" />
+          </span>
+        </span>
+      )}
     </span>
   );
 }

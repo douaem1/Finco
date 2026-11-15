@@ -25,6 +25,10 @@ const TRACES = {
   grandLivre: <><path d="M4 5.5A2.5 2.5 0 016.5 3H20v17H6.5A2.5 2.5 0 014 17.5z" /><path d="M4 6v12M8 7h8M8 11h8M8 15h5" /></>,
   repartition: <><path d="M4 7h8M12 7l-3-3M12 7l-3 3M20 17h-8M12 17l3-3M12 17l3 3" /><circle cx="4" cy="7" r="1.5" /><circle cx="20" cy="17" r="1.5" /></>,
   rapport: <><path d="M4 20V4M4 20h17" /><path d="M8 16v-4M13 16V8M18 16V5" /></>,
+  soleil: <><circle cx="12" cy="12" r="4.2" /><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.7 5.7l1.6 1.6M16.7 16.7l1.6 1.6M18.3 5.7l-1.6 1.6M7.3 16.7l-1.6 1.6" /></>,
+  lune: <><path d="M20.5 14.8A8.6 8.6 0 019.2 3.5a8.6 8.6 0 1011.3 11.3z" /></>,
+  ecran: <><rect x="3" y="4" width="18" height="13" rx="2" /><path d="M9 21h6M12 17v4" /></>,
+  coche: <><path d="M5 12.5l4.5 4.5L19 7" /></>,
 };
 
 export default function Icone({ nom, taille = 20, className = '' }) {

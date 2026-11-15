@@ -4,10 +4,11 @@ import { useAuth } from '../context/AuthContext';
 import { PAGES, obtenirSectionsMenuPourRole } from '../config/roleAccess';
 import { listerExercices } from '../services/exerciceApi';
 import { useNotifications } from '../hooks/useNotifications';
-import { LogoMarque } from './Logo';
+import Logo from './Logo';
 import Icone from './Icone';
 import MessageErreur from './MessageErreur';
 import NotificationBell from './NotificationBell';
+import ThemeToggle from './ThemeToggle';
 import UserMenu from './UserMenu';
 import Tooltip from './ui/Tooltip';
 
@@ -106,8 +107,7 @@ export default function MiseEnPageApp() {
     {menuMobileOuvert && <button type="button" className="coque-voile" aria-label="Fermer le menu" onClick={() => setMenuMobileOuvert(false)} />}
     <aside id="navigation-principale" className={`lateral ${lateralReplie ? 'lateral-replie' : ''} ${menuMobileOuvert ? 'lateral-mobile-ouvert' : ''}`}>
       <div className="lateral-marque">
-        <LogoMarque taille={32} />
-        <span className="lateral-marque-nom">FinCo</span>
+        <Logo variante={lateralReplie ? 'icone' : 'complet'} taille={32} />
       </div>
       <nav className="lateral-menu" aria-label="Navigation principale">
         {sections.map((section) => <Fragment key={section.nom}>
@@ -141,6 +141,7 @@ export default function MiseEnPageApp() {
             <strong>{exercice?.annee ?? new Date().getFullYear()}</strong>
             <small>{exercice?.cloture ? 'Clôturée' : 'Ouverte'}</small>
           </div>
+          <ThemeToggle />
           <NotificationBell
             items={notifications}
             compteur={notificationsNonLues}
