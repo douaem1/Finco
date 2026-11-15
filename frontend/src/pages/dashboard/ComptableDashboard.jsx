@@ -1,4 +1,5 @@
 import DashboardShell from '../../components/dashboard/DashboardShell';
+import { ComptableLegacyWidgets } from '../../components/dashboard/LegacyDashboardWidgets';
 
 export default function ComptableDashboard() {
   return <DashboardShell role="COMPTABLE" title="Pilotage comptable" intro="Les opérations à traiter et les mouvements de votre exercice, en un coup d'œil." kpiConfig={[
@@ -6,5 +7,5 @@ export default function ComptableDashboard() {
     { key: 'ecrituresEnAttente', label: 'Écritures à valider', tone: 'warning' },
     { key: 'facturesBrouillon', label: 'Factures en brouillon', tone: 'warning' },
     { key: 'paiements', label: 'Paiements de la période', tone: 'positive' },
-  ]} links={[{ to: '/pieces/nouvelle', label: 'Nouvelle écriture' }, { to: '/factures', label: 'Voir les factures' }]} />;
+  ]} links={[{ to: '/pieces/nouvelle', label: 'Nouvelle écriture' }, { to: '/factures', label: 'Voir les factures' }]}><ComptableLegacyWidgets /></DashboardShell>;
 }

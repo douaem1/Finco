@@ -15,15 +15,21 @@ export default function GrandLivre() {
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState('');
 
-  useEffect(() => {
-    Promise.all([listerPieces(), listerComptes()])
-      .then(([piecesRecues, comptesRecus]) => {
-        setPieces(piecesRecues);
-        setComptes(comptesRecus);
-      })
-      .catch((e) => setErreur(messageErreur(e)))
-      .finally(() => setChargement(false));
-  }, []);
+  async function chargerDonnees() {
+    setChargement(true);
+    setErreur('');
+    try {
+      const [piecesRecues, comptesRecus] = await Promise.all([listerPieces(), listerComptes()]);
+      setPieces(piecesRecues);
+      setComptes(comptesRecus);
+    } catch (e) {
+      setErreur(messageErreur(e));
+    } finally {
+      setChargement(false);
+    }
+  }
+
+  useEffect(() => { chargerDonnees(); }, []);
 
   const lignes = useMemo(() => pieces
     .filter((piece) => piece.validee)
@@ -77,7 +83,7 @@ export default function GrandLivre() {
   return (
     <section>
       <header className="entete-page"><div><h1>Grand livre &amp; balance</h1><p className="texte-secondaire">Consultez les mouvements validés et le solde de chaque compte.</p></div></header>
-      <MessageErreur message={erreur} />
+      <MessageErreur message={erreur} onRetry={chargerDonnees} />
       {chargement ? <Chargement /> : (
         <>
           <div className="panneau filtre-rapport">

@@ -40,16 +40,24 @@ export default function Factures() {
   const [factureASupprimer, setFactureASupprimer] = useState(null);
   const [erreurModale, setErreurModale] = useState('');
 
+  async function chargerDonnees() {
+    setChargement(true);
+    setErreur('');
+    try {
+      const [f, fournisseursRecus, clientsRecus, centresRecus] = await Promise.all([listerFactures(), listerFournisseurs(), listerClients(), listerCentres()]);
+      setFactures(f);
+      setFournisseurs(fournisseursRecus);
+      setClients(clientsRecus);
+      setCentres(centresRecus);
+    } catch (e) {
+      setErreur(messageErreur(e));
+    } finally {
+      setChargement(false);
+    }
+  }
+
   useEffect(() => {
-    Promise.all([listerFactures(), listerFournisseurs(), listerClients(), listerCentres()])
-      .then(([f, fournisseursRecus, clientsRecus, centresRecus]) => {
-        setFactures(f);
-        setFournisseurs(fournisseursRecus);
-        setClients(clientsRecus);
-        setCentres(centresRecus);
-      })
-      .catch((e) => setErreur(messageErreur(e)))
-      .finally(() => setChargement(false));
+    chargerDonnees();
   }, []);
 
   const tiers = formulaire.type === 'ACHAT' ? fournisseurs : clients;
@@ -167,7 +175,7 @@ export default function Factures() {
       </header>
 
       {succes && <p className="message-succes" role="status">{succes}</p>}
-      <MessageErreur message={erreur} />
+      <MessageErreur message={erreur} onRetry={chargerDonnees} />
       {chargement ? <Chargement /> : (
         <div className="panneau">
           <div className="barre-outils">
@@ -196,9 +204,9 @@ export default function Factures() {
                       <td>
                         {facture.statut === 'BROUILLON' ? (
                           <div className="actions-cell">
-                            <button type="button" className="btn-action" onClick={() => ouvrirModification(facture)} title="Modifier"><Icone nom="editer" taille={16} /></button>
-                            <button type="button" className="btn-action" onClick={() => { setFactureAValider(facture); setCentreCoutId(''); setErreurModale(''); }} title="Comptabiliser"><Icone nom="valide" taille={16} /></button>
-                            <button type="button" className="btn-action btn-action-supprimer" onClick={() => setFactureASupprimer(facture)} title="Supprimer"><Icone nom="supprimer" taille={16} /></button>
+                            <button type="button" className="btn-action" onClick={() => ouvrirModification(facture)} title="Modifier" aria-label="Modifier"><Icone nom="editer" taille={16} /></button>
+                            <button type="button" className="btn-action" onClick={() => { setFactureAValider(facture); setCentreCoutId(''); setErreurModale(''); }} title="Comptabiliser" aria-label="Comptabiliser"><Icone nom="valide" taille={16} /></button>
+                            <button type="button" className="btn-action btn-action-supprimer" onClick={() => setFactureASupprimer(facture)} title="Supprimer" aria-label="Supprimer"><Icone nom="supprimer" taille={16} /></button>
                           </div>
                         ) : <span className="texte-secondaire">{facture.pieceNumero || 'Comptabilisée'}</span>}
                       </td>
@@ -215,7 +223,7 @@ export default function Factures() {
       {formulaireOuvert && (
         <div className="modale-fond" onClick={() => setFormulaireOuvert(false)}>
           <div className="modale-boite" onClick={(e) => e.stopPropagation()}>
-            <div className="modale-entete"><h2>{factureEnCours ? 'Modifier la facture' : 'Nouvelle facture'}</h2><button type="button" className="bouton-icone" onClick={() => setFormulaireOuvert(false)}><Icone nom="croix" /></button></div>
+            <div className="modale-entete"><h2>{factureEnCours ? 'Modifier la facture' : 'Nouvelle facture'}</h2><button type="button" className="bouton-icone" onClick={() => setFormulaireOuvert(false)} aria-label="Fermer"><Icone nom="croix" /></button></div>
             <form onSubmit={enregistrer}>
               <div className="modale-corps">
                 <MessageErreur message={erreurModale} />
@@ -246,7 +254,7 @@ export default function Factures() {
       {factureAValider && (
         <div className="modale-fond" onClick={() => setFactureAValider(null)}>
           <div className="modale-boite" onClick={(e) => e.stopPropagation()}>
-            <div className="modale-entete"><h2>Comptabiliser la facture</h2><button type="button" className="bouton-icone" onClick={() => setFactureAValider(null)}><Icone nom="croix" /></button></div>
+            <div className="modale-entete"><h2>Comptabiliser la facture</h2><button type="button" className="bouton-icone" onClick={() => setFactureAValider(null)} aria-label="Fermer"><Icone nom="croix" /></button></div>
             <form onSubmit={confirmerValidation}>
               <div className="modale-corps">
                 <MessageErreur message={erreurModale} />
@@ -268,7 +276,7 @@ export default function Factures() {
       {factureASupprimer && (
         <div className="modale-fond" onClick={() => setFactureASupprimer(null)}>
           <div className="modale-boite" onClick={(e) => e.stopPropagation()}>
-            <div className="modale-entete"><h2>Supprimer la facture</h2><button type="button" className="bouton-icone" onClick={() => setFactureASupprimer(null)}><Icone nom="croix" /></button></div>
+            <div className="modale-entete"><h2>Supprimer la facture</h2><button type="button" className="bouton-icone" onClick={() => setFactureASupprimer(null)} aria-label="Fermer"><Icone nom="croix" /></button></div>
             <div className="modale-corps"><p>Supprimer le brouillon <strong>{factureASupprimer.numero}</strong> ? Cette action est irréversible.</p></div>
             <div className="modale-pied"><button type="button" className="btn btn-secondaire" onClick={() => setFactureASupprimer(null)}>Annuler</button><button type="button" className="btn btn-primaire" onClick={confirmerSuppression} disabled={action}>{action ? 'Suppression…' : 'Supprimer'}</button></div>
           </div>

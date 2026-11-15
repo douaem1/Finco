@@ -29,6 +29,15 @@ export const ROLES = {
  */
 export const PAGES = [
   {
+    path: '/__kit',
+    libelle: 'Kit d’interface',
+    icone: 'rapport',
+    section: 'Développement',
+    roles: Object.values(ROLES),
+    dansMenu: false,
+    end: true,
+  },
+  {
     path: '/dashboard/comptable',
     libelle: 'Tableau de bord',
     icone: 'accueil',
@@ -211,7 +220,7 @@ export const PAGES = [
     icone: 'accueil',
     section: 'Direction financière',
     roles: [ROLES.DIRECTEUR_FINANCIER],
-    dansMenu: true,
+    dansMenu: false,
     end: false,
   },
   {

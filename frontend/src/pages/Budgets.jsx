@@ -184,7 +184,7 @@ export default function Budgets() {
       </header>
 
       {succes && <p className="message-succes" role="status">{succes}</p>}
-      <MessageErreur message={erreur} />
+      <MessageErreur message={erreur} onRetry={chargerDonnees} />
 
       {chargement ? (
         <Chargement />
@@ -201,7 +201,7 @@ export default function Budgets() {
             </button>
           )}
           {centres.length === 0 && (
-            <p className="texte-secondaire" style={{ fontSize: '0.85rem' }}>
+            <p className="texte-secondaire texte-aide-budget">
               Créez d'abord des centres de coûts pour pouvoir leur affecter un budget.
             </p>
           )}
@@ -220,8 +220,7 @@ export default function Budgets() {
               />
             </label>
             <select
-              className="input"
-              style={{ width: 'auto', minWidth: '120px' }}
+              className="input filtre-annee"
               value={filtreAnnee}
               onChange={e => setFiltreAnnee(e.target.value)}
               aria-label="Filtrer par année"
@@ -244,7 +243,7 @@ export default function Budgets() {
                   <th>Libellé</th>
                   <th>Année</th>
                   <th className="num">Montant prévu (MAD)</th>
-                  {peutModifier && <th style={{ width: '90px', textAlign: 'center' }}>Actions</th>}
+                  {peutModifier && <th className="cell-actions">Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -255,7 +254,7 @@ export default function Budgets() {
                     <td className="chiffres">{b.annee}</td>
                     <td className="num chiffres montant-fort">{montant(b.montantPrevu)}</td>
                     {peutModifier && (
-                      <td style={{ textAlign: 'center' }}>
+                      <td className="cell-actions">
                         <div className="actions-cell">
                           <button
                             type="button"
@@ -306,7 +305,7 @@ export default function Budgets() {
           <div className="modale-boite" onClick={e => e.stopPropagation()}>
             <div className="modale-entete">
               <h2>{elementEnCours ? 'Modifier le budget' : 'Nouveau budget CO'}</h2>
-              <button type="button" className="bouton-icone" onClick={() => setModaleOuverte(false)} title="Fermer">
+              <button type="button" className="bouton-icone" onClick={() => setModaleOuverte(false)} title="Fermer" aria-label="Fermer">
                 <Icone nom="croix" taille={18} />
               </button>
             </div>
@@ -315,7 +314,7 @@ export default function Budgets() {
                 <MessageErreur message={erreurModale} onFermer={() => setErreurModale('')} />
                 <div className="champ">
                   <label className="champ-label" htmlFor="budget-centre">
-                    Centre de coûts <span style={{ color: 'var(--corail)' }}>*</span>
+                    Centre de coûts <span className="obligatoire">*</span>
                   </label>
                   <select
                     id="budget-centre"
@@ -334,7 +333,7 @@ export default function Budgets() {
 
                 <div className="champ">
                   <label className="champ-label" htmlFor="budget-annee">
-                    Année <span style={{ color: 'var(--corail)' }}>*</span>
+                    Année <span className="obligatoire">*</span>
                   </label>
                   <input
                     id="budget-annee"
@@ -351,7 +350,7 @@ export default function Budgets() {
 
                 <div className="champ">
                   <label className="champ-label" htmlFor="budget-montant">
-                    Montant prévu (MAD) <span style={{ color: 'var(--corail)' }}>*</span>
+                    Montant prévu (MAD) <span className="obligatoire">*</span>
                   </label>
                   <input
                     id="budget-montant"
@@ -388,7 +387,7 @@ export default function Budgets() {
           <div className="modale-boite" onClick={e => e.stopPropagation()}>
             <div className="modale-entete">
               <h2>Confirmer la suppression</h2>
-              <button type="button" className="bouton-icone" onClick={() => setElementASupprimer(null)}>
+              <button type="button" className="bouton-icone" onClick={() => setElementASupprimer(null)} aria-label="Fermer">
                 <Icone nom="croix" taille={18} />
               </button>
             </div>
@@ -397,7 +396,7 @@ export default function Budgets() {
                 Êtes-vous sûr de vouloir supprimer le budget <strong>« {elementASupprimer.annee} »</strong>{' '}
                 du centre <strong>« {elementASupprimer.codeCenter} »</strong> ?
               </p>
-              <p className="texte-secondaire" style={{ fontSize: '0.86rem' }}>
+              <p className="texte-secondaire texte-suppression">
                 Cette action est irréversible.
               </p>
             </div>
@@ -407,8 +406,7 @@ export default function Budgets() {
               </button>
               <button
                 type="button"
-                className="btn btn-primaire"
-                style={{ background: 'var(--corail)', borderColor: 'var(--encre)' }}
+                className="btn btn-danger"
                 onClick={confirmerSuppression}
                 disabled={chargementAction}
               >

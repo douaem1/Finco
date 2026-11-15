@@ -7,11 +7,14 @@ import KpiCard from './KpiCard';
 import ChartCard from './ChartCard';
 
 const MOIS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-const PALETTE = ['#12A5A0', '#FF6B57', '#FFC53D', '#B79CFF', '#3567A8'];
+function chartPalette() {
+  return ['--chart-series-1', '--chart-series-2', '--chart-series-3', '--chart-series-4']
+    .map((token) => getComputedStyle(document.documentElement).getPropertyValue(token).trim());
+}
 
 function optionTendance(monthly) {
   return {
-    color: PALETTE,
+    color: chartPalette(),
     tooltip: { trigger: 'axis', valueFormatter: (value) => `${formatMAD(value)} MAD` },
     legend: { bottom: 0 },
     grid: { left: 50, right: 20, top: 20, bottom: 50 },
@@ -26,7 +29,7 @@ function optionTendance(monthly) {
 
 function optionCentres(centres) {
   return {
-    color: ['#12A5A0', '#FF6B57'],
+    color: chartPalette().slice(0, 2),
     tooltip: { trigger: 'axis', valueFormatter: (value) => `${formatMAD(value)} MAD` },
     legend: { bottom: 0 },
     grid: { left: 80, right: 20, top: 20, bottom: 50 },
@@ -41,7 +44,7 @@ function optionCentres(centres) {
 
 function optionStatuts(statuses) {
   return {
-    color: PALETTE,
+    color: chartPalette(),
     tooltip: { trigger: 'item' },
     legend: { bottom: 0 },
     series: [{ type: 'pie', radius: ['48%', '72%'], data: Object.entries(statuses || {}).map(([name, value]) => ({ name, value })) }],
@@ -50,7 +53,7 @@ function optionStatuts(statuses) {
 
 function optionRoles(usersByRole) {
   return {
-    color: PALETTE,
+    color: chartPalette(),
     tooltip: { trigger: 'axis' },
     grid: { left: 120, right: 24, top: 20, bottom: 20 },
     xAxis: { type: 'value', minInterval: 1 },
@@ -87,7 +90,7 @@ export default function DashboardShell({ role, title, intro, kpiConfig, links = 
         <label className="champ"><span className="champ-label">Au</span><input className="input" type="date" name="dateTo" onChange={modifierFiltre} /></label>
       </div>
 
-      <MessageErreur message={erreur} />
+      <MessageErreur message={erreur} onRetry={actualiser} />
       {chargement && !donnees ? <div className="dashboard-skeleton dashboard-skeleton-large" /> : donnees && (
         <>
           <div className="dashboard-kpi-grid">

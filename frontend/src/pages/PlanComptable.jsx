@@ -209,10 +209,10 @@ export default function PlanComptable() {
             <table className="tableau">
               <thead>
                 <tr>
-                  <th style={{ width: '130px' }}>Numéro</th>
+                  <th className="col-numero-compte">Numéro</th>
                   <th>Libellé</th>
-                  <th style={{ width: '120px' }}>Classe</th>
-                  {estAdmin && <th style={{ width: '90px', textAlign: 'center' }}>Actions</th>}
+                  <th className="col-classe-compte">Classe</th>
+                  {estAdmin && <th className="cell-actions">Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -226,13 +226,14 @@ export default function PlanComptable() {
                       </span>
                     </td>
                     {estAdmin && (
-                      <td style={{ textAlign: 'center' }}>
+                      <td className="cell-actions">
                         <div className="actions-cell">
                           <button
                             type="button"
                             className="btn-action"
                             onClick={() => ouvrirModification(c)}
                             title="Modifier ce compte"
+                            aria-label="Modifier ce compte"
                           >
                             <Icone nom="editer" taille={16} />
                           </button>
@@ -241,6 +242,7 @@ export default function PlanComptable() {
                             className="btn-action btn-action-supprimer"
                             onClick={() => setCompteASupprimer(c)}
                             title="Supprimer ce compte"
+                            aria-label="Supprimer ce compte"
                           >
                             <Icone nom="supprimer" taille={16} />
                           </button>
@@ -273,6 +275,7 @@ export default function PlanComptable() {
                 className="bouton-icone"
                 onClick={() => setModaleOuverte(false)}
                 title="Fermer"
+                aria-label="Fermer"
               >
                 <Icone nom="croix" taille={18} />
               </button>
@@ -283,7 +286,7 @@ export default function PlanComptable() {
                 <MessageErreur message={erreurModale} onFermer={() => setErreurModale('')} />
                 <div className="champ">
                   <label className="champ-label" htmlFor="compte-numero">
-                    Numéro de compte <span style={{ color: 'var(--corail)' }}>*</span>
+                    Numéro de compte <span className="obligatoire">*</span>
                   </label>
                   <input
                     id="compte-numero"
@@ -303,11 +306,11 @@ export default function PlanComptable() {
                 </div>
 
                 {classeCalculee && (
-                  <div style={{ background: 'var(--creme)', padding: '10px 14px', borderRadius: 'var(--rayon)', border: '1px solid var(--ligne-forte)' }}>
-                    <p style={{ fontSize: '0.84rem', fontWeight: 600 }}>
+                  <div className="encart-compte">
+                    <p className="encart-compte-titre">
                       Classe calculée : <span className="badge badge-classe">Classe {classeCalculee}</span>
                     </p>
-                    <p className="texte-secondaire" style={{ fontSize: '0.78rem', marginTop: '2px' }}>
+                    <p className="texte-secondaire encart-compte-aide">
                       {NOMS_CLASSES[classeCalculee]}
                     </p>
                   </div>
@@ -315,7 +318,7 @@ export default function PlanComptable() {
 
                 <div className="champ">
                   <label className="champ-label" htmlFor="compte-libelle">
-                    Libellé du compte <span style={{ color: 'var(--corail)' }}>*</span>
+                    Libellé du compte <span className="obligatoire">*</span>
                   </label>
                   <input
                     id="compte-libelle"
@@ -363,6 +366,7 @@ export default function PlanComptable() {
                 type="button"
                 className="bouton-icone"
                 onClick={() => setCompteASupprimer(null)}
+                aria-label="Fermer"
               >
                 <Icone nom="croix" taille={18} />
               </button>
@@ -371,7 +375,7 @@ export default function PlanComptable() {
               <p>
                 Êtes-vous sûr de vouloir supprimer le compte <strong>« {compteASupprimer.numero} - {compteASupprimer.libelle} »</strong> ?
               </p>
-              <p className="texte-secondaire" style={{ fontSize: '0.86rem' }}>
+              <p className="texte-secondaire texte-suppression">
                 Cette action est irréversible. La suppression sera automatiquement refusée par le serveur si ce compte
                 est déjà utilisé dans au moins une ligne d'écriture comptable.
               </p>
@@ -387,8 +391,7 @@ export default function PlanComptable() {
               </button>
               <button
                 type="button"
-                className="btn btn-primaire"
-                style={{ background: 'var(--corail)', borderColor: 'var(--encre)' }}
+                className="btn btn-danger"
                 onClick={confirmerSuppression}
                 disabled={chargementAction}
               >

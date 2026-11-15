@@ -286,7 +286,7 @@ export default function Exercices() {
           <div className="modale-boite" onClick={e => e.stopPropagation()}>
             <div className="modale-entete">
               <h2>{elementEnCours ? 'Modifier l\'exercice' : 'Nouvel exercice comptable'}</h2>
-              <button type="button" className="bouton-icone" onClick={() => setModaleOuverte(false)} title="Fermer">
+              <button type="button" className="bouton-icone" onClick={() => setModaleOuverte(false)} title="Fermer" aria-label="Fermer">
                 <Icone nom="croix" taille={18} />
               </button>
             </div>
@@ -370,7 +370,7 @@ export default function Exercices() {
           <div className="modale-boite" onClick={e => e.stopPropagation()}>
             <div className="modale-entete">
               <h2>Clôturer l'exercice</h2>
-              <button type="button" className="bouton-icone" onClick={() => setElementACloturer(null)}>
+              <button type="button" className="bouton-icone" onClick={() => setElementACloturer(null)} aria-label="Fermer">
                 <Icone nom="croix" taille={18} />
               </button>
             </div>
@@ -406,7 +406,7 @@ export default function Exercices() {
           <div className="modale-boite" onClick={e => e.stopPropagation()}>
             <div className="modale-entete">
               <h2>Confirmer la suppression</h2>
-              <button type="button" className="bouton-icone" onClick={() => setElementASupprimer(null)}>
+              <button type="button" className="bouton-icone" onClick={() => setElementASupprimer(null)} aria-label="Fermer">
                 <Icone nom="croix" taille={18} />
               </button>
             </div>

@@ -10,7 +10,6 @@ import PlanComptable from './pages/PlanComptable.jsx';
 import CentresCout from './pages/CentresCout.jsx';
 import Exercices from './pages/Exercices.jsx';
 import Budgets from './pages/Budgets.jsx';
-import EspaceDaf from './pages/EspaceDaf.jsx';
 import Utilisateurs from './pages/Utilisateurs.jsx';
 import Factures from './pages/Factures.jsx';
 import Paiements from './pages/Paiements.jsx';
@@ -18,6 +17,7 @@ import GrandLivre from './pages/GrandLivre.jsx';
 import RepartitionCouts from './pages/RepartitionCouts.jsx';
 import RapportsAnalytiques from './pages/RapportsAnalytiques.jsx';
 import ValidationPaiements from './pages/ValidationPaiements.jsx';
+import Kit from './pages/Kit.jsx';
 const ComptableDashboard = lazy(() => import('./pages/dashboard/ComptableDashboard.jsx'));
 const ControleurDashboard = lazy(() => import('./pages/dashboard/ControleurDashboard.jsx'));
 const DirecteurDashboard = lazy(() => import('./pages/dashboard/DirecteurDashboard.jsx'));
@@ -45,6 +45,7 @@ export default function App() {
       {/* Pages connectées avec vérification du rôle (RBAC) */}
       <Route element={<RouteProtegee />}>
         <Route element={<MiseEnPageApp />}>
+          {import.meta.env.DEV && <Route path="/__kit" element={<Kit />} />}
           {/* Tableaux de bord dédiés à chaque rôle */}
           <Route path="/dashboard/comptable" element={<Suspense fallback={<div className="chargement">Chargement du tableau de bord...</div>}><ComptableDashboard /></Suspense>} />
           <Route path="/dashboard/controleur" element={<Suspense fallback={<div className="chargement">Chargement du tableau de bord...</div>}><ControleurDashboard /></Suspense>} />
@@ -73,7 +74,7 @@ export default function App() {
 
           {/* Module Direction financière (DIRECTEUR_FINANCIER) */}
           <Route path="/direction" element={<Navigate to="/dashboard/directeur" replace />} />
-          <Route path="/tableau-de-bord" element={<EspaceDaf />} />
+          <Route path="/tableau-de-bord" element={<Navigate to="/dashboard/directeur" replace />} />
           <Route path="/validation-paiements" element={<ValidationPaiements />} />
         </Route>
       </Route>

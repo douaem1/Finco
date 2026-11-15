@@ -121,7 +121,7 @@ export default function Paiements() {
       {modaleOuverte && (
         <div className="modale-fond" onClick={() => setModaleOuverte(false)}>
           <div className="modale-boite" onClick={(e) => e.stopPropagation()}>
-            <div className="modale-entete"><h2>Enregistrer un paiement</h2><button type="button" className="bouton-icone" onClick={() => setModaleOuverte(false)}><Icone nom="croix" /></button></div>
+            <div className="modale-entete"><h2>Enregistrer un paiement</h2><button type="button" className="bouton-icone" onClick={() => setModaleOuverte(false)} aria-label="Fermer"><Icone nom="croix" /></button></div>
             <form onSubmit={enregistrer}>
               <div className="modale-corps">
                 <MessageErreur message={erreurModale} />

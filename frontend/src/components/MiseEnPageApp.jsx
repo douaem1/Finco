@@ -32,6 +32,7 @@ export default function MiseEnPageApp() {
 
   return (
     <div className="app">
+      <a className="lien-saut" href="#contenu-principal">Aller au contenu</a>
       <aside className="lateral">
         <div className="lateral-logo"><Logo /></div>
 
@@ -66,7 +67,7 @@ export default function MiseEnPageApp() {
         </div>
       </aside>
 
-      <main className="contenu">
+      <main id="contenu-principal" className="contenu">
         {messageRefus && (
           <div style={{ marginBottom: '1.5rem' }}>
             <MessageErreur message={messageRefus} onFermer={() => setMessageRefus('')} />

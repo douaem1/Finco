@@ -1,4 +1,5 @@
 import DashboardShell from '../../components/dashboard/DashboardShell';
+import { DirecteurLegacyWidgets } from '../../components/dashboard/LegacyDashboardWidgets';
 
 export default function DirecteurDashboard() {
   return <DashboardShell role="DIRECTEUR_FINANCIER" title="Direction financière" intro="Une lecture exécutive du résultat, des charges et des décisions en attente." kpiConfig={[
@@ -9,5 +10,5 @@ export default function DirecteurDashboard() {
     { key: 'tresorerie', label: 'Trésorerie', tone: 'positive' },
     { key: 'creancesClients', label: 'Créances clients', tone: 'neutral' },
     { key: 'dettesFournisseurs', label: 'Dettes fournisseurs', tone: 'negative' },
-  ]} links={[{ to: '/validation-paiements', label: 'Valider les paiements' }, { to: '/tableau-de-bord', label: 'Ancien tableau de bord' }]} />;
+  ]} links={[{ to: '/validation-paiements', label: 'Valider les paiements' }]}><DirecteurLegacyWidgets /></DashboardShell>;
 }

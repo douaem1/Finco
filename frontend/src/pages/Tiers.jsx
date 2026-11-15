@@ -297,7 +297,7 @@ export default function Tiers() {
                   <th>Email</th>
                   <th>Téléphone</th>
                   {onglet === 'fournisseurs' ? <th>RIB bancaire</th> : <th className="num">Plafond crédit (MAD)</th>}
-                  {peutModifier && <th style={{ width: '90px', textAlign: 'center' }}>Actions</th>}
+                  {peutModifier && <th className="cell-actions">Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -313,13 +313,14 @@ export default function Tiers() {
                       <td className="num chiffres montant-fort">{montant(item.plafondCredit)}</td>
                     )}
                     {peutModifier && (
-                      <td style={{ textAlign: 'center' }}>
+                      <td className="cell-actions">
                         <div className="actions-cell">
                           <button
                             type="button"
                             className="btn-action"
                             onClick={() => ouvrirModification(item)}
                             title="Modifier"
+                            aria-label="Modifier"
                           >
                             <Icone nom="editer" taille={16} />
                           </button>
@@ -328,6 +329,7 @@ export default function Tiers() {
                             className="btn-action btn-action-supprimer"
                             onClick={() => setElementASupprimer(item)}
                             title="Supprimer"
+                            aria-label="Supprimer"
                           >
                             <Icone nom="supprimer" taille={16} />
                           </button>
@@ -364,6 +366,7 @@ export default function Tiers() {
                 className="bouton-icone"
                 onClick={() => setModaleOuverte(false)}
                 title="Fermer"
+                aria-label="Fermer"
               >
                 <Icone nom="croix" taille={18} />
               </button>
@@ -374,7 +377,7 @@ export default function Tiers() {
                 <MessageErreur message={erreurModale} onFermer={() => setErreurModale('')} />
                 <div className="champ">
                   <label className="champ-label" htmlFor="tiers-nom">
-                    Raison sociale / Nom complet <span style={{ color: 'var(--corail)' }}>*</span>
+                    Raison sociale / Nom complet <span className="obligatoire">*</span>
                   </label>
                   <input
                     id="tiers-nom"
@@ -505,6 +508,7 @@ export default function Tiers() {
                 type="button"
                 className="bouton-icone"
                 onClick={() => setElementASupprimer(null)}
+                aria-label="Fermer"
               >
                 <Icone nom="croix" taille={18} />
               </button>
@@ -514,7 +518,7 @@ export default function Tiers() {
                 Êtes-vous sûr de vouloir supprimer le {onglet === 'fournisseurs' ? 'fournisseur' : 'client'}{' '}
                 <strong>« {elementASupprimer.nom} »</strong> ?
               </p>
-              <p className="texte-secondaire" style={{ fontSize: '0.86rem' }}>
+              <p className="texte-secondaire texte-suppression">
                 Cette action est irréversible. La suppression sera automatiquement refusée par le serveur si ce tiers
                 possède des factures associées.
               </p>
@@ -530,8 +534,7 @@ export default function Tiers() {
               </button>
               <button
                 type="button"
-                className="btn btn-primaire"
-                style={{ background: 'var(--corail)', borderColor: 'var(--encre)' }}
+                className="btn btn-danger"
                 onClick={confirmerSuppression}
                 disabled={chargementAction}
               >

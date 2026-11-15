@@ -1,5 +1,5 @@
 /** Affiche le message d'erreur renvoyé par le serveur. */
-export default function MessageErreur({ message, onFermer }) {
+export default function MessageErreur({ message, onFermer, onRetry }) {
   if (!message) return null;
   return (
     <div className="alerte" role="alert">
@@ -8,6 +8,7 @@ export default function MessageErreur({ message, onFermer }) {
         <path d="M10 5.5v5.5M10 13.6v.9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
       </svg>
       <p>{message}</p>
+      {onRetry && <button type="button" className="bouton-texte alerte-reessayer" onClick={onRetry}>Réessayer</button>}
       {onFermer && (
         <button type="button" className="alerte-fermer" onClick={onFermer} aria-label="Fermer le message">×</button>
       )}

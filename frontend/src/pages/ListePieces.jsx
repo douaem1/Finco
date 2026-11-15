@@ -8,7 +8,7 @@ import MessageErreur from '../components/MessageErreur';
 import Chargement from '../components/Chargement';
 import Icone from '../components/Icone';
 
-const ROLES_SAISIE = ['COMPTABLE', 'ADMIN'];
+const ROLES_SAISIE = ['COMPTABLE'];
 
 export default function ListePieces() {
   const { utilisateur } = useAuth();
@@ -18,12 +18,19 @@ export default function ListePieces() {
   const [erreur, setErreur] = useState('');
   const [recherche, setRecherche] = useState('');
 
-  useEffect(() => {
-    listerPieces()
-      .then(setPieces)
-      .catch((e) => setErreur(messageErreur(e)))
-      .finally(() => setChargement(false));
-  }, []);
+  async function chargerPieces() {
+    setChargement(true);
+    setErreur('');
+    try {
+      setPieces(await listerPieces());
+    } catch (e) {
+      setErreur(messageErreur(e));
+    } finally {
+      setChargement(false);
+    }
+  }
+
+  useEffect(() => { chargerPieces(); }, []);
 
   // Affichage seulement : le serveur refuse de toute façon (403) les autres rôles.
   const peutSaisir = ROLES_SAISIE.includes(utilisateur?.role);
@@ -47,7 +54,7 @@ export default function ListePieces() {
       </header>
 
       {location.state?.succes && <p className="message-succes" role="status">{location.state.succes}</p>}
-      <MessageErreur message={erreur} />
+      <MessageErreur message={erreur} onRetry={chargerPieces} />
 
       {chargement ? <Chargement /> : pieces.length === 0 ? (
         <div className="panneau vide">
