@@ -218,7 +218,7 @@ export default function Accueil() {
   const sourisY = useMotionValue(-400);
   const lumX = useSpring(sourisX, { stiffness: 60, damping: 20, mass: 0.8 });
   const lumY = useSpring(sourisY, { stiffness: 60, damping: 20, mass: 0.8 });
-  const lumiere = useMotionTemplate`radial-gradient(520px circle at ${lumX}px ${lumY}px, rgba(255, 197, 61, 0.22), transparent 70%)`;
+  const lumiere = useMotionTemplate`radial-gradient(520px circle at ${lumX}px ${lumY}px, var(--jaune-22), transparent 70%)`;
   function suivreSouris(e) {
     if (reduit) return;
     const r = e.currentTarget.getBoundingClientRect();
@@ -342,7 +342,7 @@ export default function Accueil() {
             <TitreRevele>Prêt à saisir votre première écriture ?</TitreRevele>
             <p>Connectez-vous avec votre email : un code de vérification vous est envoyé pour sécuriser l’accès.</p>
           </div>
-          <Magnetique><Link to={lienEspace} className="btn ac-btn-blanc">{texteEspace}</Link></Magnetique>
+          <Magnetique><Link to={lienEspace} className="btn btn-primaire">{texteEspace}</Link></Magnetique>
         </motion.section>
       </main>
 

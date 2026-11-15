@@ -7,7 +7,8 @@ import { messageErreur } from '../services/api';
 import { minutesSecondes } from '../utils/format';
 import Logo from '../components/Logo';
 import { EcritureAnimee } from '../components/Balance';
-import ChampSaisie from '../components/ChampSaisie';
+import Field from '../components/ui/Field';
+import Button from '../components/ui/Button';
 import MessageErreur from '../components/MessageErreur';
 import SaisieCode from '../components/SaisieCode';
 
@@ -119,41 +120,50 @@ export default function Login() {
           <Link to="/" className="connexion-logo-mobile"><Logo /></Link>
 
           <ol className="etapes-connexion" aria-label="Étapes de connexion">
-            <li className={etape === 'identifiants' ? 'en-cours' : 'faite'}>Identifiants</li>
-            <li className={etape === 'code' ? 'en-cours' : ''}>Code de vérification</li>
+            <li className={etape === 'identifiants' ? 'en-cours' : 'faite'} aria-current={etape === 'identifiants' ? 'step' : undefined}>Identifiants</li>
+            <li className={etape === 'code' ? 'en-cours' : ''} aria-current={etape === 'code' ? 'step' : undefined}>Code de vérification</li>
           </ol>
 
           {etape === 'identifiants' ? (
-            <form onSubmit={envoyerIdentifiants} className="pile">
+            <form onSubmit={envoyerIdentifiants} className="pile connexion-formulaire">
               <div>
                 <h1>Connexion</h1>
                 <p className="texte-secondaire">Accédez à votre espace comptable FinCo.</p>
               </div>
 
-              <ChampSaisie id="email" label="Adresse email" type="email" autoComplete="username" autoFocus
-                value={email} onChange={(e) => setEmail(e.target.value)} placeholder="prenom.nom@entreprise.ma" />
+              <Field id="email" label="Adresse email">
+                {({ id, ...champ }) => (
+                  <input id={id} className="input" type="email" autoComplete="username" autoFocus
+                    value={email} onChange={(e) => setEmail(e.target.value)} placeholder="prenom.nom@entreprise.ma" {...champ} />
+                )}
+              </Field>
 
-              <div className="champ">
-                <label className="champ-label" htmlFor="mdp">Mot de passe</label>
-                <div className="champ-avec-bouton">
-                  <input id="mdp" className="input" type={voirMdp ? 'text' : 'password'} autoComplete="current-password"
-                    value={motDePasse} onChange={(e) => setMotDePasse(e.target.value)} />
-                  <button type="button" className="bouton-texte" onClick={() => setVoirMdp((v) => !v)}
-                    aria-pressed={voirMdp}>
-                    {voirMdp ? 'Masquer' : 'Afficher'}
-                  </button>
-                </div>
-              </div>
+              <Field id="mdp" label="Mot de passe">
+                {({ id, ...champ }) => (
+                  <div className="champ-avec-bouton">
+                    <input id={id} className="input" type={voirMdp ? 'text' : 'password'} autoComplete="current-password"
+                      value={motDePasse} onChange={(e) => setMotDePasse(e.target.value)} {...champ} />
+                    <button type="button" className="bouton-oeil" onClick={() => setVoirMdp((v) => !v)}
+                      aria-pressed={voirMdp} aria-label={voirMdp ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        {voirMdp
+                          ? <><path d="M3 3l18 18" /><path d="M10.6 10.6a2 2 0 002.8 2.8" /><path d="M9.4 5.4A9.7 9.7 0 0112 5c5 0 9 4.5 9 7a11 11 0 01-2.4 3.4M6.1 6.6A11.4 11.4 0 003 12c0 2.5 4 7 9 7a9.6 9.6 0 004-.9" /></>
+                          : <><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" /><circle cx="12" cy="12" r="3" /></>}
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </Field>
 
               <MessageErreur message={erreur} />
 
               {/* Ergonomie autorisée : bouton désactivé si un champ est vide. */}
-              <button type="submit" className="btn btn-primaire btn-large" disabled={!email.trim() || !motDePasse || envoi}>
+              <Button type="submit" variant="primary" disabled={!email.trim() || !motDePasse || envoi}>
                 {envoi ? 'Vérification…' : 'Continuer'}
-              </button>
+              </Button>
             </form>
           ) : (
-            <form onSubmit={envoyerCode} className="pile">
+            <form onSubmit={envoyerCode} className="pile connexion-formulaire">
               <div>
                 <h1>Vérification</h1>
                 <p className="texte-secondaire">
@@ -161,20 +171,23 @@ export default function Login() {
                 </p>
               </div>
 
-              <SaisieCode valeur={code} onChange={setCode} desactive={envoi} enErreur={Boolean(erreur)} />
+              <SaisieCode valeur={code} onChange={setCode} desactive={envoi} enErreur={Boolean(erreur)}
+                ariaDescribedby="code-etat" />
 
-              <p className={`validite ${resteValidite <= 60 ? 'validite-proche' : ''}`}>
-                {resteValidite > 0
-                  ? <>Code valable encore <strong>{minutesSecondes(resteValidite)}</strong></>
-                  : 'Le code a expiré. Demandez-en un nouveau.'}
-              </p>
+              <div id="code-etat" className="connexion-statuts" aria-live="polite">
+                <p className={`validite ${resteValidite <= 60 ? 'validite-proche' : ''}`}>
+                  {resteValidite > 0
+                    ? <>Code valable encore <strong>{minutesSecondes(resteValidite)}</strong></>
+                    : 'Le code a expiré. Demandez-en un nouveau.'}
+                </p>
+                {info && <p className="message-info" role="status">{info}</p>}
+              </div>
 
               <MessageErreur message={erreur} />
-              {info && <p className="message-info" role="status">{info}</p>}
 
-              <button type="submit" className="btn btn-primaire btn-large" disabled={code.length !== 6 || envoi}>
+              <Button type="submit" variant="primary" disabled={code.length !== 6 || envoi}>
                 {envoi ? 'Connexion…' : 'Se connecter'}
-              </button>
+              </Button>
 
               <div className="liens-code">
                 <button type="button" className="bouton-texte" onClick={demanderNouveauCode} disabled={resteRenvoi > 0}>

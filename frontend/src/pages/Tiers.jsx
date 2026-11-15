@@ -5,13 +5,27 @@ import {
   listerClients, creerClient, modifierClient, supprimerClient,
 } from '../services/tiersApi';
 import { erreursParChamp, messageErreur } from '../services/api';
-import { montant } from '../utils/format';
+import PageHeader from '../components/ui/PageHeader';
+import AsyncState from '../components/ui/AsyncState';
+import DataTable from '../components/ui/DataTable';
+import SearchToolbar from '../components/ui/SearchToolbar';
+import Amount from '../components/ui/Amount';
+import Button from '../components/ui/Button';
+import Field from '../components/ui/Field';
+import CrudModal from '../components/ui/CrudModal';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
 import MessageErreur from '../components/MessageErreur';
-import Chargement from '../components/Chargement';
 import Icone from '../components/Icone';
+import { useToast } from '../components/ui/ToastRegion';
+
+const ONGLETS = [
+  ['fournisseurs', 'Fournisseurs'],
+  ['clients', 'Clients'],
+];
 
 export default function Tiers() {
   const { utilisateur } = useAuth();
+  const { showToast } = useToast();
   const [onglet, setOnglet] = useState('fournisseurs'); // 'fournisseurs' | 'clients'
 
   // Données
@@ -19,7 +33,6 @@ export default function Tiers() {
   const [clients, setClients] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState('');
-  const [succes, setSucces] = useState('');
   const [recherche, setRecherche] = useState('');
 
   // Modale édition / création
@@ -36,6 +49,9 @@ export default function Tiers() {
   const [elementASupprimer, setElementASupprimer] = useState(null);
 
   const peutModifier = utilisateur?.role === 'COMPTABLE';
+
+  const estFournisseurs = onglet === 'fournisseurs';
+  const typeSingulier = estFournisseurs ? 'fournisseur' : 'client';
 
   useEffect(() => {
     chargerDonnees();
@@ -106,13 +122,13 @@ export default function Tiers() {
       }
     }
 
-    if (onglet === 'fournisseurs' && formulaire.rib && formulaire.rib.trim()) {
+    if (estFournisseurs && formulaire.rib && formulaire.rib.trim()) {
       if (!/^[0-9]{24}$/.test(formulaire.rib.replace(/[\s.-]/g, ''))) {
         errs.rib = 'Le RIB doit comporter exactement 24 chiffres.';
       }
     }
 
-    if (onglet === 'clients') {
+    if (!estFournisseurs) {
       const plafond = Number(formulaire.plafondCredit);
       if (isNaN(plafond) || plafond < 0) {
         errs.plafondCredit = 'Le plafond de crédit doit être supérieur ou égal à zéro.';
@@ -130,11 +146,10 @@ export default function Tiers() {
     if (!validerFormulaire()) return;
 
     setChargementAction(true);
-    setErreur('');
-    setSucces('');
+    setErreurModale('');
 
     try {
-      if (onglet === 'fournisseurs') {
+      if (estFournisseurs) {
         const payload = {
           nom: formulaire.nom.trim(),
           ice: formulaire.ice.trim() || null,
@@ -146,11 +161,11 @@ export default function Tiers() {
         if (elementEnCours) {
           const modifie = await modifierFournisseur(elementEnCours.id, payload);
           setFournisseurs((prev) => prev.map((f) => (f.id === modifie.id ? modifie : f)));
-          setSucces(`Fournisseur « ${modifie.nom} » mis à jour avec succès.`);
+          showToast(`Fournisseur « ${modifie.nom} » mis à jour avec succès.`);
         } else {
           const cree = await creerFournisseur(payload);
           setFournisseurs((prev) => [...prev, cree].sort((a, b) => a.nom.localeCompare(b.nom)));
-          setSucces(`Fournisseur « ${cree.nom} » créé avec succès.`);
+          showToast(`Fournisseur « ${cree.nom} » créé avec succès.`);
         }
       } else {
         const payload = {
@@ -164,11 +179,11 @@ export default function Tiers() {
         if (elementEnCours) {
           const modifie = await modifierClient(elementEnCours.id, payload);
           setClients((prev) => prev.map((c) => (c.id === modifie.id ? modifie : c)));
-          setSucces(`Client « ${modifie.nom} » mis à jour avec succès.`);
+          showToast(`Client « ${modifie.nom} » mis à jour avec succès.`);
         } else {
           const cree = await creerClient(payload);
           setClients((prev) => [...prev, cree].sort((a, b) => a.nom.localeCompare(b.nom)));
-          setSucces(`Client « ${cree.nom} » créé avec succès.`);
+          showToast(`Client « ${cree.nom} » créé avec succès.`);
         }
       }
       setModaleOuverte(false);
@@ -183,22 +198,20 @@ export default function Tiers() {
   async function confirmerSuppression() {
     if (!elementASupprimer) return;
     setChargementAction(true);
-    setErreur('');
-    setSucces('');
 
     try {
-      if (onglet === 'fournisseurs') {
+      if (estFournisseurs) {
         await supprimerFournisseur(elementASupprimer.id);
         setFournisseurs((prev) => prev.filter((f) => f.id !== elementASupprimer.id));
-        setSucces(`Fournisseur « ${elementASupprimer.nom} » supprimé avec succès.`);
+        showToast(`Fournisseur « ${elementASupprimer.nom} » supprimé avec succès.`);
       } else {
         await supprimerClient(elementASupprimer.id);
         setClients((prev) => prev.filter((c) => c.id !== elementASupprimer.id));
-        setSucces(`Client « ${elementASupprimer.nom} » supprimé avec succès.`);
+        showToast(`Client « ${elementASupprimer.nom} » supprimé avec succès.`);
       }
       setElementASupprimer(null);
     } catch (err) {
-      setErreur(messageErreur(err));
+      showToast(messageErreur(err), 'error');
       setElementASupprimer(null);
     } finally {
       setChargementAction(false);
@@ -206,7 +219,7 @@ export default function Tiers() {
   }
 
   const filtre = recherche.trim().toLowerCase();
-  const listeActive = onglet === 'fournisseurs' ? fournisseurs : clients;
+  const listeActive = estFournisseurs ? fournisseurs : clients;
   const donneesVisibles = useMemo(() => {
     return listeActive.filter((item) => {
       if (!filtre) return true;
@@ -218,332 +231,216 @@ export default function Tiers() {
     });
   }, [listeActive, filtre]);
 
+  const colonnes = [
+    { key: 'nom', label: 'Nom', sortable: true, render: (item) => <strong>{item.nom}</strong> },
+    { key: 'ice', label: 'ICE', render: (item) => <span className="chiffres">{item.ice || '—'}</span> },
+    { key: 'email', label: 'Email', render: (item) => item.email || '—' },
+    { key: 'telephone', label: 'Téléphone', render: (item) => item.telephone || '—' },
+    estFournisseurs
+      ? { key: 'rib', label: 'RIB bancaire', render: (item) => (item.rib ? <span className="badge-rib">{item.rib}</span> : '—') }
+      : { key: 'plafondCredit', label: 'Plafond crédit (MAD)', numeric: true, render: (item) => <Amount value={item.plafondCredit} /> },
+    ...(peutModifier ? [{
+      key: 'actions',
+      label: 'Actions',
+      render: (item) => (
+        <div className="actions-cell">
+          <button type="button" className="btn-action" onClick={() => ouvrirModification(item)} title="Modifier" aria-label="Modifier">
+            <Icone nom="editer" taille={16} />
+          </button>
+          <button type="button" className="btn-action btn-action-supprimer" onClick={() => setElementASupprimer(item)} title="Supprimer" aria-label="Supprimer">
+            <Icone nom="supprimer" taille={16} />
+          </button>
+        </div>
+      ),
+    }] : []),
+  ];
+
   return (
     <section>
-      <header className="entete-page">
-        <div>
-          <h1>Gestion des tiers</h1>
-          <p className="texte-secondaire">Référentiel des partenaires commerciaux : fournisseurs et clients.</p>
-        </div>
-        {peutModifier && (
-          <button type="button" className="btn btn-primaire" onClick={ouvrirCreation}>
+      <PageHeader
+        title="Gestion des tiers"
+        description="Référentiel des partenaires commerciaux : fournisseurs et clients."
+        actions={peutModifier && (
+          <Button type="button" onClick={ouvrirCreation}>
             <Icone nom="plus" taille={18} />
-            {onglet === 'fournisseurs' ? 'Nouveau fournisseur' : 'Nouveau client'}
-          </button>
+            {estFournisseurs ? 'Nouveau fournisseur' : 'Nouveau client'}
+          </Button>
         )}
-      </header>
+      />
 
-      {succes && <p className="message-succes" role="status">{succes}</p>}
-      <MessageErreur message={erreur} />
-
-      <div className="onglets">
-        <button
-          type="button"
-          className={`onglet ${onglet === 'fournisseurs' ? 'actif' : ''}`}
-          onClick={() => { setOnglet('fournisseurs'); setRecherche(''); }}
-        >
-          <Icone nom="tiers" taille={18} /> Fournisseurs ({fournisseurs.length})
-        </button>
-        <button
-          type="button"
-          className={`onglet ${onglet === 'clients' ? 'actif' : ''}`}
-          onClick={() => { setOnglet('clients'); setRecherche(''); }}
-        >
-          <Icone nom="tiers" taille={18} /> Clients ({clients.length})
-        </button>
+      <div className="onglets-statut" role="tablist" aria-label="Type de tiers">
+        {ONGLETS.map(([code, libelle]) => (
+          <button
+            key={code}
+            type="button"
+            role="tab"
+            aria-selected={onglet === code}
+            className={`onglet-statut ${onglet === code ? 'actif' : ''}`}
+            onClick={() => { setOnglet(code); setRecherche(''); }}
+          >
+            {libelle}<span className="onglet-compte">{code === 'fournisseurs' ? fournisseurs.length : clients.length}</span>
+          </button>
+        ))}
       </div>
 
-      {chargement ? (
-        <Chargement />
-      ) : listeActive.length === 0 ? (
-        <div className="panneau vide">
-          <Icone nom="tiers" taille={36} />
-          <p><strong>Aucun {onglet === 'fournisseurs' ? 'fournisseur' : 'client'} pour l'instant.</strong></p>
-          <p className="texte-secondaire">
-            {onglet === 'fournisseurs'
-              ? 'Ajoutez vos fournisseurs pour enregistrer leurs factures et règlements.'
-              : 'Ajoutez vos clients pour émettre des factures et gérer leur encaissement.'}
-          </p>
-          {peutModifier && (
-            <button type="button" className="btn btn-primaire" onClick={ouvrirCreation}>
-              Créer le premier {onglet === 'fournisseurs' ? 'fournisseur' : 'client'}
-            </button>
-          )}
-        </div>
-      ) : (
+      <AsyncState
+        loading={chargement}
+        error={erreur}
+        onRetry={chargerDonnees}
+        empty={listeActive.length === 0}
+        emptyTitle={`Aucun ${typeSingulier} pour l'instant.`}
+        emptyDescription={estFournisseurs
+          ? 'Ajoutez vos fournisseurs pour enregistrer leurs factures et règlements.'
+          : 'Ajoutez vos clients pour émettre des factures et gérer leur encaissement.'}
+        emptyAction={peutModifier && (
+          <Button type="button" onClick={ouvrirCreation}>Créer le premier {typeSingulier}</Button>
+        )}
+      >
         <div className="panneau">
-          <div className="barre-outils">
-            <label className="recherche">
-              <Icone nom="recherche" taille={18} />
+          <SearchToolbar
+            value={recherche}
+            onChange={setRecherche}
+            placeholder={`Rechercher un ${typeSingulier} par nom, ICE ou email…`}
+            resultCount={`${donneesVisibles.length} ${typeSingulier}${donneesVisibles.length > 1 ? 's' : ''}`}
+          />
+          <DataTable columns={colonnes} rows={donneesVisibles} empty={`Aucun résultat correspondant à « ${recherche} ».`} />
+        </div>
+      </AsyncState>
+
+      <CrudModal
+        open={modaleOuverte}
+        onOpenChange={setModaleOuverte}
+        title={elementEnCours ? `Modifier le ${typeSingulier}` : `Nouveau ${typeSingulier}`}
+        footer={(
+          <>
+            <Button variant="secondary" type="button" onClick={() => setModaleOuverte(false)}>Annuler</Button>
+            <Button type="submit" form="formulaire-tiers" loading={chargementAction}>
+              {chargementAction ? 'Enregistrement…' : elementEnCours ? 'Mettre à jour' : 'Créer'}
+            </Button>
+          </>
+        )}
+      >
+        <MessageErreur message={erreurModale} onFermer={() => setErreurModale('')} />
+        <form id="formulaire-tiers" className="pile" onSubmit={enregistrer}>
+          <Field id="tiers-nom" label="Raison sociale / Nom complet" required error={erreursChamps.nom}>
+            {(p) => (
               <input
-                type="search"
-                placeholder={`Rechercher un ${onglet === 'fournisseurs' ? 'fournisseur' : 'client'} par nom, ICE ou email...`}
-                value={recherche}
-                onChange={(e) => setRecherche(e.target.value)}
-                aria-label="Rechercher"
+                className="input"
+                type="text"
+                value={formulaire.nom}
+                onChange={(e) => setFormulaire({ ...formulaire, nom: e.target.value })}
+                placeholder="Ex. Maroc Telecom, Atlas Distribution..."
+                maxLength={150}
+                {...p}
               />
-            </label>
-            <span className="texte-secondaire">
-              {donneesVisibles.length} {onglet === 'fournisseurs' ? 'fournisseur' : 'client'}{donneesVisibles.length > 1 ? 's' : ''}
-            </span>
-          </div>
+            )}
+          </Field>
 
-          <div className="defilement">
-            <table className="tableau">
-              <thead>
-                <tr>
-                  <th>Nom</th>
-                  <th>ICE</th>
-                  <th>Email</th>
-                  <th>Téléphone</th>
-                  {onglet === 'fournisseurs' ? <th>RIB bancaire</th> : <th className="num">Plafond crédit (MAD)</th>}
-                  {peutModifier && <th className="cell-actions">Actions</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {donneesVisibles.map((item) => (
-                  <tr key={item.id}>
-                    <td><strong>{item.nom}</strong></td>
-                    <td className="chiffres">{item.ice || '—'}</td>
-                    <td>{item.email || '—'}</td>
-                    <td>{item.telephone || '—'}</td>
-                    {onglet === 'fournisseurs' ? (
-                      <td>{item.rib ? <span className="badge-rib">{item.rib}</span> : '—'}</td>
-                    ) : (
-                      <td className="num chiffres montant-fort">{montant(item.plafondCredit)}</td>
-                    )}
-                    {peutModifier && (
-                      <td className="cell-actions">
-                        <div className="actions-cell">
-                          <button
-                            type="button"
-                            className="btn-action"
-                            onClick={() => ouvrirModification(item)}
-                            title="Modifier"
-                            aria-label="Modifier"
-                          >
-                            <Icone nom="editer" taille={16} />
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-action btn-action-supprimer"
-                            onClick={() => setElementASupprimer(item)}
-                            title="Supprimer"
-                            aria-label="Supprimer"
-                          >
-                            <Icone nom="supprimer" taille={16} />
-                          </button>
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-                {donneesVisibles.length === 0 && (
-                  <tr>
-                    <td colSpan={peutModifier ? 6 : 5} className="texte-secondaire aucun-resultat">
-                      Aucun résultat correspondant à « {recherche} ».
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+          <Field
+            id="tiers-ice"
+            label="Identifiant Commun de l'Entreprise (ICE)"
+            error={erreursChamps.ice}
+            hint={`Facultatif — exactement 15 chiffres, unique par ${typeSingulier}.`}
+          >
+            {(p) => (
+              <input
+                className="input"
+                type="text"
+                value={formulaire.ice}
+                onChange={(e) => setFormulaire({ ...formulaire, ice: e.target.value })}
+                placeholder="15 chiffres (ex. 001524368000085)"
+                inputMode="numeric"
+                maxLength={20}
+                {...p}
+              />
+            )}
+          </Field>
 
-      {/* MODALE DE CRÉATION / MODIFICATION */}
-      {modaleOuverte && (
-        <div className="modale-fond" onClick={() => setModaleOuverte(false)}>
-          <div className="modale-boite" onClick={(e) => e.stopPropagation()}>
-            <div className="modale-entete">
-              <h2>
-                {elementEnCours
-                  ? `Modifier le ${onglet === 'fournisseurs' ? 'fournisseur' : 'client'}`
-                  : `Nouveau ${onglet === 'fournisseurs' ? 'fournisseur' : 'client'}`}
-              </h2>
-              <button
-                type="button"
-                className="bouton-icone"
-                onClick={() => setModaleOuverte(false)}
-                title="Fermer"
-                aria-label="Fermer"
-              >
-                <Icone nom="croix" taille={18} />
-              </button>
-            </div>
+          <Field id="tiers-email" label="Adresse e-mail" error={erreursChamps.email}>
+            {(p) => (
+              <input
+                className="input"
+                type="email"
+                value={formulaire.email}
+                onChange={(e) => setFormulaire({ ...formulaire, email: e.target.value })}
+                placeholder="contact@societe.ma"
+                maxLength={100}
+                {...p}
+              />
+            )}
+          </Field>
 
-            <form onSubmit={enregistrer}>
-              <div className="modale-corps">
-                <MessageErreur message={erreurModale} onFermer={() => setErreurModale('')} />
-                <div className="champ">
-                  <label className="champ-label" htmlFor="tiers-nom">
-                    Raison sociale / Nom complet <span className="obligatoire">*</span>
-                  </label>
-                  <input
-                    id="tiers-nom"
-                    type="text"
-                    className={`input ${erreursChamps.nom ? 'input-erreur' : ''}`}
-                    value={formulaire.nom}
-                    onChange={(e) => setFormulaire({ ...formulaire, nom: e.target.value })}
-                    placeholder="Ex. Maroc Telecom, Atlas Distribution..."
-                    maxLength={150}
-                    required
-                  />
-                  {erreursChamps.nom && <span className="champ-erreur">{erreursChamps.nom}</span>}
-                </div>
+          <Field
+            id="tiers-telephone"
+            label="Numéro de téléphone"
+            error={erreursChamps.telephone}
+            hint="Facultatif — 05, 06, 07 ou 08 suivi de 8 chiffres, ou +212."
+          >
+            {(p) => (
+              <input
+                className="input"
+                type="tel"
+                value={formulaire.telephone}
+                onChange={(e) => setFormulaire({ ...formulaire, telephone: e.target.value })}
+                placeholder="05 22 00 00 00"
+                inputMode="tel"
+                maxLength={20}
+                {...p}
+              />
+            )}
+          </Field>
 
-                <div className="champ">
-                  <label className="champ-label" htmlFor="tiers-ice">Identifiant Commun de l'Entreprise (ICE)</label>
-                  <input
-                    id="tiers-ice"
-                    type="text"
-                    className={`input ${erreursChamps.ice ? 'input-erreur' : ''}`}
-                    value={formulaire.ice}
-                    onChange={(e) => setFormulaire({ ...formulaire, ice: e.target.value })}
-                    placeholder="15 chiffres (ex. 001524368000085)"
-                    inputMode="numeric"
-                    maxLength={20}
-                  />
-                  {erreursChamps.ice
-                    ? <span className="champ-erreur">{erreursChamps.ice}</span>
-                    : <span className="champ-aide">Facultatif — exactement 15 chiffres, unique par {onglet === 'fournisseurs' ? 'fournisseur' : 'client'}.</span>}
-                </div>
+          {estFournisseurs ? (
+            <Field
+              id="tiers-rib"
+              label="Relevé d'Identité Bancaire (RIB - 24 chiffres)"
+              error={erreursChamps.rib}
+              hint="Compte bancaire marocain à 24 chiffres."
+            >
+              {(p) => (
+                <input
+                  className="input"
+                  type="text"
+                  value={formulaire.rib}
+                  onChange={(e) => setFormulaire({ ...formulaire, rib: e.target.value })}
+                  placeholder="Ex. 011780000012345678901234"
+                  inputMode="numeric"
+                  maxLength={30}
+                  {...p}
+                />
+              )}
+            </Field>
+          ) : (
+            <Field id="tiers-plafond" label="Plafond de crédit autorisé (MAD)" error={erreursChamps.plafondCredit}>
+              {(p) => (
+                <input
+                  className="input"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formulaire.plafondCredit}
+                  onChange={(e) => setFormulaire({ ...formulaire, plafondCredit: e.target.value })}
+                  placeholder="0.00"
+                  {...p}
+                />
+              )}
+            </Field>
+          )}
+        </form>
+      </CrudModal>
 
-                <div className="champ">
-                  <label className="champ-label" htmlFor="tiers-email">Adresse e-mail</label>
-                  <input
-                    id="tiers-email"
-                    type="email"
-                    className={`input ${erreursChamps.email ? 'input-erreur' : ''}`}
-                    value={formulaire.email}
-                    onChange={(e) => setFormulaire({ ...formulaire, email: e.target.value })}
-                    placeholder="contact@societe.ma"
-                    maxLength={100}
-                  />
-                  {erreursChamps.email && <span className="champ-erreur">{erreursChamps.email}</span>}
-                </div>
-
-                <div className="champ">
-                  <label className="champ-label" htmlFor="tiers-telephone">Numéro de téléphone</label>
-                  <input
-                    id="tiers-telephone"
-                    type="tel"
-                    className={`input ${erreursChamps.telephone ? 'input-erreur' : ''}`}
-                    value={formulaire.telephone}
-                    onChange={(e) => setFormulaire({ ...formulaire, telephone: e.target.value })}
-                    placeholder="05 22 00 00 00"
-                    inputMode="tel"
-                    maxLength={20}
-                  />
-                  {erreursChamps.telephone
-                    ? <span className="champ-erreur">{erreursChamps.telephone}</span>
-                    : <span className="champ-aide">Facultatif — 05, 06, 07 ou 08 suivi de 8 chiffres, ou +212.</span>}
-                </div>
-
-                {onglet === 'fournisseurs' ? (
-                  <div className="champ">
-                    <label className="champ-label" htmlFor="tiers-rib">Relevé d'Identité Bancaire (RIB - 24 chiffres)</label>
-                    <input
-                      id="tiers-rib"
-                      type="text"
-                      className={`input ${erreursChamps.rib ? 'input-erreur' : ''}`}
-                      value={formulaire.rib}
-                      onChange={(e) => setFormulaire({ ...formulaire, rib: e.target.value })}
-                      placeholder="Ex. 011780000012345678901234"
-                      inputMode="numeric"
-                      maxLength={30}
-                    />
-                    {erreursChamps.rib && <span className="champ-erreur">{erreursChamps.rib}</span>}
-                    <span className="champ-aide">Compte bancaire marocain à 24 chiffres.</span>
-                  </div>
-                ) : (
-                  <div className="champ">
-                    <label className="champ-label" htmlFor="tiers-plafond">Plafond de crédit autorisé (MAD)</label>
-                    <input
-                      id="tiers-plafond"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      className={`input ${erreursChamps.plafondCredit ? 'input-erreur' : ''}`}
-                      value={formulaire.plafondCredit}
-                      onChange={(e) => setFormulaire({ ...formulaire, plafondCredit: e.target.value })}
-                      placeholder="0.00"
-                    />
-                    {erreursChamps.plafondCredit && (
-                      <span className="champ-erreur">{erreursChamps.plafondCredit}</span>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div className="modale-pied">
-                <button
-                  type="button"
-                  className="btn btn-secondaire"
-                  onClick={() => setModaleOuverte(false)}
-                  disabled={chargementAction}
-                >
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primaire"
-                  disabled={chargementAction}
-                >
-                  {chargementAction ? 'Enregistrement...' : elementEnCours ? 'Mettre à jour' : 'Créer'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODALE DE CONFIRMATION DE SUPPRESSION */}
-      {elementASupprimer && (
-        <div className="modale-fond" onClick={() => setElementASupprimer(null)}>
-          <div className="modale-boite" onClick={(e) => e.stopPropagation()}>
-            <div className="modale-entete">
-              <h2>Confirmer la suppression</h2>
-              <button
-                type="button"
-                className="bouton-icone"
-                onClick={() => setElementASupprimer(null)}
-                aria-label="Fermer"
-              >
-                <Icone nom="croix" taille={18} />
-              </button>
-            </div>
-            <div className="modale-corps">
-              <p>
-                Êtes-vous sûr de vouloir supprimer le {onglet === 'fournisseurs' ? 'fournisseur' : 'client'}{' '}
-                <strong>« {elementASupprimer.nom} »</strong> ?
-              </p>
-              <p className="texte-secondaire texte-suppression">
-                Cette action est irréversible. La suppression sera automatiquement refusée par le serveur si ce tiers
-                possède des factures associées.
-              </p>
-            </div>
-            <div className="modale-pied">
-              <button
-                type="button"
-                className="btn btn-secondaire"
-                onClick={() => setElementASupprimer(null)}
-                disabled={chargementAction}
-              >
-                Annuler
-              </button>
-              <button
-                type="button"
-                className="btn btn-danger"
-                onClick={confirmerSuppression}
-                disabled={chargementAction}
-              >
-                {chargementAction ? 'Suppression...' : 'Supprimer définitivement'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={Boolean(elementASupprimer)}
+        onOpenChange={(o) => !o && setElementASupprimer(null)}
+        title={`Supprimer le ${typeSingulier}`}
+        description={elementASupprimer
+          ? `Supprimer le ${typeSingulier} « ${elementASupprimer.nom} » ? Cette action est irréversible. La suppression sera automatiquement refusée par le serveur si ce tiers possède des factures associées.`
+          : ''}
+        confirmLabel="Supprimer définitivement"
+        danger
+        loading={chargementAction}
+        onConfirm={confirmerSuppression}
+      />
     </section>
   );
 }

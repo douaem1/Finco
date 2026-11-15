@@ -7,7 +7,7 @@ export default function ChampSaisie({ id, label, aide, erreur, obligatoire, ...p
   return (
     <div className="champ">
       <label className="champ-label" htmlFor={id}>
-        {label}{obligatoire && <span style={{ color: 'var(--corail)' }}> *</span>}
+        {label}{obligatoire && <span className="obligatoire"> *</span>}
       </label>
       <input id={id} className={`input ${erreur ? 'input-erreur' : ''}`} aria-invalid={erreur ? true : undefined}
         required={obligatoire || undefined} {...props} />

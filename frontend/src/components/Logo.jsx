@@ -8,12 +8,12 @@ export function LogoMarque({ taille = 36, inverse = false }) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 40 40" aria-hidden="true" focusable="false">
       {/* ombre décalée (encre), puis tampon corail bordé d'encre */}
-      <rect x="4" y="4" width="34" height="34" rx="9" fill="#221D16" />
-      <rect x="1.5" y="1.5" width="34" height="34" rx="9" fill={inverse ? '#FFFDF7' : '#FF6B57'} stroke="#221D16" strokeWidth="2" />
-      <rect x="11" y="9" width="4.6" height="19" rx="1.2" fill={inverse ? '#221D16' : '#FFFDF7'} />
-      <rect x="11" y="9" width="15.5" height="4.6" rx="1.2" fill={inverse ? '#221D16' : '#FFFDF7'} />
-      <rect x="11" y="16.6" width="15.5" height="4.6" rx="1.2" fill={inverse ? '#221D16' : '#FFFDF7'} />
-      <circle cx="25" cy="26" r="2.5" fill="#12A5A0" stroke="#221D16" strokeWidth="1.2" />
+      <rect x="4" y="4" width="34" height="34" rx="9" fill="var(--encre)" />
+      <rect x="1.5" y="1.5" width="34" height="34" rx="9" fill={inverse ? 'var(--papier)' : 'var(--corail)'} stroke="var(--encre)" strokeWidth="2" />
+      <rect x="11" y="9" width="4.6" height="19" rx="1.2" fill={inverse ? 'var(--encre)' : 'var(--papier)'} />
+      <rect x="11" y="9" width="15.5" height="4.6" rx="1.2" fill={inverse ? 'var(--encre)' : 'var(--papier)'} />
+      <rect x="11" y="16.6" width="15.5" height="4.6" rx="1.2" fill={inverse ? 'var(--encre)' : 'var(--papier)'} />
+      <circle cx="25" cy="26" r="2.5" fill="var(--sarcelle)" stroke="var(--encre)" strokeWidth="1.2" />
     </svg>
   );
 }

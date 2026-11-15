@@ -78,7 +78,7 @@ export function Inclinable({ as = 'div', children, max = 5, className = '', ...p
   const lumiereX = useMotionValue(50);
   const lumiereY = useMotionValue(50);
   const reflet = useTransform([lumiereX, lumiereY], ([lx, ly]) =>
-    `radial-gradient(420px circle at ${lx}% ${ly}%, rgba(255,255,255,0.18), transparent 45%)`);
+    `radial-gradient(420px circle at ${lx}% ${ly}%, var(--clarte-18), transparent 45%)`);
 
   function bouger(e) {
     if (reduit) return;

@@ -2,9 +2,17 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { listerComptes, creerCompte, modifierCompte, supprimerCompte } from '../services/compteApi';
 import { erreursParChamp, messageErreur } from '../services/api';
+import PageHeader from '../components/ui/PageHeader';
+import AsyncState from '../components/ui/AsyncState';
+import DataTable from '../components/ui/DataTable';
+import SearchToolbar from '../components/ui/SearchToolbar';
+import Button from '../components/ui/Button';
+import Field from '../components/ui/Field';
+import CrudModal from '../components/ui/CrudModal';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
 import MessageErreur from '../components/MessageErreur';
-import Chargement from '../components/Chargement';
 import Icone from '../components/Icone';
+import { useToast } from '../components/ui/ToastRegion';
 
 const NOMS_CLASSES = {
   1: 'Comptes de financement permanent',
@@ -19,10 +27,10 @@ const NOMS_CLASSES = {
 
 export default function PlanComptable() {
   const { utilisateur } = useAuth();
+  const { showToast } = useToast();
   const [comptes, setComptes] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState('');
-  const [succes, setSucces] = useState('');
   const [recherche, setRecherche] = useState('');
 
   // Modale édition / création
@@ -96,8 +104,7 @@ export default function PlanComptable() {
     if (!validerFormulaire()) return;
 
     setChargementAction(true);
-    setErreur('');
-    setSucces('');
+    setErreurModale('');
 
     const payload = {
       numero: formulaire.numero.trim(),
@@ -108,11 +115,11 @@ export default function PlanComptable() {
       if (compteEnCours) {
         const modifie = await modifierCompte(compteEnCours.id, payload);
         setComptes((prev) => prev.map((c) => (c.id === modifie.id ? modifie : c)));
-        setSucces(`Compte « ${modifie.numero} - ${modifie.libelle} » mis à jour avec succès.`);
+        showToast(`Compte « ${modifie.numero} - ${modifie.libelle} » mis à jour avec succès.`);
       } else {
         const cree = await creerCompte(payload);
         setComptes((prev) => [...prev, cree].sort((a, b) => a.numero.localeCompare(b.numero)));
-        setSucces(`Compte « ${cree.numero} - ${cree.libelle} » créé avec succès (Classe ${cree.classe}).`);
+        showToast(`Compte « ${cree.numero} - ${cree.libelle} » créé avec succès (Classe ${cree.classe}).`);
       }
       setModaleOuverte(false);
     } catch (err) {
@@ -126,16 +133,14 @@ export default function PlanComptable() {
   async function confirmerSuppression() {
     if (!compteASupprimer) return;
     setChargementAction(true);
-    setErreur('');
-    setSucces('');
 
     try {
       await supprimerCompte(compteASupprimer.id);
       setComptes((prev) => prev.filter((c) => c.id !== compteASupprimer.id));
-      setSucces(`Compte « ${compteASupprimer.numero} - ${compteASupprimer.libelle} » supprimé avec succès.`);
+      showToast(`Compte « ${compteASupprimer.numero} - ${compteASupprimer.libelle} » supprimé avec succès.`);
       setCompteASupprimer(null);
     } catch (err) {
-      setErreur(messageErreur(err));
+      showToast(messageErreur(err), 'error');
       setCompteASupprimer(null);
     } finally {
       setChargementAction(false);
@@ -157,250 +162,141 @@ export default function PlanComptable() {
   const premierChiffre = formulaire.numero.trim().charAt(0);
   const classeCalculee = /^[1-8]$/.test(premierChiffre) ? Number(premierChiffre) : null;
 
+  const colonnes = [
+    { key: 'numero', label: 'Numéro', sortable: true, render: (c) => <strong className="numero-compte">{c.numero}</strong> },
+    { key: 'libelle', label: 'Libellé', sortable: true },
+    {
+      key: 'classe',
+      label: 'Classe',
+      render: (c) => (
+        <span className="badge badge-classe" title={NOMS_CLASSES[c.classe] || ''}>Classe {c.classe}</span>
+      ),
+    },
+    ...(estAdmin ? [{
+      key: 'actions',
+      label: 'Actions',
+      render: (c) => (
+        <div className="actions-cell">
+          <button type="button" className="btn-action" onClick={() => ouvrirModification(c)} title="Modifier ce compte" aria-label="Modifier ce compte">
+            <Icone nom="editer" taille={16} />
+          </button>
+          <button type="button" className="btn-action btn-action-supprimer" onClick={() => setCompteASupprimer(c)} title="Supprimer ce compte" aria-label="Supprimer ce compte">
+            <Icone nom="supprimer" taille={16} />
+          </button>
+        </div>
+      ),
+    }] : []),
+  ];
+
   return (
     <section>
-      <header className="entete-page">
-        <div>
-          <h1>Plan comptable général (CGNC)</h1>
-          <p className="texte-secondaire">Nomenclature officielle des comptes généraux de l’entreprise.</p>
-        </div>
-        {estAdmin && (
-          <button type="button" className="btn btn-primaire" onClick={ouvrirCreation}>
+      <PageHeader
+        title="Plan comptable général (CGNC)"
+        description="Nomenclature officielle des comptes généraux de l’entreprise."
+        actions={estAdmin && (
+          <Button type="button" onClick={ouvrirCreation}>
             <Icone nom="plus" taille={18} /> Nouveau compte
-          </button>
+          </Button>
         )}
-      </header>
+      />
 
-      {succes && <p className="message-succes" role="status">{succes}</p>}
-      <MessageErreur message={erreur} />
-
-      {chargement ? (
-        <Chargement />
-      ) : comptes.length === 0 ? (
-        <div className="panneau vide">
-          <Icone nom="comptes" taille={36} />
-          <p><strong>Aucun compte dans le plan comptable.</strong></p>
-          <p className="texte-secondaire">Ajoutez les comptes nécessaires à la comptabilisation des opérations.</p>
-          {estAdmin && (
-            <button type="button" className="btn btn-primaire" onClick={ouvrirCreation}>
-              Créer le premier compte
-            </button>
-          )}
-        </div>
-      ) : (
+      <AsyncState
+        loading={chargement}
+        error={erreur}
+        onRetry={chargerComptes}
+        empty={comptes.length === 0}
+        emptyTitle="Aucun compte dans le plan comptable."
+        emptyDescription="Ajoutez les comptes nécessaires à la comptabilisation des opérations."
+        emptyAction={estAdmin && (
+          <Button type="button" onClick={ouvrirCreation}>Créer le premier compte</Button>
+        )}
+      >
         <div className="panneau">
-          <div className="barre-outils">
-            <label className="recherche">
-              <Icone nom="recherche" taille={18} />
+          <SearchToolbar
+            value={recherche}
+            onChange={setRecherche}
+            placeholder="Rechercher par numéro ou libellé…"
+            resultCount={`${comptesVisibles.length} compte${comptesVisibles.length > 1 ? 's' : ''}`}
+          />
+          <DataTable columns={colonnes} rows={comptesVisibles} empty={`Aucun compte ne correspond à « ${recherche} ».`} />
+        </div>
+      </AsyncState>
+
+      <CrudModal
+        open={modaleOuverte}
+        onOpenChange={setModaleOuverte}
+        title={compteEnCours ? 'Modifier le compte général' : 'Nouveau compte général'}
+        footer={(
+          <>
+            <Button variant="secondary" type="button" onClick={() => setModaleOuverte(false)}>Annuler</Button>
+            <Button type="submit" form="formulaire-compte" loading={chargementAction}>
+              {chargementAction ? 'Enregistrement…' : compteEnCours ? 'Mettre à jour' : 'Créer le compte'}
+            </Button>
+          </>
+        )}
+      >
+        <MessageErreur message={erreurModale} onFermer={() => setErreurModale('')} />
+        <form id="formulaire-compte" className="pile" onSubmit={enregistrer}>
+          <Field
+            id="compte-numero"
+            label="Numéro de compte"
+            required
+            error={erreursChamps.numero}
+            hint="De 2 à 10 chiffres. Le 1er chiffre (1 à 8) détermine automatiquement la classe du compte."
+          >
+            {(p) => (
               <input
-                type="search"
-                placeholder="Rechercher par numéro ou libellé..."
-                value={recherche}
-                onChange={(e) => setRecherche(e.target.value)}
-                aria-label="Rechercher un compte"
+                className="input"
+                type="text"
+                value={formulaire.numero}
+                onChange={(e) => setFormulaire({ ...formulaire, numero: e.target.value })}
+                placeholder="Ex. 6111, 4411, 3421..."
+                inputMode="numeric"
+                maxLength={10}
+                {...p}
               />
-            </label>
-            <span className="texte-secondaire">
-              {comptesVisibles.length} compte{comptesVisibles.length > 1 ? 's' : ''}
-            </span>
-          </div>
+            )}
+          </Field>
 
-          <div className="defilement">
-            <table className="tableau">
-              <thead>
-                <tr>
-                  <th className="col-numero-compte">Numéro</th>
-                  <th>Libellé</th>
-                  <th className="col-classe-compte">Classe</th>
-                  {estAdmin && <th className="cell-actions">Actions</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {comptesVisibles.map((c) => (
-                  <tr key={c.id}>
-                    <td><strong className="numero-compte">{c.numero}</strong></td>
-                    <td>{c.libelle}</td>
-                    <td>
-                      <span className="badge badge-classe" title={NOMS_CLASSES[c.classe] || ''}>
-                        Classe {c.classe}
-                      </span>
-                    </td>
-                    {estAdmin && (
-                      <td className="cell-actions">
-                        <div className="actions-cell">
-                          <button
-                            type="button"
-                            className="btn-action"
-                            onClick={() => ouvrirModification(c)}
-                            title="Modifier ce compte"
-                            aria-label="Modifier ce compte"
-                          >
-                            <Icone nom="editer" taille={16} />
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-action btn-action-supprimer"
-                            onClick={() => setCompteASupprimer(c)}
-                            title="Supprimer ce compte"
-                            aria-label="Supprimer ce compte"
-                          >
-                            <Icone nom="supprimer" taille={16} />
-                          </button>
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-                {comptesVisibles.length === 0 && (
-                  <tr>
-                    <td colSpan={estAdmin ? 4 : 3} className="texte-secondaire aucun-resultat">
-                      Aucun compte ne correspond à « {recherche} ».
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* MODALE DE CRÉATION / MODIFICATION */}
-      {modaleOuverte && (
-        <div className="modale-fond" onClick={() => setModaleOuverte(false)}>
-          <div className="modale-boite" onClick={(e) => e.stopPropagation()}>
-            <div className="modale-entete">
-              <h2>{compteEnCours ? 'Modifier le compte général' : 'Nouveau compte général'}</h2>
-              <button
-                type="button"
-                className="bouton-icone"
-                onClick={() => setModaleOuverte(false)}
-                title="Fermer"
-                aria-label="Fermer"
-              >
-                <Icone nom="croix" taille={18} />
-              </button>
-            </div>
-
-            <form onSubmit={enregistrer}>
-              <div className="modale-corps">
-                <MessageErreur message={erreurModale} onFermer={() => setErreurModale('')} />
-                <div className="champ">
-                  <label className="champ-label" htmlFor="compte-numero">
-                    Numéro de compte <span className="obligatoire">*</span>
-                  </label>
-                  <input
-                    id="compte-numero"
-                    type="text"
-                    className={`input ${erreursChamps.numero ? 'input-erreur' : ''}`}
-                    value={formulaire.numero}
-                    onChange={(e) => setFormulaire({ ...formulaire, numero: e.target.value })}
-                    placeholder="Ex. 6111, 4411, 3421..."
-                    inputMode="numeric"
-                    maxLength={10}
-                    required
-                  />
-                  {erreursChamps.numero && <span className="champ-erreur">{erreursChamps.numero}</span>}
-                  <span className="champ-aide">
-                    De 2 à 10 chiffres. Le 1er chiffre (1 à 8) détermine automatiquement la classe du compte.
-                  </span>
-                </div>
-
-                {classeCalculee && (
-                  <div className="encart-compte">
-                    <p className="encart-compte-titre">
-                      Classe calculée : <span className="badge badge-classe">Classe {classeCalculee}</span>
-                    </p>
-                    <p className="texte-secondaire encart-compte-aide">
-                      {NOMS_CLASSES[classeCalculee]}
-                    </p>
-                  </div>
-                )}
-
-                <div className="champ">
-                  <label className="champ-label" htmlFor="compte-libelle">
-                    Libellé du compte <span className="obligatoire">*</span>
-                  </label>
-                  <input
-                    id="compte-libelle"
-                    type="text"
-                    className={`input ${erreursChamps.libelle ? 'input-erreur' : ''}`}
-                    value={formulaire.libelle}
-                    onChange={(e) => setFormulaire({ ...formulaire, libelle: e.target.value })}
-                    placeholder="Ex. Achats de marchandises, Fournisseurs..."
-                    maxLength={150}
-                    required
-                  />
-                  {erreursChamps.libelle && <span className="champ-erreur">{erreursChamps.libelle}</span>}
-                </div>
-              </div>
-
-              <div className="modale-pied">
-                <button
-                  type="button"
-                  className="btn btn-secondaire"
-                  onClick={() => setModaleOuverte(false)}
-                  disabled={chargementAction}
-                >
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primaire"
-                  disabled={chargementAction}
-                >
-                  {chargementAction ? 'Enregistrement...' : compteEnCours ? 'Mettre à jour' : 'Créer le compte'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODALE DE SUPPRESSION */}
-      {compteASupprimer && (
-        <div className="modale-fond" onClick={() => setCompteASupprimer(null)}>
-          <div className="modale-boite" onClick={(e) => e.stopPropagation()}>
-            <div className="modale-entete">
-              <h2>Confirmer la suppression</h2>
-              <button
-                type="button"
-                className="bouton-icone"
-                onClick={() => setCompteASupprimer(null)}
-                aria-label="Fermer"
-              >
-                <Icone nom="croix" taille={18} />
-              </button>
-            </div>
-            <div className="modale-corps">
-              <p>
-                Êtes-vous sûr de vouloir supprimer le compte <strong>« {compteASupprimer.numero} - {compteASupprimer.libelle} »</strong> ?
+          {classeCalculee && (
+            <div className="encart-compte">
+              <p className="encart-compte-titre">
+                Classe calculée : <span className="badge badge-classe">Classe {classeCalculee}</span>
               </p>
-              <p className="texte-secondaire texte-suppression">
-                Cette action est irréversible. La suppression sera automatiquement refusée par le serveur si ce compte
-                est déjà utilisé dans au moins une ligne d'écriture comptable.
+              <p className="texte-secondaire encart-compte-aide">
+                {NOMS_CLASSES[classeCalculee]}
               </p>
             </div>
-            <div className="modale-pied">
-              <button
-                type="button"
-                className="btn btn-secondaire"
-                onClick={() => setCompteASupprimer(null)}
-                disabled={chargementAction}
-              >
-                Annuler
-              </button>
-              <button
-                type="button"
-                className="btn btn-danger"
-                onClick={confirmerSuppression}
-                disabled={chargementAction}
-              >
-                {chargementAction ? 'Suppression...' : 'Supprimer définitivement'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          )}
+
+          <Field id="compte-libelle" label="Libellé du compte" required error={erreursChamps.libelle}>
+            {(p) => (
+              <input
+                className="input"
+                type="text"
+                value={formulaire.libelle}
+                onChange={(e) => setFormulaire({ ...formulaire, libelle: e.target.value })}
+                placeholder="Ex. Achats de marchandises, Fournisseurs..."
+                maxLength={150}
+                {...p}
+              />
+            )}
+          </Field>
+        </form>
+      </CrudModal>
+
+      <ConfirmDialog
+        open={Boolean(compteASupprimer)}
+        onOpenChange={(o) => !o && setCompteASupprimer(null)}
+        title="Supprimer le compte"
+        description={compteASupprimer
+          ? `Supprimer le compte « ${compteASupprimer.numero} - ${compteASupprimer.libelle} » ? Cette action est irréversible. La suppression sera automatiquement refusée par le serveur si ce compte est déjà utilisé dans au moins une ligne d'écriture comptable.`
+          : ''}
+        confirmLabel="Supprimer définitivement"
+        danger
+        loading={chargementAction}
+        onConfirm={confirmerSuppression}
+      />
     </section>
   );
 }

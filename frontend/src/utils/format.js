@@ -23,11 +23,40 @@ export function dateFr(iso) {
 
 export function nomAffiche(utilisateur) {
   if (!utilisateur) return '';
-  return `${utilisateur.prenom ?? ''} ${utilisateur.nom ?? ''}`.trim();
+  const complet = `${utilisateur.prenom ?? ''} ${utilisateur.nom ?? ''}`.trim()
+    || (utilisateur.nomComplet ?? '').trim();
+  if (complet) return complet;
+  const local = String(utilisateur.email ?? utilisateur.login ?? '').split('@')[0].trim();
+  return local ? local.charAt(0).toUpperCase() + local.slice(1) : '';
 }
 
-export function initiales(utilisateur) {
-  return `${utilisateur?.prenom?.[0] ?? ''}${utilisateur?.nom?.[0] ?? ''}`.toUpperCase() || '?';
+/** Première lettre utilisable d'un texte, sans accent, en majuscule (ou '' si vide). */
+function premiereLettre(texte) {
+  const propre = String(texte ?? '').trim();
+  if (!propre) return '';
+  const sansAccent = propre.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const lettre = (sansAccent || propre).charAt(0);
+  return lettre ? lettre.toUpperCase() : '';
+}
+
+/**
+ * Initiale unique d'un utilisateur pour l'avatar.
+ * Ordre : prénom, nom/nomComplet, puis partie locale de l'email (ou login).
+ * Ne casse jamais sur une valeur vide ; renvoie « ? » seulement si tout est vide.
+ */
+export function getInitial(utilisateur) {
+  if (!utilisateur) return '?';
+  const candidats = [
+    utilisateur.prenom,
+    utilisateur.nom,
+    utilisateur.nomComplet,
+    String(utilisateur.email ?? utilisateur.login ?? '').split('@')[0],
+  ];
+  for (const candidat of candidats) {
+    const lettre = premiereLettre(candidat);
+    if (lettre) return lettre;
+  }
+  return '?';
 }
 
 export function minutesSecondes(secondes) {

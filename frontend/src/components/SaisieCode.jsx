@@ -5,9 +5,10 @@ import { useRef } from 'react';
  * Ergonomie uniquement : passage automatique à la case suivante,
  * retour arrière, collage du code complet. La vérification se fait côté serveur.
  */
-export default function SaisieCode({ valeur, onChange, longueur = 6, desactive = false, enErreur = false }) {
+export default function SaisieCode({ valeur, onChange, longueur = 6, desactive = false, enErreur = false, ariaDescribedby }) {
   const cases = useRef([]);
   const chiffres = Array.from({ length: longueur }, (_, i) => valeur[i] ?? '');
+  const idLabel = 'code-verification-libelle';
 
   function ecrire(index, texte) {
     const nettoye = texte.replace(/\D/g, '');
@@ -32,25 +33,29 @@ export default function SaisieCode({ valeur, onChange, longueur = 6, desactive =
   }
 
   return (
-    <div className={`code-cases ${enErreur ? 'code-erreur' : ''}`} role="group" aria-label="Code de vérification">
-      {chiffres.map((c, i) => (
-        <input
-          key={i}
-          ref={(el) => { cases.current[i] = el; }}
-          className="code-case"
-          inputMode="numeric"
-          autoComplete={i === 0 ? 'one-time-code' : 'off'}
-          maxLength={longueur}
-          value={c}
-          disabled={desactive}
-          autoFocus={i === 0}
-          aria-label={`Chiffre ${i + 1}`}
-          onChange={(e) => ecrire(i, e.target.value)}
-          onKeyDown={(e) => touche(i, e)}
-          onFocus={(e) => e.target.select()}
-          onPaste={(e) => { e.preventDefault(); ecrire(0, e.clipboardData.getData('text')); }}
-        />
-      ))}
+    <div className="champ-saisie-code">
+      <span className="champ-label" id={idLabel}>Code de vérification</span>
+      <div className={`code-cases ${enErreur ? 'code-erreur' : ''}`} role="group" aria-labelledby={idLabel} aria-describedby={ariaDescribedby}>
+        {chiffres.map((c, i) => (
+          <input
+            key={i}
+            ref={(el) => { cases.current[i] = el; }}
+            className="code-case"
+            inputMode="numeric"
+            autoComplete={i === 0 ? 'one-time-code' : 'off'}
+            maxLength={longueur}
+            value={c}
+            disabled={desactive}
+            autoFocus={i === 0}
+            aria-label={`Chiffre ${i + 1}`}
+            aria-invalid={enErreur || undefined}
+            onChange={(e) => ecrire(i, e.target.value)}
+            onKeyDown={(e) => touche(i, e)}
+            onFocus={(e) => e.target.select()}
+            onPaste={(e) => { e.preventDefault(); ecrire(0, e.clipboardData.getData('text')); }}
+          />
+        ))}
+      </div>
     </div>
   );
 }

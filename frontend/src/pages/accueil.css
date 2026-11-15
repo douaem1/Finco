@@ -1,23 +1,26 @@
 /* ================================================================
-   FinCo — page d'accueil, thème « papier & encre » (version mature).
-   Variables dans styles/app.css. Classes préfixées ac-.
+   FinCo — page d'accueil publique.
+   Langage visuel de l'application (surfaces papier, bordure 1 px,
+   rayon 12 px, ombre douce, échelle typographique), identité de
+   mise en page conservée (héros, balance, ruban).
+   Variables dans styles/app.css — aucune couleur en dur ici.
    ================================================================ */
 
-.ac { color: var(--encre); overflow-x: clip; }
+.ac { color: var(--texte); font-size: 1rem; overflow-x: clip; }
 
 /* ---------- navigation ---------- */
 .ac-nav {
   position: sticky; top: 0; z-index: 20;
   display: flex; align-items: center; gap: 40px;
-  height: 74px; padding: 0 max(24px, calc((100vw - 1180px) / 2));
-  background: var(--creme); border-bottom: var(--trait);
-  transition: background-color 0.25s ease-out, box-shadow 0.25s ease-out;
+  height: 72px; padding: 0 max(24px, calc((100vw - 1180px) / 2));
+  background: var(--surface); border-bottom: 1px solid var(--bordure);
+  transition: background-color 0.15s ease-out, box-shadow 0.15s ease-out;
 }
-.ac-nav-defile { background: rgba(251, 246, 236, 0.78); backdrop-filter: blur(14px) saturate(1.2); box-shadow: 0 10px 24px -20px rgba(34, 29, 22, 0.6); }
+.ac-nav-defile { background: var(--papier-voile); backdrop-filter: blur(14px) saturate(1.2); box-shadow: var(--ombre-carte); }
 .ac-nav-logo { text-decoration: none; }
 .ac-nav-liens { display: flex; gap: 30px; flex: 1; }
-.ac-nav-liens a { position: relative; padding: 6px 0; color: var(--encre); font-weight: 500; text-decoration: none; transition: color 0.2s ease-out; }
-.ac-nav-liens a:hover { color: var(--muet); }
+.ac-nav-liens a { position: relative; padding: 6px 0; color: var(--texte); font-weight: 500; text-decoration: none; transition: color 0.15s ease-out; }
+.ac-nav-liens a:hover { color: var(--texte-2); }
 .ac-souligne { position: absolute; left: -4px; bottom: -8px; width: calc(100% + 8px); height: 10px; overflow: visible; }
 .ac-souligne path { fill: none; stroke: var(--corail); stroke-width: 2.6; stroke-linecap: round; vector-effect: non-scaling-stroke; }
 
@@ -29,24 +32,24 @@
 }
 .ac-heros::before {
   content: ''; position: absolute; z-index: -1; top: 70px; right: -120px; width: 300px; height: 300px;
-  border-radius: 50%; background: var(--jaune); border: var(--trait);
+  border-radius: 50%; background: var(--jaune); border: 1px solid var(--bordure);
 }
 .ac-lumiere { position: absolute; inset: 0 -30vw; z-index: -1; pointer-events: none; }
 .ac-heros > :not(.ac-lumiere) { position: relative; }
 .ac-heros h1 { font: 600 clamp(2.5rem, 4.6vw, 4rem)/1.04 var(--titre); letter-spacing: -0.03em; max-width: 15ch; }
-.ac-heros-texte > p { margin-top: 24px; max-width: 50ch; font-size: 1.1rem; line-height: 1.65; color: var(--muet); }
+.ac-heros-texte > p { margin-top: 24px; max-width: 50ch; font-size: 1.1rem; line-height: 1.65; color: var(--texte-2); }
 .ac-heros-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 34px; }
 .ac .btn-heros { min-height: 52px; padding: 0 26px; font-size: 1rem; }
 
 .ac-scene { perspective: 1400px; transform-style: preserve-3d; will-change: transform; }
 .ac-apercu {
   padding: 0 22px 20px; transform-style: preserve-3d; will-change: transform;
-  background: var(--papier); border: var(--trait); border-radius: 20px; box-shadow: 6px 6px 0 var(--encre);
+  background: var(--surface); border: 1px solid var(--bordure); border-radius: var(--radius-lg); box-shadow: var(--ombre-douce);
 }
 .ac-apercu-barre {
   display: flex; justify-content: space-between; align-items: center; gap: 12px;
-  margin: 0 -22px 18px; padding: 14px 22px; border-bottom: var(--trait); background: var(--jaune-pale);
-  border-radius: 19px 19px 0 0; font-weight: 600; font-size: 0.88rem; font-variant-numeric: tabular-nums;
+  margin: 0 -22px 18px; padding: 14px 22px; border-bottom: 1px solid var(--bordure); background: var(--jaune-pale);
+  border-radius: calc(var(--radius-lg) - 1px) calc(var(--radius-lg) - 1px) 0 0; font-weight: 600; font-size: 0.88rem; font-variant-numeric: tabular-nums;
   transform: translateZ(14px);
 }
 .ac-apercu-barre .texte-secondaire { font-weight: 500; font-size: 0.8rem; }
@@ -58,7 +61,7 @@
 .mot { display: inline-block; transform-origin: 0 100%; will-change: transform; }
 
 /* ---------- ruban ---------- */
-.ac-ruban { overflow: hidden; border-top: var(--trait); border-bottom: var(--trait); background: var(--encre); color: var(--creme); }
+.ac-ruban { overflow: hidden; border-top: 1px solid var(--bordure); border-bottom: 1px solid var(--bordure); background: var(--encre); color: var(--creme); }
 .ac-ruban-piste { display: flex; width: max-content; padding: 13px 0; animation: ruban 60s linear infinite; }
 .ac-ruban-piste span { display: inline-flex; align-items: center; gap: 22px; padding-right: 22px; font: 500 1rem var(--titre); white-space: nowrap; }
 .ac-ruban-piste i { font-style: normal; color: var(--jaune); font-size: 0.8rem; }
@@ -67,33 +70,45 @@
 /* ---------- sections ---------- */
 .ac-section { max-width: 1180px; margin: 0 auto; padding: 96px 24px; }
 .ac-section-blanche {
-  max-width: none; background: var(--papier); border-top: var(--trait); border-bottom: var(--trait);
+  max-width: none; background: var(--surface); border-top: 1px solid var(--bordure); border-bottom: 1px solid var(--bordure);
   padding-left: max(24px, calc((100vw - 1132px) / 2)); padding-right: max(24px, calc((100vw - 1132px) / 2));
 }
 .ac-section-tete { max-width: 660px; margin-bottom: 48px; }
 .ac-section-tete h2 { font: 600 clamp(1.8rem, 3vw, 2.6rem)/1.1 var(--titre); letter-spacing: -0.025em; }
-.ac-section-tete p { margin-top: 12px; color: var(--muet); font-size: 1.05rem; }
+.ac-section-tete p { margin-top: 12px; color: var(--texte-2); font-size: 1.05rem; }
 
+/* Cartes de modules — style carte / KPI de l'application */
 .ac-modules { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-.ac-module { padding: 30px; border: var(--trait); border-radius: 20px; box-shadow: var(--ombre); background: var(--corail-pale); }
-.ac-module + .ac-module { background: var(--sarcelle-pale); }
-.ac-module-code { display: inline-grid; place-items: center; width: 50px; height: 50px; border-radius: 12px; border: var(--trait); background: var(--papier); font: 700 1.1rem var(--titre); box-shadow: var(--ombre-petite); }
+.ac-module {
+  padding: 30px; background: var(--surface); border: 1px solid var(--bordure);
+  border-top: 3px solid var(--corail); border-radius: var(--radius-lg); box-shadow: var(--ombre-carte);
+}
+.ac-module + .ac-module { border-top-color: var(--sarcelle); }
+.ac-module-code {
+  display: inline-grid; place-items: center; width: 50px; height: 50px; border-radius: var(--radius-md);
+  border: 1px solid var(--bordure); background: var(--neutre-fond); font: 700 1.1rem var(--titre);
+}
 .ac-module h3 { margin-top: 20px; font: 600 1.45rem var(--titre); letter-spacing: -0.015em; }
-.ac-module p { margin-top: 8px; color: var(--muet); max-width: 46ch; }
+.ac-module p { margin-top: 8px; color: var(--texte-2); max-width: 46ch; }
 .ac-module ul { margin-top: 20px; padding: 0; list-style: none; display: grid; gap: 10px; }
 .ac-module li { position: relative; padding-left: 28px; font-weight: 500; }
 .ac-module li::before {
   content: '✓'; position: absolute; left: 0; top: 1px;
   display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%;
-  background: var(--papier); border: 1.5px solid var(--encre); font-size: 0.68rem; font-weight: 700;
+  background: var(--surface); border: 1px solid var(--bordure); font-size: 0.68rem; font-weight: 700;
 }
 
+/* Cartes de fonctionnalités — style carte de l'application */
 .ac-fonctions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
-.ac-fonction { padding: 26px; border: var(--trait); border-radius: 18px; background: var(--creme); box-shadow: var(--ombre-petite); transition: box-shadow 0.2s ease-out; }
-.ac-fonction:hover { box-shadow: 5px 5px 0 var(--encre); }
+.ac-fonction {
+  padding: 26px; background: var(--surface); border: 1px solid var(--bordure);
+  border-radius: var(--radius-lg); box-shadow: var(--ombre-carte);
+  transition: box-shadow 0.15s ease-out;
+}
+.ac-fonction:hover { box-shadow: var(--shadow-md); }
 .ac-fonction h3 { margin-top: 16px; font: 600 1.15rem var(--titre); }
-.ac-fonction p { margin-top: 6px; color: var(--muet); font-size: 0.95rem; }
-.ac-icone { width: 46px; height: 46px; padding: 10px; border-radius: 12px; border: var(--trait); background: var(--papier); color: var(--encre); }
+.ac-fonction p { margin-top: 6px; color: var(--texte-2); font-size: 0.95rem; }
+.ac-icone { width: 46px; height: 46px; padding: 10px; border-radius: var(--radius-md); border: 1px solid var(--bordure); background: var(--neutre-fond); color: var(--texte); }
 .ac-fonction:nth-child(3n + 1) .ac-icone { background: var(--jaune-pale); }
 .ac-fonction:nth-child(3n + 2) .ac-icone { background: var(--lilas-pale); }
 .ac-fonction:nth-child(3n) .ac-icone { background: var(--sarcelle-pale); }
@@ -107,10 +122,10 @@
 
 /* Étapes (version sans animation) */
 .ac-etapes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 0; list-style: none; counter-reset: etape; }
-.ac-etapes li { padding: 24px 22px; border: var(--trait); border-radius: 18px; background: var(--papier); counter-increment: etape; }
-.ac-etapes li::before { content: counter(etape); display: grid; place-items: center; width: 34px; height: 34px; margin-bottom: 14px; border-radius: 50%; border: var(--trait); background: var(--jaune); font-weight: 700; }
+.ac-etapes li { padding: 24px 22px; border: 1px solid var(--bordure); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--ombre-carte); counter-increment: etape; }
+.ac-etapes li::before { content: counter(etape); display: grid; place-items: center; width: 34px; height: 34px; margin-bottom: 14px; border-radius: 50%; border: 1px solid var(--bordure); background: var(--jaune); font-weight: 700; }
 .ac-etapes h3 { font: 600 1.2rem var(--titre); }
-.ac-etapes p { margin-top: 6px; color: var(--muet); font-size: 0.95rem; }
+.ac-etapes p { margin-top: 6px; color: var(--texte-2); font-size: 0.95rem; }
 
 /* ---------- section « cycle » collante pilotée par le scroll ---------- */
 .ac-cycle { position: relative; height: 320vh; }
@@ -120,9 +135,9 @@
   max-width: 1180px; margin: 0 auto; padding: 84px 24px 40px;
 }
 .ac-etapes-cycle { position: relative; display: grid; grid-template-columns: 1fr; gap: 6px; padding-left: 26px; }
-.ac-etapes-cycle li { padding: 14px 18px; border: 1.5px solid transparent; border-radius: 14px; background: none; transition: background-color 0.35s ease-out, border-color 0.35s ease-out, box-shadow 0.35s ease-out; }
+.ac-etapes-cycle li { padding: 14px 18px; border: 1px solid transparent; border-radius: var(--radius-md); background: none; transition: background-color 0.35s ease-out, border-color 0.35s ease-out, box-shadow 0.35s ease-out; }
 .ac-etapes-cycle li::before { display: none; }
-.ac-etapes-cycle li.actif { background: var(--papier); border-color: var(--encre); box-shadow: var(--ombre-petite); }
+.ac-etapes-cycle li.actif { background: var(--surface); border-color: var(--bordure); box-shadow: var(--ombre-carte); }
 .ac-cycle-rail { position: absolute; left: 0; top: 16px; bottom: 16px; width: 3px; border-radius: 999px; background: var(--ligne); overflow: hidden; }
 .ac-cycle-rail span { display: block; width: 100%; background: var(--corail); border-radius: inherit; }
 .ac-cycle-droite { position: relative; display: grid; place-items: center; aspect-ratio: 1; }
@@ -131,32 +146,30 @@
 .ac-cycle-anneau-fond { stroke: var(--ligne); }
 .ac-cycle-anneau-trace { stroke: var(--sarcelle); }
 .ac-cycle-etape { display: grid; gap: 8px; justify-items: center; max-width: 250px; text-align: center; }
-.ac-cycle-numero { display: grid; place-items: center; width: 62px; height: 62px; margin-bottom: 8px; border-radius: 50%; border: var(--trait); background: var(--jaune); font: 700 1.6rem var(--titre); box-shadow: var(--ombre-petite); }
+.ac-cycle-numero { display: grid; place-items: center; width: 62px; height: 62px; margin-bottom: 8px; border-radius: 50%; border: 1px solid var(--bordure); background: var(--jaune); font: 700 1.6rem var(--titre); }
 .ac-cycle-etape strong { font: 600 2rem var(--titre); letter-spacing: -0.02em; }
-.ac-cycle-etape span:last-child { color: var(--muet); }
+.ac-cycle-etape span:last-child { color: var(--texte-2); }
 
 /* ---------- appel final ---------- */
 .ac-appel {
   display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap;
   max-width: 1132px; margin: 0 auto 96px; padding: 40px 44px;
-  border: var(--trait); border-radius: 24px; background: var(--encre); color: var(--creme); box-shadow: 6px 6px 0 var(--corail);
+  border: 1px solid var(--bordure); border-radius: var(--radius-lg); background: var(--encre); color: var(--creme); box-shadow: var(--ombre-douce);
 }
 .ac-appel h2 { font: 600 clamp(1.5rem, 2.6vw, 2.1rem)/1.15 var(--titre); letter-spacing: -0.02em; }
-.ac-appel p { margin-top: 8px; color: rgba(251, 246, 236, 0.72); max-width: 52ch; }
-.ac .ac-btn-blanc { background: var(--jaune); color: var(--encre); border-color: var(--creme); box-shadow: 3px 3px 0 var(--creme); min-height: 52px; padding: 0 26px; }
-.ac .ac-btn-blanc:hover:not(:disabled) { box-shadow: 4px 4px 0 var(--creme); }
+.ac-appel p { margin-top: 8px; color: var(--creme-70); max-width: 52ch; }
 
 /* ---------- pied ---------- */
 .ac-pied {
   display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
   padding: 26px max(24px, calc((100vw - 1180px) / 2));
-  border-top: var(--trait); background: var(--papier); color: var(--muet); font-size: 0.88rem;
+  border-top: 1px solid var(--bordure); background: var(--surface); color: var(--texte-2); font-size: 0.88rem;
 }
 .ac-pied > p:nth-child(2) { flex: 1; }
 .ac-api { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; }
-.ac-api::before { content: ''; width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--encre); background: var(--ligne); }
-.ac-api-operationnel::before { background: var(--sarcelle); }
-.ac-api-indisponible::before { background: var(--corail); }
+.ac-api::before { content: ''; width: 9px; height: 9px; border-radius: 50%; border: 1px solid var(--bordure-forte); background: var(--ligne); }
+.ac-api-operationnel::before { background: var(--favorable); border-color: var(--favorable); }
+.ac-api-indisponible::before { background: var(--corail); border-color: var(--corail); }
 
 /* ---------- curseur personnalisé ---------- */
 .curseur-perso, .curseur-perso * { cursor: none !important; }
@@ -165,10 +178,10 @@
 .curseur-anneau {
   display: grid; place-items: center; width: 32px; height: 32px; margin: -16px 0 0 -16px; border-radius: 999px;
   border: 1.5px solid var(--encre);
-  transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1), height 0.28s cubic-bezier(0.16, 1, 0.3, 1), margin 0.28s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s;
+  transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1), height 0.28s cubic-bezier(0.16, 1, 0.3, 1), margin 0.28s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s;
 }
 .curseur-anneau span { font-size: 0.72rem; font-weight: 700; color: var(--encre); opacity: 0; transition: opacity 0.15s; }
-.curseur-bouton { width: 56px; height: 56px; margin: -28px 0 0 -28px; background: rgba(255, 197, 61, 0.35); }
+.curseur-bouton { width: 56px; height: 56px; margin: -28px 0 0 -28px; background: var(--jaune-35); }
 .curseur-voir { width: 70px; height: 70px; margin: -35px 0 0 -35px; background: var(--jaune); }
 .curseur-voir span { opacity: 1; }
 
@@ -196,4 +209,5 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .ac-ruban-piste { animation: none; }
+  .ac-fonction, .ac-nav { transition: none; }
 }

@@ -1,19 +1,43 @@
-import React, { useEffect, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LIBELLES_ROLES, initiales, nomAffiche } from '../utils/format';
-import { obtenirSectionsMenuPourRole } from '../config/roleAccess';
-import Logo from './Logo';
+import { PAGES, obtenirSectionsMenuPourRole } from '../config/roleAccess';
+import { listerExercices } from '../services/exerciceApi';
+import { LogoMarque } from './Logo';
 import Icone from './Icone';
 import MessageErreur from './MessageErreur';
+import NotificationBell from './NotificationBell';
+import UserMenu from './UserMenu';
+import Tooltip from './ui/Tooltip';
 
-/** Cadre des pages connectées : barre latérale filtrée par rôle + zone de travail. */
+const CLE_REPLI = 'finco.lateral.replie';
+
+/** Lecture de la préférence d'affichage (stockage local, tolérant aux erreurs). */
+function lireRepli() {
+  try {
+    return window.localStorage.getItem(CLE_REPLI) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function ecrireRepli(valeur) {
+  try {
+    window.localStorage.setItem(CLE_REPLI, valeur ? '1' : '0');
+  } catch {
+    /* stockage local indisponible : la préférence reste en mémoire */
+  }
+}
+
 export default function MiseEnPageApp() {
   const { utilisateur, role, deconnexion } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-
   const [messageRefus, setMessageRefus] = useState(location.state?.messageAccesRefuse || '');
+  const [menuMobileOuvert, setMenuMobileOuvert] = useState(false);
+  const [lateralReplie, setLateralReplie] = useState(lireRepli);
+  const [exercices, setExercices] = useState([]);
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
     if (location.state?.messageAccesRefuse) {
@@ -22,59 +46,103 @@ export default function MiseEnPageApp() {
     }
   }, [location]);
 
+  useEffect(() => {
+    listerExercices().then(setExercices).catch(() => setExercices([]));
+  }, []);
+
+  // Le tiroir mobile se referme à chaque changement de page.
+  useEffect(() => {
+    setMenuMobileOuvert(false);
+  }, [location.pathname]);
+
+  // Échap ferme le tiroir mobile.
+  useEffect(() => {
+    if (!menuMobileOuvert) return undefined;
+    function surTouche(evenement) {
+      if (evenement.key === 'Escape') setMenuMobileOuvert(false);
+    }
+    window.addEventListener('keydown', surTouche);
+    return () => window.removeEventListener('keydown', surTouche);
+  }, [menuMobileOuvert]);
+
+  function basculerLateral() {
+    setLateralReplie((valeur) => {
+      ecrireRepli(!valeur);
+      return !valeur;
+    });
+  }
+
   function quitter() {
     deconnexion();
     navigate('/login', { replace: true });
   }
 
-  // Filtrage strict : seules les sections contenant des liens autorisés pour ce rôle sont conservées
-  const sections = obtenirSectionsMenuPourRole(role);
+  function toutMarquerLu() {
+    setNotifications((liste) => liste.map((item) => ({ ...item, lu: true })));
+  }
 
-  return (
-    <div className="app">
-      <a className="lien-saut" href="#contenu-principal">Aller au contenu</a>
-      <aside className="lateral">
-        <div className="lateral-logo"><Logo /></div>
+  const sections = useMemo(() => {
+    const groupes = new Map();
+    obtenirSectionsMenuPourRole(role).forEach((section) => section.items.forEach((item) => {
+      const nom = item.path === '/tiers' ? 'Tiers' : section.nom === 'Comptabilité financière' ? 'Comptabilité' : section.nom === 'Direction financière' ? 'Direction' : section.nom;
+      if (!groupes.has(nom)) groupes.set(nom, []);
+      groupes.get(nom).push(item);
+    }));
+    return Array.from(groupes, ([nom, items]) => ({ nom, items }));
+  }, [role]);
 
-        <nav className="lateral-nav" aria-label="Navigation principale">
-          {sections.map((section) => (
-            <React.Fragment key={section.nom}>
-              <p className="lateral-groupe">{section.nom}</p>
-              {section.items.map((item) => (
-                <NavLink key={item.path} to={item.path} end={item.end}>
-                  <Icone nom={item.icone} /> {item.libelle}
-                </NavLink>
-              ))}
-            </React.Fragment>
-          ))}
-        </nav>
+  const page = PAGES.find((item) => (item.pattern ? item.pattern.test(location.pathname) : item.path === location.pathname));
+  const aujourdHui = new Date().toISOString().slice(0, 10);
+  const exercice = exercices.find((item) => item.dateDebut <= aujourdHui && item.dateFin >= aujourdHui) || exercices[0];
 
-        <div className="lateral-profil">
-          <span className="avatar" aria-hidden="true">{initiales(utilisateur)}</span>
-          <span className="lateral-profil-texte">
-            <strong>{nomAffiche(utilisateur)}</strong>
-            <small>{LIBELLES_ROLES[role] ?? role}</small>
-          </span>
-          <button
-            type="button"
-            className="lateral-sortie"
-            onClick={quitter}
-            title="Se déconnecter"
-            aria-label="Se déconnecter"
-          >
-            <Icone nom="sortie" />
+  return <div className={`coque ${lateralReplie ? 'coque-replie' : ''}`}>
+    <a className="lien-saut" href="#contenu-principal">Aller au contenu</a>
+    {menuMobileOuvert && <button type="button" className="coque-voile" aria-label="Fermer le menu" onClick={() => setMenuMobileOuvert(false)} />}
+    <aside id="navigation-principale" className={`lateral ${lateralReplie ? 'lateral-replie' : ''} ${menuMobileOuvert ? 'lateral-mobile-ouvert' : ''}`}>
+      <div className="lateral-marque">
+        <LogoMarque taille={32} />
+        <span className="lateral-marque-nom">FinCo</span>
+      </div>
+      <nav className="lateral-menu" aria-label="Navigation principale">
+        {sections.map((section) => <Fragment key={section.nom}>
+          <p className="lateral-section">{section.nom}</p>
+          <span className="lateral-section-trait" aria-hidden="true" />
+          {section.items.map((item) => <Tooltip key={item.path} label={item.libelle} disabled={!lateralReplie}>
+            <NavLink to={item.path} end={item.end} onClick={() => setMenuMobileOuvert(false)}>
+              <span className="lateral-icone"><Icone nom={item.icone} taille={20} /></span>
+              <span className="lateral-libelle">{item.libelle}</span>
+            </NavLink>
+          </Tooltip>)}
+        </Fragment>)}
+      </nav>
+      <button type="button" className="lateral-bascule" onClick={basculerLateral} aria-label={lateralReplie ? 'Développer le menu' : 'Réduire le menu'} aria-expanded={!lateralReplie} aria-controls="navigation-principale">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+        <span className="lateral-bascule-texte">Réduire</span>
+      </button>
+    </aside>
+    <div className="zone-principale">
+      <header className="barre-sup">
+        <div className="barre-sup-gauche">
+          <button type="button" className="barre-sup-mobile" onClick={() => setMenuMobileOuvert(true)} aria-label="Ouvrir le menu" aria-expanded={menuMobileOuvert} aria-controls="navigation-principale">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
           </button>
+          <nav className="fil-ariane" aria-label="Fil d’Ariane"><span>FinCo</span>{page?.libelle && <><span aria-hidden="true">/</span><strong>{page.libelle}</strong></>}</nav>
         </div>
-      </aside>
-
-      <main id="contenu-principal" className="contenu">
-        {messageRefus && (
-          <div style={{ marginBottom: '1.5rem' }}>
-            <MessageErreur message={messageRefus} onFermer={() => setMessageRefus('')} />
+        <div className="barre-sup-actions">
+          <div className="exercice-puce">
+            <span className={`exercice-point ${exercice?.cloture ? 'exercice-point-ferme' : 'exercice-point-ouvert'}`} aria-hidden="true" />
+            <span>Exercice</span>
+            <strong>{exercice?.annee ?? new Date().getFullYear()}</strong>
+            <small>{exercice?.cloture ? 'Clôturée' : 'Ouverte'}</small>
           </div>
-        )}
+          <NotificationBell items={notifications} onToutMarquerLu={toutMarquerLu} />
+          <UserMenu utilisateur={utilisateur} role={role} onLogout={quitter} />
+        </div>
+      </header>
+      {messageRefus && <div className="coque-message"><MessageErreur message={messageRefus} onFermer={() => setMessageRefus('')} /></div>}
+      <main id="contenu-principal" className="contenu">
         <Outlet />
       </main>
     </div>
-  );
+  </div>;
 }

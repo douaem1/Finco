@@ -2,11 +2,18 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { listerPieces, listerComptes } from '../services/ecritureApi';
 import { messageErreur } from '../services/api';
-import { dateFr, montant } from '../utils/format';
-import MessageErreur from '../components/MessageErreur';
-import Chargement from '../components/Chargement';
+import { dateFr } from '../utils/format';
+import PageHeader from '../components/ui/PageHeader';
+import AsyncState from '../components/ui/AsyncState';
+import DataTable from '../components/ui/DataTable';
+import Field from '../components/ui/Field';
+import Combobox from '../components/ui/Combobox';
+import Amount from '../components/ui/Amount';
+import Button from '../components/ui/Button';
+import { useToast } from '../components/ui/ToastRegion';
 
 export default function GrandLivre() {
+  const { showToast } = useToast();
   const [pieces, setPieces] = useState([]);
   const [comptes, setComptes] = useState([]);
   const [compteNumero, setCompteNumero] = useState('');
@@ -23,7 +30,9 @@ export default function GrandLivre() {
       setPieces(piecesRecues);
       setComptes(comptesRecus);
     } catch (e) {
-      setErreur(messageErreur(e));
+      const message = messageErreur(e);
+      setErreur(message);
+      showToast(message, 'error');
     } finally {
       setChargement(false);
     }
@@ -80,42 +89,74 @@ export default function GrandLivre() {
     credit: totaux.credit + compte.credit,
   }), { debit: 0, credit: 0 });
 
+  const colonnesBalance = [
+    { key: 'numero', label: 'Compte', sortable: true, render: (c) => <button type="button" className="lien-bouton" onClick={() => setCompteNumero(c.numero)}>{c.numero}</button> },
+    { key: 'libelle', label: 'Libellé', sortable: true },
+    { key: 'debit', label: 'Débit', numeric: true, sortable: true, render: (c) => <Amount value={c.debit} /> },
+    { key: 'credit', label: 'Crédit', numeric: true, sortable: true, render: (c) => <Amount value={c.credit} /> },
+    { key: 'solde', label: 'Solde', numeric: true, sortable: true, render: (c) => <strong><Amount value={c.solde} /></strong> },
+  ];
+
+  const colonnesCompte = [
+    { key: 'dateEcriture', label: 'Date', render: (l) => <span className="chiffres">{dateFr(l.dateEcriture)}</span> },
+    { key: 'pieceNumero', label: 'Pièce', render: (l) => <Link to={`/pieces/${l.pieceId}`}>{l.pieceNumero}</Link> },
+    { key: 'pieceLibelle', label: 'Libellé' },
+    { key: 'centreCoutCode', label: 'Centre', render: (l) => l.centreCoutCode || '—' },
+    { key: 'debit', label: 'Débit', numeric: true, render: (l) => (l.sens === 'DEBIT' ? <Amount value={l.montant} /> : '—') },
+    { key: 'credit', label: 'Crédit', numeric: true, render: (l) => (l.sens === 'CREDIT' ? <Amount value={l.montant} /> : '—') },
+    { key: 'soldeCourant', label: 'Solde', numeric: true, render: (l) => <Amount value={l.soldeCourant} /> },
+  ];
+
   return (
     <section>
-      <header className="entete-page"><div><h1>Grand livre &amp; balance</h1><p className="texte-secondaire">Consultez les mouvements validés et le solde de chaque compte.</p></div></header>
-      <MessageErreur message={erreur} onRetry={chargerDonnees} />
-      {chargement ? <Chargement /> : (
-        <>
-          <div className="panneau filtre-rapport">
-            <label className="champ"><span className="champ-label">Compte</span><select className="input" value={compteNumero} onChange={(e) => setCompteNumero(e.target.value)}><option value="">Tous les comptes — Balance</option>{comptes.map((c) => <option key={c.id} value={c.numero}>{c.numero} — {c.libelle}</option>)}</select></label>
-            <label className="champ"><span className="champ-label">Du</span><input type="date" className="input" value={dateDebut} onChange={(e) => setDateDebut(e.target.value)} /></label>
-            <label className="champ"><span className="champ-label">Au</span><input type="date" className="input" value={dateFin} onChange={(e) => setDateFin(e.target.value)} /></label>
+      <PageHeader
+        title="Grand livre & balance"
+        description="Consultez les mouvements validés et le solde de chaque compte."
+      />
+
+      <AsyncState loading={chargement} error={erreur} onRetry={chargerDonnees}>
+        <div className="panneau filtre-rapport">
+          <Combobox
+            id="grand-livre-compte"
+            label="Compte"
+            options={comptes.map((c) => ({ value: c.numero, label: `${c.numero} — ${c.libelle}` }))}
+            value={compteNumero}
+            onChange={setCompteNumero}
+            placeholder="Rechercher un compte…"
+            vide="Tous les comptes — Balance"
+          />
+          <Field id="grand-livre-du" label="Du">
+            {(p) => <input className="input" type="date" value={dateDebut} onChange={(e) => setDateDebut(e.target.value)} {...p} />}
+          </Field>
+          <Field id="grand-livre-au" label="Au">
+            {(p) => <input className="input" type="date" value={dateFin} onChange={(e) => setDateFin(e.target.value)} {...p} />}
+          </Field>
+        </div>
+
+        {!compteNumero ? (
+          <>
+            <div className="carte-resume">
+              <div className="carte-resume-item"><small>Total débit</small><Amount value={totauxBalance.debit} /></div>
+              <div className="carte-resume-item"><small>Total crédit</small><Amount value={totauxBalance.credit} /></div>
+              <div className="carte-resume-item accent"><small>Solde de la période</small><Amount value={totauxBalance.debit - totauxBalance.credit} /></div>
+            </div>
+            <div className="panneau">
+              <DataTable columns={colonnesBalance} rows={balance} empty="Aucun mouvement validé pour cette période." />
+            </div>
+          </>
+        ) : (
+          <div className="panneau">
+            <header className="carte-entete">
+              <div>
+                <h2>{compteNumero} — {comptes.find((c) => c.numero === compteNumero)?.libelle}</h2>
+                <p className="texte-secondaire">Solde d’ouverture : <Amount value={ouverture} /></p>
+              </div>
+              <Button variant="secondary" type="button" onClick={() => setCompteNumero('')}>Retour à la balance</Button>
+            </header>
+            <DataTable columns={colonnesCompte} rows={lignesAvecSolde} empty="Aucun mouvement pour ce compte et cette période." />
           </div>
-          {!compteNumero ? (
-            <div className="panneau">
-              <div className="defilement"><table className="tableau">
-                <thead><tr><th>Compte</th><th>Libellé</th><th className="num">Débit (MAD)</th><th className="num">Crédit (MAD)</th><th className="num">Solde (MAD)</th></tr></thead>
-                <tbody>
-                  {balance.map((c) => <tr key={c.id}><td><button type="button" className="lien-bouton" onClick={() => setCompteNumero(c.numero)}>{c.numero}</button></td><td>{c.libelle}</td><td className="num chiffres">{montant(c.debit)}</td><td className="num chiffres">{montant(c.credit)}</td><td className="num chiffres"><strong>{montant(c.solde)}</strong></td></tr>)}
-                  {balance.length === 0 && <tr><td colSpan={5} className="texte-secondaire aucun-resultat">Aucun mouvement validé pour cette période.</td></tr>}
-                </tbody>
-                <tfoot><tr><td colSpan={2}>Totaux de la période</td><td className="num chiffres">{montant(totauxBalance.debit)}</td><td className="num chiffres">{montant(totauxBalance.credit)}</td><td className="num chiffres">{montant(totauxBalance.debit - totauxBalance.credit)}</td></tr></tfoot>
-              </table></div>
-            </div>
-          ) : (
-            <div className="panneau">
-              <header className="carte-entete"><div><h2>{compteNumero} — {comptes.find((c) => c.numero === compteNumero)?.libelle}</h2><p className="texte-secondaire">Solde d’ouverture : {montant(ouverture)} MAD</p></div><button type="button" className="btn btn-secondaire btn-petit" onClick={() => setCompteNumero('')}>Retour à la balance</button></header>
-              <div className="defilement"><table className="tableau">
-                <thead><tr><th>Date</th><th>Pièce</th><th>Libellé</th><th>Centre</th><th className="num">Débit</th><th className="num">Crédit</th><th className="num">Solde</th></tr></thead>
-                <tbody>
-                  {lignesAvecSolde.map((l, index) => <tr key={`${l.pieceId}-${l.id || index}`}><td className="chiffres">{dateFr(l.dateEcriture)}</td><td><Link to={`/pieces/${l.pieceId}`}>{l.pieceNumero}</Link></td><td>{l.pieceLibelle}</td><td>{l.centreCoutCode || '—'}</td><td className="num chiffres">{l.sens === 'DEBIT' ? montant(l.montant) : '—'}</td><td className="num chiffres">{l.sens === 'CREDIT' ? montant(l.montant) : '—'}</td><td className="num chiffres">{montant(l.soldeCourant)}</td></tr>)}
-                  {lignesPeriode.length === 0 && <tr><td colSpan={7} className="texte-secondaire aucun-resultat">Aucun mouvement pour ce compte et cette période.</td></tr>}
-                </tbody>
-              </table></div>
-            </div>
-          )}
-        </>
-      )}
+        )}
+      </AsyncState>
     </section>
   );
 }

@@ -5,21 +5,30 @@ import {
 } from '../services/budgetApi';
 import { listerCentres } from '../services/centreCoutApi';
 import { erreursParChamp, messageErreur } from '../services/api';
-import { montant } from '../utils/format';
+import PageHeader from '../components/ui/PageHeader';
+import AsyncState from '../components/ui/AsyncState';
+import DataTable from '../components/ui/DataTable';
+import SearchToolbar from '../components/ui/SearchToolbar';
+import Amount from '../components/ui/Amount';
+import Field from '../components/ui/Field';
+import Combobox from '../components/ui/Combobox';
+import Button from '../components/ui/Button';
+import CrudModal from '../components/ui/CrudModal';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
 import MessageErreur from '../components/MessageErreur';
-import Chargement from '../components/Chargement';
 import Icone from '../components/Icone';
+import { useToast } from '../components/ui/ToastRegion';
 
 const ANNEE_COURANTE = new Date().getFullYear();
 
 export default function Budgets() {
   const { utilisateur } = useAuth();
+  const { showToast } = useToast();
 
   const [budgets, setBudgets] = useState([]);
   const [centres, setCentres] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState('');
-  const [succes, setSucces] = useState('');
   const [recherche, setRecherche] = useState('');
   const [filtreAnnee, setFiltreAnnee] = useState('');
 
@@ -103,8 +112,7 @@ export default function Budgets() {
     e.preventDefault();
     if (!validerFormulaire()) return;
     setChargementAction(true);
-    setErreur('');
-    setSucces('');
+    setErreurModale('');
     try {
       const payload = {
         annee: Number(formulaire.annee),
@@ -114,11 +122,11 @@ export default function Budgets() {
       if (elementEnCours) {
         const modifie = await modifierBudget(elementEnCours.id, payload);
         setBudgets(prev => prev.map(b => b.id === modifie.id ? modifie : b));
-        setSucces(`Budget ${modifie.annee} du centre « ${modifie.codeCenter} » mis à jour.`);
+        showToast(`Budget ${modifie.annee} du centre « ${modifie.codeCenter} » mis à jour.`);
       } else {
         const cree = await creerBudget(payload);
         setBudgets(prev => [...prev, cree]);
-        setSucces(`Budget ${cree.annee} du centre « ${cree.codeCenter} » créé avec succès.`);
+        showToast(`Budget ${cree.annee} du centre « ${cree.codeCenter} » créé avec succès.`);
       }
       setModaleOuverte(false);
     } catch (err) {
@@ -132,15 +140,13 @@ export default function Budgets() {
   async function confirmerSuppression() {
     if (!elementASupprimer) return;
     setChargementAction(true);
-    setErreur('');
-    setSucces('');
     try {
       await supprimerBudget(elementASupprimer.id);
       setBudgets(prev => prev.filter(b => b.id !== elementASupprimer.id));
-      setSucces(`Budget ${elementASupprimer.annee} supprimé avec succès.`);
+      showToast(`Budget ${elementASupprimer.annee} supprimé avec succès.`);
       setElementASupprimer(null);
     } catch (err) {
-      setErreur(messageErreur(err));
+      showToast(messageErreur(err), 'error');
       setElementASupprimer(null);
     } finally {
       setChargementAction(false);
@@ -167,58 +173,62 @@ export default function Budgets() {
     [donneesFiltrees]
   );
 
+  const colonnes = [
+    { key: 'codeCenter', label: 'Centre de coûts', sortable: true, render: (b) => <code className="badge-code">{b.codeCenter}</code> },
+    { key: 'libelleCenter', label: 'Libellé', sortable: true },
+    { key: 'annee', label: 'Année', sortable: true, render: (b) => <span className="chiffres">{b.annee}</span> },
+    { key: 'montantPrevu', label: 'Montant prévu (MAD)', numeric: true, sortable: true, render: (b) => <strong><Amount value={b.montantPrevu} /></strong> },
+  ];
+  if (peutModifier) {
+    colonnes.push({
+      key: 'actions',
+      label: 'Actions',
+      render: (b) => (
+        <div className="actions-cell">
+          <button type="button" className="btn-action" onClick={() => ouvrirModification(b)} title="Modifier" aria-label="Modifier"><Icone nom="editer" taille={16} /></button>
+          <button type="button" className="btn-action btn-action-supprimer" onClick={() => setElementASupprimer(b)} title="Supprimer" aria-label="Supprimer"><Icone nom="supprimer" taille={16} /></button>
+        </div>
+      ),
+    });
+  }
+
   return (
     <section>
-      <header className="entete-page">
-        <div>
-          <h1>Budgets CO</h1>
-          <p className="texte-secondaire">
-            Budgets prévisionnels par centre de coûts et par exercice.
-          </p>
-        </div>
-        {peutModifier && (
-          <button type="button" className="btn btn-primaire" onClick={ouvrirCreation} disabled={centres.length === 0}>
+      <PageHeader
+        title="Budgets CO"
+        description="Budgets prévisionnels par centre de coûts et par exercice."
+        actions={peutModifier ? (
+          <Button type="button" onClick={ouvrirCreation} disabled={centres.length === 0}>
             <Icone nom="plus" taille={18} /> Nouveau budget
-          </button>
-        )}
-      </header>
+          </Button>
+        ) : undefined}
+      />
 
-      {succes && <p className="message-succes" role="status">{succes}</p>}
-      <MessageErreur message={erreur} onRetry={chargerDonnees} />
-
-      {chargement ? (
-        <Chargement />
-      ) : budgets.length === 0 ? (
-        <div className="panneau vide">
-          <Icone nom="centres" taille={36} />
-          <p><strong>Aucun budget défini.</strong></p>
-          <p className="texte-secondaire">
-            Définissez des budgets prévisionnels pour chaque centre de coûts et exercice.
-          </p>
-          {peutModifier && centres.length > 0 && (
-            <button type="button" className="btn btn-primaire" onClick={ouvrirCreation}>
-              Créer le premier budget
-            </button>
-          )}
-          {centres.length === 0 && (
-            <p className="texte-secondaire texte-aide-budget">
-              Créez d'abord des centres de coûts pour pouvoir leur affecter un budget.
-            </p>
-          )}
+      <AsyncState
+        loading={chargement}
+        error={erreur}
+        onRetry={chargerDonnees}
+        empty={!chargement && !erreur && budgets.length === 0}
+        emptyTitle="Aucun budget défini."
+        emptyDescription={centres.length === 0
+          ? 'Créez d\'abord des centres de coûts pour pouvoir leur affecter un budget.'
+          : 'Définissez des budgets prévisionnels pour chaque centre de coûts et exercice.'}
+        emptyAction={peutModifier && centres.length > 0
+          ? <Button type="button" onClick={ouvrirCreation}>Créer le premier budget</Button>
+          : undefined}
+      >
+        <div className="carte-resume">
+          <div className="carte-resume-item"><small>Budgets affichés</small>{donneesFiltrees.length}</div>
+          <div className="carte-resume-item accent"><small>Total prévu</small><Amount value={totalPrevu} /></div>
         </div>
-      ) : (
+
         <div className="panneau">
-          <div className="barre-outils">
-            <label className="recherche">
-              <Icone nom="recherche" taille={18} />
-              <input
-                type="search"
-                placeholder="Rechercher par code ou libellé de centre..."
-                value={recherche}
-                onChange={e => setRecherche(e.target.value)}
-                aria-label="Rechercher"
-              />
-            </label>
+          <SearchToolbar
+            value={recherche}
+            onChange={setRecherche}
+            placeholder="Rechercher par code ou libellé de centre…"
+            resultCount={`${donneesFiltrees.length} budget${donneesFiltrees.length > 1 ? 's' : ''}`}
+          >
             <select
               className="input filtre-annee"
               value={filtreAnnee}
@@ -230,192 +240,89 @@ export default function Budgets() {
                 <option key={a} value={a}>{a}</option>
               ))}
             </select>
-            <span className="texte-secondaire">
-              {donneesFiltrees.length} budget{donneesFiltrees.length > 1 ? 's' : ''} · Total : {montant(totalPrevu)} MAD
-            </span>
-          </div>
-
-          <div className="defilement">
-            <table className="tableau">
-              <thead>
-                <tr>
-                  <th>Centre de coûts</th>
-                  <th>Libellé</th>
-                  <th>Année</th>
-                  <th className="num">Montant prévu (MAD)</th>
-                  {peutModifier && <th className="cell-actions">Actions</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {donneesFiltrees.map(b => (
-                  <tr key={b.id}>
-                    <td><code className="badge-code">{b.codeCenter}</code></td>
-                    <td>{b.libelleCenter}</td>
-                    <td className="chiffres">{b.annee}</td>
-                    <td className="num chiffres montant-fort">{montant(b.montantPrevu)}</td>
-                    {peutModifier && (
-                      <td className="cell-actions">
-                        <div className="actions-cell">
-                          <button
-                            type="button"
-                            className="btn-action"
-                            onClick={() => ouvrirModification(b)}
-                            title="Modifier"
-                          >
-                            <Icone nom="editer" taille={16} />
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-action btn-action-supprimer"
-                            onClick={() => setElementASupprimer(b)}
-                            title="Supprimer"
-                          >
-                            <Icone nom="supprimer" taille={16} />
-                          </button>
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-                {donneesFiltrees.length === 0 && (
-                  <tr>
-                    <td colSpan={peutModifier ? 5 : 4} className="texte-secondaire aucun-resultat">
-                      Aucun résultat pour les filtres sélectionnés.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-              {donneesFiltrees.length > 0 && (
-                <tfoot>
-                  <tr>
-                    <td colSpan={3}><strong>Total affiché</strong></td>
-                    <td className="num chiffres montant-fort"><strong>{montant(totalPrevu)}</strong></td>
-                    {peutModifier && <td />}
-                  </tr>
-                </tfoot>
-              )}
-            </table>
-          </div>
+          </SearchToolbar>
+          <DataTable columns={colonnes} rows={donneesFiltrees} empty="Aucun résultat pour les filtres sélectionnés." />
         </div>
-      )}
+      </AsyncState>
 
       {/* MODALE CRÉATION / MODIFICATION */}
-      {modaleOuverte && (
-        <div className="modale-fond" onClick={() => setModaleOuverte(false)}>
-          <div className="modale-boite" onClick={e => e.stopPropagation()}>
-            <div className="modale-entete">
-              <h2>{elementEnCours ? 'Modifier le budget' : 'Nouveau budget CO'}</h2>
-              <button type="button" className="bouton-icone" onClick={() => setModaleOuverte(false)} title="Fermer" aria-label="Fermer">
-                <Icone nom="croix" taille={18} />
-              </button>
-            </div>
-            <form onSubmit={enregistrer}>
-              <div className="modale-corps">
-                <MessageErreur message={erreurModale} onFermer={() => setErreurModale('')} />
-                <div className="champ">
-                  <label className="champ-label" htmlFor="budget-centre">
-                    Centre de coûts <span className="obligatoire">*</span>
-                  </label>
-                  <select
-                    id="budget-centre"
-                    className={`input ${erreursChamps.centreCoutId ? 'input-erreur' : ''}`}
-                    value={formulaire.centreCoutId}
-                    onChange={e => setFormulaire({ ...formulaire, centreCoutId: e.target.value })}
-                    required
-                  >
-                    <option value="">— Sélectionner un centre —</option>
-                    {centres.map(c => (
-                      <option key={c.id} value={c.id}>{c.code} — {c.libelle}</option>
-                    ))}
-                  </select>
-                  {erreursChamps.centreCoutId && <span className="champ-erreur">{erreursChamps.centreCoutId}</span>}
-                </div>
-
-                <div className="champ">
-                  <label className="champ-label" htmlFor="budget-annee">
-                    Année <span className="obligatoire">*</span>
-                  </label>
-                  <input
-                    id="budget-annee"
-                    type="number"
-                    min="2000"
-                    max="2099"
-                    className={`input ${erreursChamps.annee ? 'input-erreur' : ''}`}
-                    value={formulaire.annee}
-                    onChange={e => setFormulaire({ ...formulaire, annee: e.target.value })}
-                    required
-                  />
-                  {erreursChamps.annee && <span className="champ-erreur">{erreursChamps.annee}</span>}
-                </div>
-
-                <div className="champ">
-                  <label className="champ-label" htmlFor="budget-montant">
-                    Montant prévu (MAD) <span className="obligatoire">*</span>
-                  </label>
-                  <input
-                    id="budget-montant"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    className={`input ${erreursChamps.montantPrevu ? 'input-erreur' : ''}`}
-                    value={formulaire.montantPrevu}
-                    onChange={e => setFormulaire({ ...formulaire, montantPrevu: e.target.value })}
-                    placeholder="Ex. 500000"
-                    required
-                  />
-                  {erreursChamps.montantPrevu && <span className="champ-erreur">{erreursChamps.montantPrevu}</span>}
-                  <span className="champ-aide">Montant prévisionnel annuel pour ce centre (≥ 0, 2 décimales max). Un seul budget par centre et par année ; le budget d'un exercice clôturé est figé.</span>
-                </div>
-              </div>
-
-              <div className="modale-pied">
-                <button type="button" className="btn btn-secondaire" onClick={() => setModaleOuverte(false)} disabled={chargementAction}>
-                  Annuler
-                </button>
-                <button type="submit" className="btn btn-primaire" disabled={chargementAction}>
-                  {chargementAction ? 'Enregistrement...' : elementEnCours ? 'Mettre à jour' : 'Créer'}
-                </button>
-              </div>
-            </form>
+      <CrudModal
+        open={modaleOuverte}
+        onOpenChange={setModaleOuverte}
+        title={elementEnCours ? 'Modifier le budget' : 'Nouveau budget CO'}
+        footer={(
+          <>
+            <Button variant="secondary" type="button" onClick={() => setModaleOuverte(false)} disabled={chargementAction}>
+              Annuler
+            </Button>
+            <Button type="submit" form="formulaire-budget" loading={chargementAction} disabled={centres.length === 0}>
+              {chargementAction ? 'Enregistrement…' : elementEnCours ? 'Mettre à jour' : 'Créer'}
+            </Button>
+          </>
+        )}
+      >
+        <MessageErreur message={erreurModale} onFermer={() => setErreurModale('')} />
+        <form id="formulaire-budget" className="pile" onSubmit={enregistrer}>
+          <Combobox
+            id="budget-centre"
+            label="Centre de coûts"
+            options={centres.map(c => ({ value: String(c.id), label: `${c.code} — ${c.libelle}` }))}
+            value={formulaire.centreCoutId}
+            onChange={(v) => setFormulaire({ ...formulaire, centreCoutId: v })}
+            placeholder="Sélectionner un centre"
+            required
+            error={erreursChamps.centreCoutId}
+            hint={centres.length === 0 ? 'Créez d\'abord des centres de coûts dans l\'espace Centres de coûts.' : undefined}
+          />
+          <div className="grille-formulaire">
+            <Field id="budget-annee" label="Année" required error={erreursChamps.annee}>
+              {(p) => (
+                <input
+                  className="input"
+                  type="number"
+                  min="2000"
+                  max="2099"
+                  value={formulaire.annee}
+                  onChange={e => setFormulaire({ ...formulaire, annee: e.target.value })}
+                  {...p}
+                />
+              )}
+            </Field>
+            <Field
+              id="budget-montant"
+              label="Montant prévu (MAD)"
+              required
+              error={erreursChamps.montantPrevu}
+              hint="Montant prévisionnel annuel pour ce centre (≥ 0, 2 décimales max). Un seul budget par centre et par année ; le budget d'un exercice clôturé est figé."
+            >
+              {(p) => (
+                <input
+                  className="input"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="Ex. 500000"
+                  value={formulaire.montantPrevu}
+                  onChange={e => setFormulaire({ ...formulaire, montantPrevu: e.target.value })}
+                  {...p}
+                />
+              )}
+            </Field>
           </div>
-        </div>
-      )}
+        </form>
+      </CrudModal>
 
       {/* MODALE SUPPRESSION */}
-      {elementASupprimer && (
-        <div className="modale-fond" onClick={() => setElementASupprimer(null)}>
-          <div className="modale-boite" onClick={e => e.stopPropagation()}>
-            <div className="modale-entete">
-              <h2>Confirmer la suppression</h2>
-              <button type="button" className="bouton-icone" onClick={() => setElementASupprimer(null)} aria-label="Fermer">
-                <Icone nom="croix" taille={18} />
-              </button>
-            </div>
-            <div className="modale-corps">
-              <p>
-                Êtes-vous sûr de vouloir supprimer le budget <strong>« {elementASupprimer.annee} »</strong>{' '}
-                du centre <strong>« {elementASupprimer.codeCenter} »</strong> ?
-              </p>
-              <p className="texte-secondaire texte-suppression">
-                Cette action est irréversible.
-              </p>
-            </div>
-            <div className="modale-pied">
-              <button type="button" className="btn btn-secondaire" onClick={() => setElementASupprimer(null)} disabled={chargementAction}>
-                Annuler
-              </button>
-              <button
-                type="button"
-                className="btn btn-danger"
-                onClick={confirmerSuppression}
-                disabled={chargementAction}
-              >
-                {chargementAction ? 'Suppression...' : 'Supprimer définitivement'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={Boolean(elementASupprimer)}
+        onOpenChange={(o) => !o && setElementASupprimer(null)}
+        title="Confirmer la suppression"
+        description={elementASupprimer ? `Êtes-vous sûr de vouloir supprimer le budget « ${elementASupprimer.annee} » du centre « ${elementASupprimer.codeCenter} » ? Cette action est irréversible.` : ''}
+        confirmLabel="Supprimer définitivement"
+        danger
+        loading={chargementAction}
+        onConfirm={confirmerSuppression}
+      />
     </section>
   );
 }

@@ -51,20 +51,20 @@ export default function Balance({ debit = 0, credit = 0, compacte = false, inver
       <svg viewBox="0 0 220 150" aria-hidden="true">
         <defs>
           <linearGradient id={`${id}-metal`} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stopColor="#221D16" />
-            <stop offset="1" stopColor="#221D16" />
+            <stop offset="0" stopColor="var(--encre)" />
+            <stop offset="1" stopColor="var(--encre)" />
           </linearGradient>
           <linearGradient id={`${id}-colonne`} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stopColor="#221D16" />
-            <stop offset="0.5" stopColor="#221D16" stopOpacity="0.72" />
-            <stop offset="1" stopColor="#221D16" />
+            <stop offset="0" stopColor="var(--encre)" />
+            <stop offset="0.5" stopColor="var(--encre)" stopOpacity="0.72" />
+            <stop offset="1" stopColor="var(--encre)" />
           </linearGradient>
           <radialGradient id={`${id}-coupe`} cx="0.5" cy="0.2" r="0.9">
             <stop offset="0" className="coupe-clair" />
             <stop offset="1" className="coupe-fonce" />
           </radialGradient>
           <filter id={`${id}-ombre`} x="-20%" y="-20%" width="140%" height="160%">
-            <feDropShadow dx="2" dy="2" stdDeviation="0" floodColor="#221D16" floodOpacity="0.9" />
+            <feDropShadow dx="2" dy="2" stdDeviation="0" floodColor="var(--encre)" floodOpacity="0.9" />
           </filter>
         </defs>
 
