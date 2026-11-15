@@ -1,6 +1,7 @@
 package com.finco.repository;
 
 import com.finco.entity.Utilisateur;
+import com.finco.entity.enums.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -17,4 +18,7 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> 
     boolean existsByEmail(String email);
 
     List<Utilisateur> findAllByOrderByNomAscPrenomAsc();
+
+    /** Utilisateurs actifs d'un rôle donné — cible des notifications par rôle. */
+    List<Utilisateur> findByRoleAndActifTrue(Role role);
 }

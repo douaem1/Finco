@@ -8,13 +8,19 @@ import com.finco.entity.Facture;
 import com.finco.entity.Paiement;
 import com.finco.entity.Utilisateur;
 import com.finco.entity.enums.ModePaiement;
+import com.finco.entity.enums.Role;
 import com.finco.entity.enums.StatutFacture;
+import com.finco.exception.ConflitMetierException;
 import com.finco.exception.RegleMetierException;
 import com.finco.exception.RessourceIntrouvableException;
+import com.finco.notification.NotificationEvenement;
+import com.finco.notification.SeveriteNotification;
+import com.finco.notification.TypeNotification;
 import com.finco.repository.AllocationPaiementRepository;
 import com.finco.repository.FactureRepository;
 import com.finco.repository.PaiementRepository;
 import com.finco.repository.UtilisateurRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Isolation;
@@ -23,6 +29,8 @@ import java.util.List;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.ArrayList;
@@ -34,19 +42,24 @@ import java.util.LinkedHashMap;
 @Service
 @Transactional
 public class PaiementDirectionService {
+    private static final DateTimeFormatter FORMAT_DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
     private final PaiementRepository paiementRepository;
     private final AllocationPaiementRepository allocationRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final FactureRepository factureRepository;
+    private final ApplicationEventPublisher evenementPublisher;
 
     public PaiementDirectionService(PaiementRepository paiementRepository,
                                     AllocationPaiementRepository allocationRepository,
                                     UtilisateurRepository utilisateurRepository,
-                                    FactureRepository factureRepository) {
+                                    FactureRepository factureRepository,
+                                    ApplicationEventPublisher evenementPublisher) {
         this.paiementRepository = paiementRepository;
         this.allocationRepository = allocationRepository;
         this.utilisateurRepository = utilisateurRepository;
         this.factureRepository = factureRepository;
+        this.evenementPublisher = evenementPublisher;
     }
 
     @Transactional(readOnly = true)
@@ -106,6 +119,15 @@ public class PaiementDirectionService {
                         facturesSelectionnees.get(a.factureId())))
                 .toList();
         allocationRepository.saveAll(allocations);
+        evenementPublisher.publishEvent(new NotificationEvenement(
+                TypeNotification.PAIEMENT_A_VALIDER,
+                SeveriteNotification.WARNING,
+                "Un paiement de " + montant(total) + " MAD attend votre validation.",
+                "/validation-paiements",
+                "PAIEMENT",
+                paiement.getId(),
+                null,
+                List.of(NotificationEvenement.Cible.role(Role.DIRECTEUR_FINANCIER))));
         return PaiementDirectionResponse.depuis(paiement, allocations);
     }
 
@@ -128,6 +150,7 @@ public class PaiementDirectionService {
                     .orElseThrow(() -> new RessourceIntrouvableException("Valideur introuvable."));
             paiement.setValidePar(valideur);
             paiementRepository.save(paiement);
+            List<Facture> facturesPayees = new ArrayList<>();
             for (int i = 0; i < allocations.size(); i++) {
                 AllocationPaiement allocation = allocations.get(i);
                 Facture facture = facturesVerrouillees.get(allocation.getFacture().getId());
@@ -137,8 +160,65 @@ public class PaiementDirectionService {
                 BigDecimal totalPaye = montantsDejaPayes.get(i).add(allocation.getMontantAffecte());
                 facture.setStatut(totalPaye.compareTo(facture.calculerTTC()) >= 0
                         ? StatutFacture.PAYEE : StatutFacture.VALIDEE);
+                if (facture.getStatut() == StatutFacture.PAYEE) {
+                    facturesPayees.add(facture);
+                }
+            }
+            evenementPublisher.publishEvent(new NotificationEvenement(
+                    TypeNotification.PAIEMENT_VALIDE,
+                    SeveriteNotification.INFO,
+                    "Votre paiement du " + paiement.getDatePaiement().format(FORMAT_DATE)
+                            + " (" + montant(paiement.getMontant()) + " MAD) a été validé.",
+                    "/paiements",
+                    "PAIEMENT",
+                    paiement.getId(),
+                    valideur.getId(),
+                    List.of(NotificationEvenement.Cible.role(Role.COMPTABLE))));
+            for (Facture facture : facturesPayees) {
+                evenementPublisher.publishEvent(new NotificationEvenement(
+                        TypeNotification.FACTURE_PAYEE,
+                        SeveriteNotification.INFO,
+                        "La facture " + facture.getNumero() + " est payée ("
+                                + montant(facture.calculerTTC()) + " MAD).",
+                        "/factures",
+                        "FACTURE",
+                        facture.getId(),
+                        valideur.getId(),
+                        List.of(NotificationEvenement.Cible.role(Role.COMPTABLE))));
             }
         }
+        return PaiementDirectionResponse.depuis(paiement, allocations(paiement));
+    }
+
+    /**
+     * Rejet d'un paiement par la direction financière. Aucune écriture comptable n'est
+     * générée : les factures liées conservent leur statut précédent.
+     */
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public PaiementDirectionResponse rejeter(Long id, String motif, String email) {
+        Paiement paiement = paiementRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new RessourceIntrouvableException("Paiement introuvable (id = " + id + ")."));
+        if (paiement.getValidePar() != null) {
+            throw new ConflitMetierException("Ce paiement est déjà validé : il ne peut plus être rejeté.");
+        }
+        if (paiement.getRejetePar() != null) {
+            throw new ConflitMetierException("Ce paiement a déjà été rejeté.");
+        }
+        Utilisateur rejeteur = utilisateurRepository.findByEmail(email)
+                .orElseThrow(() -> new RessourceIntrouvableException("Rejeteur introuvable."));
+        paiement.setMotifRejet(motif);
+        paiement.setDateRejet(LocalDateTime.now());
+        paiement.setRejetePar(rejeteur);
+        paiementRepository.save(paiement);
+        evenementPublisher.publishEvent(new NotificationEvenement(
+                TypeNotification.PAIEMENT_REJETE,
+                SeveriteNotification.CRITICAL,
+                "Paiement rejeté : " + motif + ".",
+                "/paiements",
+                "PAIEMENT",
+                paiement.getId(),
+                rejeteur.getId(),
+                List.of(NotificationEvenement.Cible.role(Role.COMPTABLE))));
         return PaiementDirectionResponse.depuis(paiement, allocations(paiement));
     }
 
@@ -160,5 +240,10 @@ public class PaiementDirectionService {
 
     private List<AllocationPaiement> allocations(Paiement paiement) {
         return allocationRepository.findAllByPaiementIdWithFacture(paiement.getId());
+    }
+
+    /** Montant lisible pour un message de notification, ex. "1000.00". */
+    private String montant(BigDecimal valeur) {
+        return valeur == null ? "0" : valeur.setScale(2, RoundingMode.HALF_UP).toPlainString();
     }
 }

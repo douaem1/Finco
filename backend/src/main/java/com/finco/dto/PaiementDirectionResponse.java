@@ -5,6 +5,7 @@ import com.finco.entity.Paiement;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record PaiementDirectionResponse(
@@ -14,6 +15,10 @@ public record PaiementDirectionResponse(
         String mode,
         boolean valide,
         String validePar,
+        boolean rejete,
+        String motifRejet,
+        LocalDateTime dateRejet,
+        String rejetePar,
         List<FacturePaiementResponse> factures
 ) {
     public static PaiementDirectionResponse depuis(Paiement paiement, List<AllocationPaiement> allocations) {
@@ -24,6 +29,10 @@ public record PaiementDirectionResponse(
                 paiement.getMode().name(),
                 paiement.getValidePar() != null,
                 paiement.getValidePar() == null ? null : paiement.getValidePar().getNomComplet(),
+                paiement.getRejetePar() != null,
+                paiement.getMotifRejet(),
+                paiement.getDateRejet(),
+                paiement.getRejetePar() == null ? null : paiement.getRejetePar().getNomComplet(),
                 allocations.stream().map(FacturePaiementResponse::depuis).toList());
     }
 

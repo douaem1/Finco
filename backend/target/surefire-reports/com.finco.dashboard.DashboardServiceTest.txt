@@ -1,8 +1,8 @@
 -------------------------------------------------------------------------------
 Test set: com.finco.dashboard.DashboardServiceTest
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.718 s <<< FAILURE! -- in com.finco.dashboard.DashboardServiceTest
-com.finco.dashboard.DashboardServiceTest.controleurCalculeEcartEtConsommationAvecDouzeMois -- Time elapsed: 0.712 s <<< ERROR!
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.855 s <<< FAILURE! -- in com.finco.dashboard.DashboardServiceTest
+com.finco.dashboard.DashboardServiceTest.controleurCalculeEcartEtConsommationAvecDouzeMois -- Time elapsed: 0.847 s <<< ERROR!
 org.mockito.exceptions.misusing.UnnecessaryStubbingException: 
 
 Unnecessary stubbings detected.

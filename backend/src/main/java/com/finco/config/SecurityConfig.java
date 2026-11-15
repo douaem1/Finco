@@ -81,6 +81,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/paiements/**").hasAnyRole("COMPTABLE", "DIRECTEUR_FINANCIER")
                         .requestMatchers(HttpMethod.POST, "/api/paiements/**").hasRole("COMPTABLE")
                         .requestMatchers(HttpMethod.PUT, "/api/paiements/*/valider").hasRole("DIRECTEUR_FINANCIER")
+                        .requestMatchers(HttpMethod.PATCH, "/api/paiements/*/rejeter").hasRole("DIRECTEUR_FINANCIER")
 
                         // Module CONTRÔLE DE GESTION (CONTROLEUR uniquement) :
                         // Écriture centres de coûts (CUD)

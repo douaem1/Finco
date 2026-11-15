@@ -470,6 +470,9 @@ input[type='number'].input::-webkit-inner-spin-button { -webkit-appearance: none
 .notification-element { display: flex; gap: 12px; padding: 11px 12px; border-radius: var(--radius-md); cursor: pointer; outline: none; }
 .notification-element:hover, .notification-element:focus-visible { background: var(--creme); }
 .notification-icone { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 9px; background: var(--sarcelle-pale); color: var(--lien); }
+.notification-icone-info { background: var(--sarcelle-pale); color: var(--lien); }
+.notification-icone-warning { background: var(--jaune-pale); color: var(--avertissement-texte); }
+.notification-icone-critical { background: var(--corail-pale); color: var(--danger-texte); }
 .notification-texte { display: grid; gap: 1px; flex: 1; min-width: 0; }
 .notification-texte strong { font-size: .86rem; font-weight: 600; }
 .notification-texte small { overflow: hidden; color: var(--muet); font-size: .8rem; text-overflow: ellipsis; white-space: nowrap; }

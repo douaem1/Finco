@@ -4,12 +4,17 @@ import com.finco.dto.ExerciceRequest;
 import com.finco.dto.ExerciceResponse;
 import com.finco.entity.Exercice;
 import com.finco.entity.Societe;
+import com.finco.entity.enums.Role;
 import com.finco.exception.ConflitMetierException;
 import com.finco.exception.RegleMetierException;
 import com.finco.exception.RessourceIntrouvableException;
+import com.finco.notification.NotificationEvenement;
+import com.finco.notification.SeveriteNotification;
+import com.finco.notification.TypeNotification;
 import com.finco.repository.ExerciceRepository;
 import com.finco.repository.PieceComptableRepository;
 import com.finco.repository.SocieteRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,13 +44,16 @@ public class ExerciceService {
     private final ExerciceRepository exerciceRepository;
     private final PieceComptableRepository pieceComptableRepository;
     private final SocieteRepository societeRepository;
+    private final ApplicationEventPublisher evenementPublisher;
 
     public ExerciceService(ExerciceRepository exerciceRepository,
                            PieceComptableRepository pieceComptableRepository,
-                           SocieteRepository societeRepository) {
+                           SocieteRepository societeRepository,
+                           ApplicationEventPublisher evenementPublisher) {
         this.exerciceRepository = exerciceRepository;
         this.pieceComptableRepository = pieceComptableRepository;
         this.societeRepository = societeRepository;
+        this.evenementPublisher = evenementPublisher;
     }
 
     @Transactional(readOnly = true)
@@ -105,7 +113,18 @@ public class ExerciceService {
                     + " » contient encore des pièces en brouillon : validez-les avant la clôture.");
         }
         ex.setCloture(true);
-        return ExerciceResponse.de(exerciceRepository.save(ex));
+        ExerciceResponse reponse = ExerciceResponse.de(exerciceRepository.save(ex));
+        evenementPublisher.publishEvent(new NotificationEvenement(
+                TypeNotification.EXERCICE_CLOTURE,
+                SeveriteNotification.INFO,
+                "L'exercice " + ex.getAnnee() + " est clôturé : plus aucune saisie.",
+                "/exercices",
+                "EXERCICE",
+                ex.getId(),
+                null,
+                List.of(NotificationEvenement.Cible.role(Role.CONTROLEUR),
+                        NotificationEvenement.Cible.role(Role.DIRECTEUR_FINANCIER))));
+        return reponse;
     }
 
     public void delete(Long id) {

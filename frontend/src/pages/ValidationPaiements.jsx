@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { listerPaiements, validerPaiement } from '../services/paiementApi';
+import { listerPaiements, validerPaiement, rejeterPaiement } from '../services/paiementApi';
 import { messageErreur } from '../services/api';
 import { dateFr, montant } from '../utils/format';
 import PageHeader from '../components/ui/PageHeader';
@@ -54,14 +54,24 @@ export default function ValidationPaiements() {
     setMotifRejet('');
   }
 
-  function confirmerRejet() {
-    if (!rejetEnCours || !motifRejet.trim()) return;
-    showToast('Le rejet des paiements n’est pas disponible : aucun service de rejet n’est déclaré.', 'error');
-    setRejetEnCours(null);
-    setMotifRejet('');
+  async function confirmerRejet() {
+    const motif = motifRejet.trim();
+    if (!rejetEnCours || motif.length < 5) return;
+    setAction(rejetEnCours.id);
+    try {
+      await rejeterPaiement(rejetEnCours.id, motif);
+      showToast('Paiement rejeté.');
+      setRejetEnCours(null);
+      setMotifRejet('');
+      await chargerDonnees();
+    } catch (e) {
+      showToast(messageErreur(e), 'error');
+    } finally {
+      setAction(null);
+    }
   }
 
-  const enAttente = paiements.filter((p) => !p.valide);
+  const enAttente = paiements.filter((p) => !p.valide && !p.rejete);
 
   const colonnes = [
     { key: 'datePaiement', label: 'Date', sortable: true, render: (p) => <span className="chiffres">{dateFr(p.datePaiement)}</span> },
@@ -76,13 +86,22 @@ export default function ValidationPaiements() {
     },
     { key: 'mode', label: 'Mode' },
     { key: 'montant', label: 'Montant', numeric: true, sortable: true, render: (p) => <strong><Amount value={p.montant} /></strong> },
-    { key: 'valide', label: 'Statut', render: (p) => <StatusBadge status={p.valide ? 'VALIDEE' : 'BROUILLON'} label={p.valide ? 'Validé' : 'À valider'} /> },
+    {
+      key: 'valide',
+      label: 'Statut',
+      render: (p) => {
+        if (p.valide) return <StatusBadge status="VALIDEE" label="Validé" />;
+        if (p.rejete) return <StatusBadge status="REJETEE" label="Rejeté" />;
+        return <StatusBadge status="BROUILLON" label="À valider" />;
+      },
+    },
     {
       key: 'actions',
       label: 'Action',
-      render: (p) => (p.valide
-        ? <span className="texte-secondaire">Par {p.validePar}</span>
-        : (
+      render: (p) => {
+        if (p.valide) return <span className="texte-secondaire">Par {p.validePar}</span>;
+        if (p.rejete) return <span className="texte-secondaire">Rejeté par {p.rejetePar} — {p.motifRejet}</span>;
+        return (
           <div className="actions-cell">
             <Button type="button" onClick={() => approuver(p)} loading={action === p.id} disabled={action !== null}>
               <Icone nom="valide" taille={16} /> Valider
@@ -91,7 +110,8 @@ export default function ValidationPaiements() {
               Rejeter
             </Button>
           </div>
-        )),
+        );
+      },
     },
   ];
 
@@ -123,7 +143,13 @@ export default function ValidationPaiements() {
         footer={(
           <>
             <Button variant="secondary" type="button" onClick={() => setRejetEnCours(null)}>Annuler</Button>
-            <Button variant="danger" type="button" disabled={!motifRejet.trim()} onClick={confirmerRejet}>
+            <Button
+              variant="danger"
+              type="button"
+              loading={action === rejetEnCours?.id}
+              disabled={motifRejet.trim().length < 5}
+              onClick={confirmerRejet}
+            >
               Rejeter
             </Button>
           </>

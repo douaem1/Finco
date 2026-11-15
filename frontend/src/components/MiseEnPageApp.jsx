@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { PAGES, obtenirSectionsMenuPourRole } from '../config/roleAccess';
 import { listerExercices } from '../services/exerciceApi';
+import { useNotifications } from '../hooks/useNotifications';
 import { LogoMarque } from './Logo';
 import Icone from './Icone';
 import MessageErreur from './MessageErreur';
@@ -37,7 +38,7 @@ export default function MiseEnPageApp() {
   const [menuMobileOuvert, setMenuMobileOuvert] = useState(false);
   const [lateralReplie, setLateralReplie] = useState(lireRepli);
   const [exercices, setExercices] = useState([]);
-  const [notifications, setNotifications] = useState([]);
+  const { items: notifications, compteur: notificationsNonLues, chargerListe, marquerLue, toutMarquerLu } = useNotifications();
 
   useEffect(() => {
     if (location.state?.messageAccesRefuse) {
@@ -77,8 +78,13 @@ export default function MiseEnPageApp() {
     navigate('/login', { replace: true });
   }
 
-  function toutMarquerLu() {
-    setNotifications((liste) => liste.map((item) => ({ ...item, lu: true })));
+  function toutMarquerNotificationsLues() {
+    toutMarquerLu();
+  }
+
+  function ouvrirNotification(item) {
+    marquerLue(item.id);
+    if (item.lien) navigate(item.lien);
   }
 
   const sections = useMemo(() => {
@@ -135,7 +141,13 @@ export default function MiseEnPageApp() {
             <strong>{exercice?.annee ?? new Date().getFullYear()}</strong>
             <small>{exercice?.cloture ? 'Clôturée' : 'Ouverte'}</small>
           </div>
-          <NotificationBell items={notifications} onToutMarquerLu={toutMarquerLu} />
+          <NotificationBell
+            items={notifications}
+            compteur={notificationsNonLues}
+            onOuvrir={chargerListe}
+            onToutMarquerLu={toutMarquerNotificationsLues}
+            onOuvrirNotification={ouvrirNotification}
+          />
           <UserMenu utilisateur={utilisateur} role={role} onLogout={quitter} />
         </div>
       </header>

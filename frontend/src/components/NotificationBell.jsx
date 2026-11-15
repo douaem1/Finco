@@ -1,14 +1,16 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import Icone from './Icone';
 
-/** Icône affichée selon le type de notification (donnée fournie par l'appelant). */
-const ICONES_TYPE = {
-  piece: 'journal',
-  facture: 'factures',
-  paiement: 'paiements',
-  alerte: 'valide',
-  info: 'rapport',
+/**
+ * Apparence de chaque sévérité : icône + libellé accessible + classe de couleur.
+ * La couleur n'est jamais le seul indicateur (icône + libellé « visuellement caché »).
+ */
+const SEVERITES = {
+  INFO: { icone: 'rapport', libelle: 'Information', classe: 'notification-icone-info' },
+  WARNING: { icone: 'horloge', libelle: 'Avertissement', classe: 'notification-icone-warning' },
+  CRITICAL: { icone: 'croix', libelle: 'Critique', classe: 'notification-icone-critical' },
 };
+const SEVERITE_DEFAUT = SEVERITES.INFO;
 
 function tempsRelatif(iso) {
   if (!iso) return '';
@@ -26,17 +28,23 @@ function tempsRelatif(iso) {
 }
 
 /**
- * Cloche de notifications. Les données arrivent par `items` afin qu'une source
- * réelle puisse être branchée plus tard sans changer le composant.
+ * Cloche de notifications alimentée par `items` (données réelles) et `compteur`.
  *
- * item = { id, type, titre, texte, date, lu }
+ * item = { id, type, severite, titre, texte, date, lien, lu }
  */
-export default function NotificationBell({ items = [], onToutMarquerLu, onOuvrirNotification, ariaLabel = 'Notifications' }) {
-  const nonLues = items.filter((item) => !item.lu).length;
+export default function NotificationBell({
+  items = [],
+  compteur,
+  onOuvrir,
+  onToutMarquerLu,
+  onOuvrirNotification,
+  ariaLabel = 'Notifications',
+}) {
+  const nonLues = typeof compteur === 'number' ? compteur : items.filter((item) => !item.lu).length;
   const badge = nonLues > 9 ? '9+' : String(nonLues);
 
   return (
-    <DropdownMenu.Root>
+    <DropdownMenu.Root onOpenChange={(ouvert) => { if (ouvert) onOuvrir?.(); }}>
       <DropdownMenu.Trigger asChild>
         <button type="button" className="cloche" aria-label={nonLues ? `${ariaLabel} — ${nonLues} non lue${nonLues > 1 ? 's' : ''}` : ariaLabel}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -63,17 +71,21 @@ export default function NotificationBell({ items = [], onToutMarquerLu, onOuvrir
                 <small>Vous êtes à jour.</small>
               </div>
             )}
-            {items.map((item) => (
-              <DropdownMenu.Item key={item.id} className="notification-element" onSelect={() => onOuvrirNotification?.(item)}>
-                <span className="notification-icone" aria-hidden="true"><Icone nom={ICONES_TYPE[item.type] || 'rapport'} taille={18} /></span>
-                <span className="notification-texte">
-                  <strong>{item.titre}</strong>
-                  <small>{item.texte}</small>
-                  <em>{tempsRelatif(item.date)}</em>
-                </span>
-                {!item.lu && <span className="notification-point" aria-label="Non lue" />}
-              </DropdownMenu.Item>
-            ))}
+            {items.map((item) => {
+              const severite = SEVERITES[item.severite] || SEVERITE_DEFAUT;
+              return (
+                <DropdownMenu.Item key={item.id} className="notification-element" onSelect={() => onOuvrirNotification?.(item)}>
+                  <span className={`notification-icone ${severite.classe}`} aria-hidden="true"><Icone nom={severite.icone} taille={18} /></span>
+                  <span className="visuellement-cache">{severite.libelle}</span>
+                  <span className="notification-texte">
+                    <strong>{item.titre}</strong>
+                    <small>{item.texte}</small>
+                    <em>{tempsRelatif(item.date)}</em>
+                  </span>
+                  {!item.lu && <span className="notification-point" aria-label="Non lue" />}
+                </DropdownMenu.Item>
+              );
+            })}
           </div>
         </DropdownMenu.Content>
       </DropdownMenu.Portal>

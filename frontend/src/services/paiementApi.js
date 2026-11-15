@@ -10,6 +10,11 @@ export async function validerPaiement(id) {
   return data;
 }
 
+export async function rejeterPaiement(id, motif) {
+  const { data } = await api.patch(`/paiements/${id}/rejeter`, { motif });
+  return data;
+}
+
 export async function enregistrerPaiement(paiement) {
   const { data } = await api.post('/paiements', paiement);
   return data;

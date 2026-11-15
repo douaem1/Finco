@@ -8,6 +8,10 @@ import com.finco.entity.PieceComptable;
 import com.finco.entity.Utilisateur;
 import com.finco.entity.enums.Role;
 import com.finco.entity.enums.Sens;
+import com.finco.notification.Notification;
+import com.finco.notification.NotificationRepository;
+import com.finco.notification.SeveriteNotification;
+import com.finco.notification.TypeNotification;
 import com.finco.repository.CentreCoutRepository;
 import com.finco.repository.CompteGeneralRepository;
 import com.finco.repository.ExerciceRepository;
@@ -42,6 +46,7 @@ public class DonneesInitiales implements CommandLineRunner {
     private final ExerciceRepository exerciceRepository;
     private final CentreCoutRepository centreCoutRepository;
     private final PieceComptableRepository pieceRepository;
+    private final NotificationRepository notificationRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DonneesInitiales(UtilisateurRepository utilisateurRepository,
@@ -49,12 +54,14 @@ public class DonneesInitiales implements CommandLineRunner {
                             ExerciceRepository exerciceRepository,
                             CentreCoutRepository centreCoutRepository,
                             PieceComptableRepository pieceRepository,
+                            NotificationRepository notificationRepository,
                             PasswordEncoder passwordEncoder) {
         this.utilisateurRepository = utilisateurRepository;
         this.compteRepository = compteRepository;
         this.exerciceRepository = exerciceRepository;
         this.centreCoutRepository = centreCoutRepository;
         this.pieceRepository = pieceRepository;
+        this.notificationRepository = notificationRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -95,6 +102,7 @@ public class DonneesInitiales implements CommandLineRunner {
         garantirCentre("DIR", "Direction", true, new BigDecimal("150.00"));
 
         creerEcrituresDemonstration();
+        creerNotificationsDemonstration();
     }
 
     private void garantirUtilisateur(String nom, String prenom, String email, Role role, String motDePasseHache) {
@@ -160,5 +168,37 @@ public class DonneesInitiales implements CommandLineRunner {
         piece.setUtilisateur(utilisateur);
         piece.setValidee(true);
         return piece;
+    }
+
+    /**
+     * Quelques notifications d'exemple par rôle pour que la cloche soit visible
+     * dès la démonstration. Insérées une seule fois (table vide).
+     */
+    private void creerNotificationsDemonstration() {
+        if (notificationRepository.count() > 0) {
+            return;
+        }
+        notifier("daf@finco.ma", TypeNotification.PAIEMENT_A_VALIDER, SeveriteNotification.WARNING,
+                "Un paiement de 12 500,00 MAD attend votre validation.", "/validation-paiements");
+        notifier("comptable@finco.ma", TypeNotification.FACTURE_PAYEE, SeveriteNotification.INFO,
+                "La facture FAC-DEMO-001 est payée (12 500,00 MAD).", "/factures");
+        notifier("controleur@finco.ma", TypeNotification.EXERCICE_CLOTURE, SeveriteNotification.INFO,
+                "L'exercice 2026 est clôturé : plus aucune saisie.", "/exercices");
+        notifier("daf@finco.ma", TypeNotification.BUDGET_DEPASSE, SeveriteNotification.CRITICAL,
+                "Le centre PROD a dépassé son budget planifié.", "/budgets");
+        log.info("Notifications de démonstration créées.");
+    }
+
+    private void notifier(String email, TypeNotification type, SeveriteNotification severite,
+                          String message, String lien) {
+        utilisateurRepository.findByEmail(email).ifPresent(destinataire -> {
+            Notification notification = new Notification();
+            notification.setDestinataire(destinataire);
+            notification.setType(type);
+            notification.setSeverite(severite);
+            notification.setMessage(message);
+            notification.setLien(lien);
+            notificationRepository.save(notification);
+        });
     }
 }

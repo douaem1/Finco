@@ -5,6 +5,7 @@ com\finco\service\FournisseurService.class
 com\finco\repository\SocieteRepository.class
 com\finco\exception\AuthentificationException.class
 com\finco\entity\Facture.class
+com\finco\notification\NotificationRepository.class
 com\finco\dto\RapportAnalytiqueResponse.class
 com\finco\repository\CentreCoutRepository.class
 com\finco\repository\PaiementRepository.class
@@ -14,6 +15,7 @@ com\finco\service\ClientService.class
 com\finco\entity\Client.class
 com\finco\entity\Imputation.class
 com\finco\repository\TiersRepository.class
+com\finco\notification\NotificationEvenement$Cible.class
 com\finco\entity\enums\TypeFacture.class
 com\finco\repository\ImputationRepository.class
 com\finco\service\CentreCoutService.class
@@ -23,7 +25,9 @@ com\finco\dto\LigneEcritureResponse.class
 com\finco\dto\RapportAnalytiqueResponse$Mois.class
 com\finco\repository\CompteGeneralRepository.class
 com\finco\dto\PieceComptableRequest.class
+com\finco\notification\NotificationService.class
 com\finco\dto\ExerciceResponse.class
+com\finco\notification\NotificationEvenement.class
 com\finco\config\SecurityConfig.class
 com\finco\dto\RenvoiOtpRequest.class
 com\finco\entity\Fournisseur.class
@@ -40,12 +44,15 @@ com\finco\dto\PieceComptableResponse.class
 com\finco\entity\Exercice.class
 com\finco\security\UtilisateurDetailsService.class
 com\finco\service\RapportAnalytiqueService.class
+com\finco\notification\NotificationController.class
 com\finco\security\JwtService.class
 com\finco\controller\ExerciceController.class
 com\finco\dashboard\DashboardService.class
+com\finco\notification\CompteurNotificationsResponse.class
 com\finco\repository\FactureRepository.class
 com\finco\dto\LoginResponse.class
 com\finco\service\OtpService.class
+com\finco\notification\NotificationsPageResponse.class
 com\finco\dto\ImputationRequest.class
 com\finco\entity\enums\StatutFacture.class
 com\finco\repository\LigneEcritureRepository.class
@@ -58,6 +65,7 @@ com\finco\dashboard\dto\ControleurDashboardDto.class
 com\finco\dashboard\dto\AdminDashboardDto.class
 com\finco\dto\PaiementRequest.class
 com\finco\dashboard\dto\DashboardCentre.class
+com\finco\dto\RejetPaiementRequest.class
 com\finco\entity\PieceComptable.class
 com\finco\dto\FournisseurResponse.class
 com\finco\service\PieceComptableService.class
@@ -74,13 +82,16 @@ com\finco\controller\FournisseurController.class
 com\finco\dto\FactureResponse.class
 com\finco\entity\enums\ModePaiement.class
 com\finco\entity\Budget.class
+com\finco\notification\NotificationResponse.class
 com\finco\entity\Societe.class
 com\finco\controller\RapportAnalytiqueController.class
 com\finco\config\DonneesInitiales.class
 com\finco\dto\CompteGeneralResponse.class
 com\finco\entity\CentreCout.class
 com\finco\dashboard\dto\ComptableDashboardDto.class
+com\finco\notification\TypeNotification.class
 com\finco\entity\AllocationPaiementId.class
+com\finco\notification\NotificationListener.class
 com\finco\exception\RessourceIntrouvableException.class
 com\finco\entity\Utilisateur.class
 com\finco\dto\OtpEnvoyeResponse.class
@@ -107,6 +118,7 @@ com\finco\dto\FournisseurRequest.class
 com\finco\exception\GlobalExceptionHandler.class
 com\finco\dto\FactureRequest.class
 com\finco\entity\AllocationPaiement.class
+com\finco\notification\Notification.class
 com\finco\controller\ImputationController.class
 com\finco\service\FactureService.class
 com\finco\repository\AllocationPaiementRepository.class
@@ -123,6 +135,7 @@ com\finco\dto\BudgetRequest.class
 com\finco\dto\ClientResponse.class
 com\finco\controller\CompteGeneralController.class
 com\finco\controller\PaiementController.class
+com\finco\notification\SeveriteNotification.class
 com\finco\dto\RapportAnalytiqueResponse$Centre.class
 com\finco\repository\ClientRepository.class
 com\finco\service\ExerciceService.class
