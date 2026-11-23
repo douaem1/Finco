@@ -22,6 +22,7 @@ function iso(d) {
 
 export default function TableauDeBord() {
   const { utilisateur } = useAuth();
+  const estAdmin = utilisateur?.role === 'ADMIN';
   const [pieces, setPieces] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState('');
@@ -69,7 +70,7 @@ export default function TableauDeBord() {
           <p className="date-du-jour">{dateDuJour}</p>
           <h1>Bonjour {utilisateur?.prenom} 👋</h1>
         </div>
-        {peutSaisir && (
+        {peutSaisir && !estAdmin && (
           <Link to="/pieces/nouvelle" className="btn btn-primaire"><Icone nom="plus" taille={18} /> Nouvelle écriture</Link>
         )}
       </header>
@@ -103,6 +104,21 @@ export default function TableauDeBord() {
               <p className="kpi-note">Définitives</p>
             </article>
           </div>
+
+          {estAdmin && (
+            <nav className="raccourcis-admin" aria-label="Raccourcis d’administration">
+              <Link to="/comptes" className="raccourci-admin">
+                <span className="kpi-icone"><Icone nom="comptes" /></span>
+                <span><strong>Plan comptable</strong><small>Consulter et gérer les comptes</small></span>
+                <Icone nom="fleche" taille={18} />
+              </Link>
+              <Link to="/utilisateurs" className="raccourci-admin">
+                <span className="kpi-icone kpi-icone-vert"><Icone nom="utilisateurs" /></span>
+                <span><strong>Utilisateurs</strong><small>Gérer les accès de l’application</small></span>
+                <Icone nom="fleche" taille={18} />
+              </Link>
+            </nav>
+          )}
 
           <div className="grille-tdb">
             <article className="carte">
@@ -143,7 +159,7 @@ export default function TableauDeBord() {
           <article className="carte">
             <header className="carte-entete">
               <h2>Dernières écritures</h2>
-              <Link to="/pieces" className="lien-fleche">Voir le journal <Icone nom="fleche" taille={16} /></Link>
+              {!estAdmin && <Link to="/pieces" className="lien-fleche">Voir le journal <Icone nom="fleche" taille={16} /></Link>}
             </header>
             {pieces.length === 0 ? (
               <p className="texte-secondaire carte-vide">Aucune écriture pour l’instant.</p>
@@ -151,7 +167,17 @@ export default function TableauDeBord() {
               <ul className="recentes">
                 {pieces.slice(0, 5).map((p) => (
                   <li key={p.id}>
-                    <Link to={`/pieces/${p.id}`}>
+                    {estAdmin ? (
+                      <div className="recentes-ligne">
+                        <span className="recentes-icone"><Icone nom="pieces" taille={18} /></span>
+                        <span className="recentes-texte">
+                          <b>{p.libelle}</b>
+                          <small>{p.numero} · {dateFr(p.dateEcriture)}</small>
+                        </span>
+                        <span className={`statut ${p.validee ? 'statut-validee' : 'statut-brouillon'}`}>{p.validee ? 'Validée' : 'Brouillon'}</span>
+                        <b className="chiffres recentes-montant">{montant(p.totalDebit)} MAD</b>
+                      </div>
+                    ) : <Link to={`/pieces/${p.id}`}>
                       <span className="recentes-icone"><Icone nom="pieces" taille={18} /></span>
                       <span className="recentes-texte">
                         <b>{p.libelle}</b>
@@ -159,7 +185,7 @@ export default function TableauDeBord() {
                       </span>
                       <span className={`statut ${p.validee ? 'statut-validee' : 'statut-brouillon'}`}>{p.validee ? 'Validée' : 'Brouillon'}</span>
                       <b className="chiffres recentes-montant">{montant(p.totalDebit)} MAD</b>
-                    </Link>
+                    </Link>}
                   </li>
                 ))}
               </ul>

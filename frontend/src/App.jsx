@@ -11,6 +11,7 @@ import Exercices from './pages/Exercices.jsx';
 import Budgets from './pages/Budgets.jsx';
 import EspaceDaf from './pages/EspaceDaf.jsx';
 import Utilisateurs from './pages/Utilisateurs.jsx';
+import TableauDeBord from './pages/TableauDeBord.jsx';
 import Factures from './pages/Factures.jsx';
 import Paiements from './pages/Paiements.jsx';
 import GrandLivre from './pages/GrandLivre.jsx';
@@ -58,6 +59,7 @@ export default function App() {
 
           {/* Module Administration (ADMIN) */}
           <Route path="/comptes" element={<PlanComptable />} />
+          <Route path="/admin/tableau-de-bord" element={<TableauDeBord />} />
           <Route path="/utilisateurs" element={<Utilisateurs />} />
 
           {/* Module Direction financière (DIRECTEUR_FINANCIER) */}

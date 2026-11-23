@@ -13,6 +13,7 @@ const TRACES = {
   editer: <><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" /></>,
   supprimer: <><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6" /></>,
   croix: <><path d="M18 6L6 18M6 6l12 12" /></>,
+  menu: <><path d="M4 6h16M4 12h16M4 18h16" /></>,
   sortie: <><path d="M10 4.5H6.5a2 2 0 00-2 2v11a2 2 0 002 2H10" /><path d="M15 16l4-4-4-4M19 12H9.5" /></>,
   recherche: <><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.3-4.3" /></>,
   valide: <><circle cx="12" cy="12" r="8.5" /><path d="M8.2 12.3l2.5 2.5 5-5.3" /></>,

@@ -13,7 +13,7 @@
   background: var(--creme); border-bottom: var(--trait);
   transition: background-color 0.25s ease-out, box-shadow 0.25s ease-out;
 }
-.ac-nav-defile { background: rgba(251, 246, 236, 0.78); backdrop-filter: blur(14px) saturate(1.2); box-shadow: 0 10px 24px -20px rgba(34, 29, 22, 0.6); }
+.ac-nav-defile { background: rgba(245, 244, 239, 0.88); backdrop-filter: blur(14px) saturate(1.1); box-shadow: 0 10px 24px -20px rgba(32, 51, 46, 0.35); }
 .ac-nav-logo { text-decoration: none; }
 .ac-nav-liens { display: flex; gap: 30px; flex: 1; }
 .ac-nav-liens a { position: relative; padding: 6px 0; color: var(--encre); font-weight: 500; text-decoration: none; transition: color 0.2s ease-out; }
@@ -41,7 +41,7 @@
 .ac-scene { perspective: 1400px; transform-style: preserve-3d; will-change: transform; }
 .ac-apercu {
   padding: 0 22px 20px; transform-style: preserve-3d; will-change: transform;
-  background: var(--papier); border: var(--trait); border-radius: 20px; box-shadow: 6px 6px 0 var(--encre);
+  background: var(--papier); border: var(--trait); border-radius: 20px; box-shadow: var(--ombre);
 }
 .ac-apercu-barre {
   display: flex; justify-content: space-between; align-items: center; gap: 12px;
@@ -50,7 +50,7 @@
   transform: translateZ(14px);
 }
 .ac-apercu-barre .texte-secondaire { font-weight: 500; font-size: 0.8rem; }
-.ac-apercu .balance { transform: translateZ(70px); }
+.ac-apercu .synthese-ecriture { transform: translateZ(30px); }
 .ac-apercu .ecriture-lignes { transform: translateZ(30px); }
 
 /* Titre héros : mots qui remontent derrière un masque */
@@ -90,7 +90,7 @@
 
 .ac-fonctions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
 .ac-fonction { padding: 26px; border: var(--trait); border-radius: 18px; background: var(--creme); box-shadow: var(--ombre-petite); transition: box-shadow 0.2s ease-out; }
-.ac-fonction:hover { box-shadow: 5px 5px 0 var(--encre); }
+.ac-fonction:hover { box-shadow: var(--ombre); }
 .ac-fonction h3 { margin-top: 16px; font: 600 1.15rem var(--titre); }
 .ac-fonction p { margin-top: 6px; color: var(--muet); font-size: 0.95rem; }
 .ac-icone { width: 46px; height: 46px; padding: 10px; border-radius: 12px; border: var(--trait); background: var(--papier); color: var(--encre); }
@@ -139,12 +139,12 @@
 .ac-appel {
   display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap;
   max-width: 1132px; margin: 0 auto 96px; padding: 40px 44px;
-  border: var(--trait); border-radius: 24px; background: var(--encre); color: var(--creme); box-shadow: 6px 6px 0 var(--corail);
+  border: var(--trait); border-radius: 24px; background: var(--encre); color: var(--creme); box-shadow: var(--ombre);
 }
 .ac-appel h2 { font: 600 clamp(1.5rem, 2.6vw, 2.1rem)/1.15 var(--titre); letter-spacing: -0.02em; }
 .ac-appel p { margin-top: 8px; color: rgba(251, 246, 236, 0.72); max-width: 52ch; }
-.ac .ac-btn-blanc { background: var(--jaune); color: var(--encre); border-color: var(--creme); box-shadow: 3px 3px 0 var(--creme); min-height: 52px; padding: 0 26px; }
-.ac .ac-btn-blanc:hover:not(:disabled) { box-shadow: 4px 4px 0 var(--creme); }
+.ac .ac-btn-blanc { background: var(--jaune); color: var(--encre); border-color: var(--creme); box-shadow: var(--ombre-petite); min-height: 52px; padding: 0 26px; }
+.ac .ac-btn-blanc:hover:not(:disabled) { box-shadow: var(--ombre); }
 
 /* ---------- pied ---------- */
 .ac-pied {

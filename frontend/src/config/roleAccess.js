@@ -4,7 +4,7 @@
  * Découpage conforme au diagramme de cas d'utilisation FinCo :
  * - COMPTABLE : Journal, saisie, tiers, factures, paiements, grand livre et exercices.
  * - CONTROLEUR : Centres de coûts, budgets, répartitions et rapports analytiques.
- * - ADMIN : Plan comptable et gestion des utilisateurs.
+ * - ADMIN : Tableau de bord, plan comptable et gestion des utilisateurs.
  * - DIRECTEUR_FINANCIER : Tableau de bord et validation des paiements.
  */
 
@@ -151,6 +151,15 @@ export const PAGES = [
     path: '/comptes',
     libelle: 'Plan comptable',
     icone: 'comptes',
+    section: 'Administration',
+    roles: [ROLES.ADMIN],
+    dansMenu: true,
+    end: false,
+  },
+  {
+    path: '/admin/tableau-de-bord',
+    libelle: 'Tableau de bord',
+    icone: 'accueil',
     section: 'Administration',
     roles: [ROLES.ADMIN],
     dansMenu: true,

@@ -21,6 +21,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -61,7 +62,7 @@ public class SecurityConfig {
 
                         // Module COMPTABILITÉ FINANCIÈRE (COMPTABLE uniquement) :
                         // Écritures et journal des pièces
-                        .requestMatchers(HttpMethod.GET, "/api/pieces/**").hasAnyRole("COMPTABLE", "DIRECTEUR_FINANCIER")
+                        .requestMatchers(HttpMethod.GET, "/api/pieces/**").hasAnyRole("COMPTABLE", "DIRECTEUR_FINANCIER", "ADMIN")
                         .requestMatchers("/api/pieces/**").hasRole("COMPTABLE")
                         // Tiers (clients et fournisseurs)
                         .requestMatchers("/api/fournisseurs/**", "/api/clients/**").hasRole("COMPTABLE")
@@ -128,12 +129,16 @@ public class SecurityConfig {
         return configuration.getAuthenticationManager();
     }
 
-    /** CORS : autorise le frontend React (http://localhost:5173) à appeler l'API. */
+    /** CORS : autorise les origines locales du frontend à appeler l'API. */
     @Bean
     CorsConfigurationSource corsConfigurationSource(
             @Value("${app.cors.allowed-origin:http://localhost:5173}") String origineAutorisee) {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(origineAutorisee));
+        List<String> originesAutorisees = Arrays.stream(origineAutorisee.split(","))
+                .map(String::trim)
+                .filter(origine -> !origine.isEmpty())
+                .toList();
+        configuration.setAllowedOrigins(originesAutorisees);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 

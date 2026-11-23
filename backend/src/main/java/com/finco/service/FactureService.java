@@ -40,15 +40,17 @@ public class FactureService {
     private final CentreCoutRepository centreCoutRepository;
     private final CompteGeneralRepository compteRepository;
     private final PieceComptableService pieceService;
+    private final EnvoiEmailService envoiEmailService;
 
     public FactureService(FactureRepository factureRepository, TiersRepository tiersRepository,
                           CentreCoutRepository centreCoutRepository, CompteGeneralRepository compteRepository,
-                          PieceComptableService pieceService) {
+                          PieceComptableService pieceService, EnvoiEmailService envoiEmailService) {
         this.factureRepository = factureRepository;
         this.tiersRepository = tiersRepository;
         this.centreCoutRepository = centreCoutRepository;
         this.compteRepository = compteRepository;
         this.pieceService = pieceService;
+        this.envoiEmailService = envoiEmailService;
     }
 
     @Transactional(readOnly = true)
@@ -76,7 +78,12 @@ public class FactureService {
         if (factureRepository.existsByTiersIdAndNumero(tiers.getId(), numero)) {
             throw new ConflitMetierException("numero", "Ce numéro de facture existe déjà pour ce tiers.");
         }
-        return FactureResponse.depuis(factureRepository.save(new Facture(numero, date, type, ht, tva, tiers)));
+        Facture facture = factureRepository.save(new Facture(numero, date, type, ht, tva, tiers));
+        String nature = type == TypeFacture.ACHAT ? "d'achat" : "de vente";
+        envoiEmailService.envoyerNotification(tiers.getEmail(), "Nouvelle facture " + numero,
+                "Une nouvelle facture " + nature + " (" + numero + ") a été enregistrée le "
+                        + date + " pour un montant TTC de " + facture.calculerTTC().toPlainString() + " MAD.");
+        return FactureResponse.depuis(facture);
     }
 
     public FactureResponse modifier(Long id, FactureRequest request) {

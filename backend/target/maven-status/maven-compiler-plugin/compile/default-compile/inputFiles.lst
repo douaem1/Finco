@@ -9,16 +9,19 @@ C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\repository\Paiem
 C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\entity\AllocationPaiement.java
 C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\dto\FournisseurResponse.java
 C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\service\AuthService.java
+C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\service\AssistantChatService.java
 C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\repository\CentreCoutRepository.java
 C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\controller\FactureController.java
 C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\dto\AllocationPaiementRequest.java
 C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\controller\AuthController.java
 C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\entity\enums\Role.java
 C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\controller\RapportAnalytiqueController.java
+C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\dto\AssistantChatResponse.java
 C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\entity\PieceComptable.java
 C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\service\ReglesMontant.java
 C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\dto\ClientRequest.java
 C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\controller\PaiementDirectionController.java
+C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\dto\AssistantChatRequest.java
 C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\dto\PaiementRequest.java
 C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\controller\CompteGeneralController.java
 C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\dto\UtilisateurAdministrationResponse.java
@@ -85,6 +88,7 @@ C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\dto\RenvoiOtpReq
 C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\dto\PieceComptableResponse.java
 C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\service\UtilisateurAdministrationService.java
 C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\dto\ClientResponse.java
+C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\controller\AssistantChatController.java
 C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\entity\Paiement.java
 C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\service\ReglesTiers.java
 C:\Users\HP\Desktop\FinCo\Finco\backend\src\main\java\com\finco\entity\Societe.java

@@ -53,18 +53,21 @@ public class PieceComptableService {
     private final CentreCoutRepository centreCoutRepository;
     private final ExerciceRepository exerciceRepository;
     private final UtilisateurRepository utilisateurRepository;
+    private final EnvoiEmailService envoiEmailService;
 
     /** Injection par constructeur des 5 repositories (Beans fournis par Spring Data). */
     public PieceComptableService(PieceComptableRepository pieceRepository,
                                  CompteGeneralRepository compteRepository,
                                  CentreCoutRepository centreCoutRepository,
                                  ExerciceRepository exerciceRepository,
-                                 UtilisateurRepository utilisateurRepository) {
+                                 UtilisateurRepository utilisateurRepository,
+                                 EnvoiEmailService envoiEmailService) {
         this.pieceRepository = pieceRepository;
         this.compteRepository = compteRepository;
         this.centreCoutRepository = centreCoutRepository;
         this.exerciceRepository = exerciceRepository;
         this.utilisateurRepository = utilisateurRepository;
+        this.envoiEmailService = envoiEmailService;
     }
 
     @Transactional(readOnly = true)
@@ -222,6 +225,10 @@ public class PieceComptableService {
                     + " est clôturé : validation impossible.");
         }
         piece.setValidee(true);
+        envoiEmailService.envoyerNotification(piece.getUtilisateur().getEmail(),
+                "Écriture comptable validée : " + piece.getNumero(),
+                "Votre écriture « " + piece.getLibelle() + " » (" + piece.getNumero()
+                        + ") a été validée et intégrée au grand livre.");
         return PieceComptableResponse.depuis(piece);
     }
 

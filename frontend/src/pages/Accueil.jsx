@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { pageAccueilPourRole } from '../config/roleAccess';
 import { API_URL } from '../services/api';
 import Logo from '../components/Logo';
-import { EcritureAnimee } from '../components/Balance';
+import { EcritureAnimee } from '../components/SyntheseEcriture';
 import {
   CurseurPersonnalise, EASE_EXPO, Inclinable, Magnetique, SPRING_DOUX, TitreMots, TitreRevele,
   apparition, delaiNonLineaire,
@@ -74,7 +74,7 @@ const R = ({ i = 0, ...props }) => <motion.rect {...TRACE} transition={{ duratio
 
 function Icone({ nom }) {
   const traits = {
-    balance: <><P d="M12 4v16M6 20h12M4 8h16" /><P i={1} d="M7 8l-3 6h6zM17 8l-3 6h6z" /></>,
+    balance: <><P d="M4 7h16M4 12h16M4 17h16" /><P i={1} d="M8 4v6M16 9v6" /></>,
     centre: <><C cx="12" cy="12" r="8" /><C i={1} cx="12" cy="12" r="3.5" /><P i={2} d="M12 2v3M12 19v3M2 12h3M19 12h3" /></>,
     cadenas: <><R x="5" y="10.5" width="14" height="10" rx="2" /><P i={1} d="M8 10.5V7.5a4 4 0 018 0v3M12 14.5v2.5" /></>,
     roles: <><C cx="9" cy="8" r="3" /><P i={1} d="M3.5 19a5.5 5.5 0 0111 0" /><C i={2} cx="17" cy="9" r="2.4" /><P i={3} d="M15.5 14.2a4.5 4.5 0 015.5 4.8" /></>,

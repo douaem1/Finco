@@ -24,14 +24,30 @@ L’API de contrôle est disponible sur http://localhost:8081/api/test et renvoi
 
 Sans SMTP configuré, le code OTP est affiché dans les logs du backend. Pour envoyer les emails :
 
-1. Copier `backend/src/main/resources/application-local.properties.example` vers `backend/src/main/resources/application-local.properties` (ce dernier fichier est ignoré par Git).
-2. Dans PowerShell, définir l’adresse Gmail et un **mot de passe d’application Google** (pas le mot de passe normal du compte), puis activer le profil `local` :
-   ```powershell
-   $env:MAIL_USERNAME = "votre-adresse@gmail.com"
-   $env:MAIL_PASSWORD = "votre-mot-de-passe-application"
-   $env:SPRING_PROFILES_ACTIVE = "local"
-   ```
-   Pour personnaliser l’adresse d’expédition, définir aussi `$env:MAIL_FROM`.
-3. Démarrer le backend depuis `backend` avec `mvn spring-boot:run`.
+1. Copier `backend/src/main/resources/application-local.properties.example` vers `backend/src/main/resources/application-local.properties` si ce fichier n’existe pas déjà (il est ignoré par Git).
+2. Dans `backend/.env`, renseigner `MAIL_USERNAME` et `MAIL_PASSWORD`. Le mot de passe doit être un **mot de passe d’application Google**, pas le mot de passe normal du compte. Ce fichier est ignoré par Git ; ne partagez pas son contenu. Pour personnaliser l’adresse d’expédition, renseigner aussi `MAIL_FROM`.
+3. Démarrer le backend avec `backend/run-local.cmd`. Le script active le profil `local`.
 
-Ces variables ne sont définies que dans la session PowerShell courante. Sans le profil `local`, le backend conserve le mode développement et affiche les OTP dans sa console.
+Avec le SMTP configuré, FinCo envoie aussi des notifications lors de la création d'une facture, de l'approbation d'un paiement, du règlement complet d'une facture et de la validation d'une écriture comptable. Les notifications destinées aux clients ou fournisseurs utilisent l'adresse email renseignée sur leur fiche. Un email manquant ou un incident SMTP est journalisé sans annuler l'opération comptable.
+
+Le profil `local` configure le transport Gmail ; sans SMTP valide, les OTP continuent d’apparaître dans les logs du backend.
+
+### Assistant FinCo (Gemini)
+
+Le chatbot est disponible dans les espaces employés une fois la clé Gemini configurée côté backend.
+
+Pour une configuration locale, renseignez `backend/.env` :
+
+```properties
+GEMINI_API_KEY=votre-cle-api-gemini
+GEMINI_MODEL=gemini-2.5-flash
+```
+
+Ce fichier est ignoré par Git. Vous pouvez aussi définir les variables dans PowerShell :
+
+```powershell
+$env:GEMINI_API_KEY = "votre-cle-api-gemini"
+$env:GEMINI_MODEL = "gemini-2.5-flash" # facultatif
+```
+
+Redémarrer ensuite le backend. Les messages du chat sont envoyés à Gemini pour générer les réponses, mais l'assistant ne lit aucune donnée enregistrée dans FinCo et ne conserve pas l'historique côté serveur. Ne saisissez pas de données personnelles ou financières sensibles.

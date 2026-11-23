@@ -6,6 +6,7 @@ import com.finco.dto.AllocationPaiementRequest;
 import com.finco.entity.AllocationPaiement;
 import com.finco.entity.Facture;
 import com.finco.entity.Paiement;
+import com.finco.entity.Tiers;
 import com.finco.entity.Utilisateur;
 import com.finco.entity.enums.ModePaiement;
 import com.finco.entity.enums.StatutFacture;
@@ -38,15 +39,18 @@ public class PaiementDirectionService {
     private final AllocationPaiementRepository allocationRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final FactureRepository factureRepository;
+    private final EnvoiEmailService envoiEmailService;
 
     public PaiementDirectionService(PaiementRepository paiementRepository,
                                     AllocationPaiementRepository allocationRepository,
                                     UtilisateurRepository utilisateurRepository,
-                                    FactureRepository factureRepository) {
+                                    FactureRepository factureRepository,
+                                    EnvoiEmailService envoiEmailService) {
         this.paiementRepository = paiementRepository;
         this.allocationRepository = allocationRepository;
         this.utilisateurRepository = utilisateurRepository;
         this.factureRepository = factureRepository;
+        this.envoiEmailService = envoiEmailService;
     }
 
     @Transactional(readOnly = true)
@@ -128,15 +132,30 @@ public class PaiementDirectionService {
                     .orElseThrow(() -> new RessourceIntrouvableException("Valideur introuvable."));
             paiement.setValidePar(valideur);
             paiementRepository.save(paiement);
+            Set<String> destinatairesNotifies = new HashSet<>();
             for (int i = 0; i < allocations.size(); i++) {
                 AllocationPaiement allocation = allocations.get(i);
                 Facture facture = facturesVerrouillees.get(allocation.getFacture().getId());
                 if (facture == null) {
                     throw new RessourceIntrouvableException("Une facture affectée au paiement est introuvable.");
                 }
+                StatutFacture statutPrecedent = facture.getStatut();
                 BigDecimal totalPaye = montantsDejaPayes.get(i).add(allocation.getMontantAffecte());
-                facture.setStatut(totalPaye.compareTo(facture.calculerTTC()) >= 0
-                        ? StatutFacture.PAYEE : StatutFacture.VALIDEE);
+                boolean reglee = totalPaye.compareTo(facture.calculerTTC()) >= 0;
+                facture.setStatut(reglee ? StatutFacture.PAYEE : StatutFacture.VALIDEE);
+
+                Tiers tiers = facture.getTiers();
+                String destinataire = tiers.getEmail();
+                if (destinataire != null && !destinataire.isBlank() && destinatairesNotifies.add(destinataire)) {
+                    envoiEmailService.envoyerNotification(destinataire, "Paiement approuvé",
+                            "Le paiement n°" + paiement.getId() + " du " + paiement.getDatePaiement()
+                                    + " (" + paiement.getMontant().toPlainString() + " MAD) a été approuvé.");
+                }
+                if (reglee && statutPrecedent != StatutFacture.PAYEE) {
+                    envoiEmailService.envoyerNotification(destinataire,
+                            "Facture réglée : " + facture.getNumero(),
+                            "La facture " + facture.getNumero() + " est désormais entièrement réglée.");
+                }
             }
         }
         return PaiementDirectionResponse.depuis(paiement, allocations(paiement));

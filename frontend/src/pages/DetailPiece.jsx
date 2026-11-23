@@ -5,7 +5,7 @@ import { messageErreur } from '../services/api';
 import { dateFr, montant } from '../utils/format';
 import MessageErreur from '../components/MessageErreur';
 import Chargement from '../components/Chargement';
-import Balance from '../components/Balance';
+import SyntheseEcriture from '../components/SyntheseEcriture';
 
 export default function DetailPiece() {
   const { id } = useParams();
@@ -86,7 +86,7 @@ export default function DetailPiece() {
           </table>
 
           <div className="document-pied">
-            <Balance debit={Number(piece.totalDebit)} credit={Number(piece.totalCredit)} compacte />
+            <SyntheseEcriture debit={Number(piece.totalDebit)} credit={Number(piece.totalCredit)} compacte />
             {!piece.validee && (
               <div className="actions">
                 <span className="champ-aide">Une pièce validée entre dans la balance et ne peut plus être modifiée.</span>
