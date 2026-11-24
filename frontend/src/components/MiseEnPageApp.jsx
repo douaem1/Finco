@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LIBELLES_ROLES, initiales, nomAffiche } from '../utils/format';
-import { obtenirSectionsMenuPourRole } from '../config/roleAccess';
+import { obtenirSectionsMenuPourRole, PAGES } from '../config/roleAccess';
 import Logo from './Logo';
 import Icone from './Icone';
 import MessageErreur from './MessageErreur';
+import AssistantFinCo from './AssistantFinCo';
 
 /** Cadre des pages connectées : barre latérale filtrée par rôle + zone de travail. */
 export default function MiseEnPageApp() {
@@ -14,6 +15,14 @@ export default function MiseEnPageApp() {
   const location = useLocation();
 
   const [messageRefus, setMessageRefus] = useState(location.state?.messageAccesRefuse || '');
+  const [menuOuvert, setMenuOuvert] = useState(false);
+  const pageActive = PAGES.find((page) => page.pattern
+    ? page.pattern.test(location.pathname)
+    : page.path === location.pathname);
+
+  useEffect(() => {
+    setMenuOuvert(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (location.state?.messageAccesRefuse) {
@@ -35,12 +44,27 @@ export default function MiseEnPageApp() {
       <aside className="lateral">
         <div className="lateral-logo"><Logo /></div>
 
-        <nav className="lateral-nav" aria-label="Navigation principale">
+        <button
+          type="button"
+          className="lateral-menu"
+          aria-expanded={menuOuvert}
+          aria-controls="navigation-principale"
+          onClick={() => setMenuOuvert((ouvert) => !ouvert)}
+        >
+          <Icone nom={menuOuvert ? 'croix' : 'menu'} taille={18} />
+          <span>{menuOuvert ? 'Fermer' : 'Menu'}</span>
+        </button>
+
+        <nav
+          id="navigation-principale"
+          className={`lateral-nav ${menuOuvert ? 'lateral-nav-ouverte' : ''}`}
+          aria-label="Navigation principale"
+        >
           {sections.map((section) => (
             <React.Fragment key={section.nom}>
               <p className="lateral-groupe">{section.nom}</p>
               {section.items.map((item) => (
-                <NavLink key={item.path} to={item.path} end={item.end}>
+                <NavLink key={item.path} to={item.path} end={item.end} onClick={() => setMenuOuvert(false)}>
                   <Icone nom={item.icone} /> {item.libelle}
                 </NavLink>
               ))}
@@ -67,6 +91,13 @@ export default function MiseEnPageApp() {
       </aside>
 
       <main className="contenu">
+        {pageActive && (
+          <p className="app-contexte">
+            <span>{LIBELLES_ROLES[role] ?? role}</span>
+            <span aria-hidden="true">/</span>
+            <strong>{pageActive.libelle}</strong>
+          </p>
+        )}
         {messageRefus && (
           <div style={{ marginBottom: '1.5rem' }}>
             <MessageErreur message={messageRefus} onFermer={() => setMessageRefus('')} />
@@ -74,6 +105,7 @@ export default function MiseEnPageApp() {
         )}
         <Outlet />
       </main>
+      <AssistantFinCo />
     </div>
   );
 }

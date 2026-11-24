@@ -17,7 +17,7 @@ export default function CentresCout() {
   // Modale édition / création
   const [modaleOuverte, setModaleOuverte] = useState(false);
   const [centreEnCours, setCentreEnCours] = useState(null); // null = création
-  const [formulaire, setFormulaire] = useState({ code: '', libelle: '', principal: true });
+  const [formulaire, setFormulaire] = useState({ code: '', libelle: '', principal: true, cleRepartition: '0' });
   const [erreursChamps, setErreursChamps] = useState({});
   const [erreurModale, setErreurModale] = useState('');
   const [chargementAction, setChargementAction] = useState(false);
@@ -46,7 +46,7 @@ export default function CentresCout() {
 
   function ouvrirCreation() {
     setCentreEnCours(null);
-    setFormulaire({ code: '', libelle: '', principal: true });
+    setFormulaire({ code: '', libelle: '', principal: true, cleRepartition: '0' });
     setErreursChamps({});
     setErreurModale('');
     setModaleOuverte(true);
@@ -54,7 +54,7 @@ export default function CentresCout() {
 
   function ouvrirModification(c) {
     setCentreEnCours(c);
-    setFormulaire({ code: c.code, libelle: c.libelle, principal: c.principal });
+    setFormulaire({ code: c.code, libelle: c.libelle, principal: c.principal, cleRepartition: String(c.cleRepartition ?? 0) });
     setErreursChamps({});
     setErreurModale('');
     setModaleOuverte(true);
@@ -78,6 +78,11 @@ export default function CentresCout() {
       errs.libelle = 'Le libellé ne doit pas dépasser 100 caractères.';
     }
 
+    const cle = Number(formulaire.cleRepartition);
+    if (!Number.isFinite(cle) || cle < 0 || !/^\d+([.,]\d{1,2})?$/.test(String(formulaire.cleRepartition).trim())) {
+      errs.cleRepartition = 'La clé de répartition doit être positive et comporter au plus deux décimales.';
+    }
+
     setErreursChamps(errs);
     return Object.keys(errs).length === 0;
   }
@@ -94,6 +99,7 @@ export default function CentresCout() {
       code: formulaire.code.trim().toUpperCase(),
       libelle: formulaire.libelle.trim(),
       principal: Boolean(formulaire.principal),
+      cleRepartition: Number(String(formulaire.cleRepartition).replace(',', '.')),
     };
 
     try {
@@ -200,6 +206,7 @@ export default function CentresCout() {
                   <th style={{ width: '130px' }}>Code</th>
                   <th>Libellé</th>
                   <th style={{ width: '140px' }}>Type</th>
+                  <th style={{ width: '110px' }}>Clé</th>
                   {estControleur && <th style={{ width: '90px', textAlign: 'center' }}>Actions</th>}
                 </tr>
               </thead>
@@ -215,6 +222,7 @@ export default function CentresCout() {
                         {c.principal ? 'Principal' : 'Auxiliaire'}
                       </span>
                     </td>
+                    <td className="chiffres">{c.principal ? Number(c.cleRepartition || 0).toLocaleString('fr-FR') : '—'}</td>
                     {estControleur && (
                       <td style={{ textAlign: 'center' }}>
                         <div className="actions-cell">
@@ -241,7 +249,7 @@ export default function CentresCout() {
                 ))}
                 {centresVisibles.length === 0 && (
                   <tr>
-                    <td colSpan={estControleur ? 4 : 3} className="texte-secondaire aucun-resultat">
+                    <td colSpan={estControleur ? 5 : 4} className="texte-secondaire aucun-resultat">
                       Aucun centre de coûts ne correspond à « {recherche} ».
                     </td>
                   </tr>
@@ -290,6 +298,22 @@ export default function CentresCout() {
                     De 2 à 10 caractères : lettres majuscules, chiffres et tiret du bas uniquement.
                   </span>
                 </div>
+                {formulaire.principal && (
+                  <div className="champ">
+                    <label className="champ-label" htmlFor="centre-cle">Clé de répartition</label>
+                    <input
+                      id="centre-cle"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className={`input ${erreursChamps.cleRepartition ? 'input-erreur' : ''}`}
+                      value={formulaire.cleRepartition}
+                      onChange={(e) => setFormulaire({ ...formulaire, cleRepartition: e.target.value })}
+                    />
+                    {erreursChamps.cleRepartition && <span className="champ-erreur">{erreursChamps.cleRepartition}</span>}
+                    <span className="champ-aide">Poids utilisé pour répartir les charges auxiliaires vers les centres principaux.</span>
+                  </div>
+                )}
 
                 <div className="champ">
                   <label className="champ-label" htmlFor="centre-libelle">

@@ -6,7 +6,7 @@ import { erreursParChamp, messageErreur } from '../services/api';
 import ChampSaisie from '../components/ChampSaisie';
 import MessageErreur from '../components/MessageErreur';
 import Chargement from '../components/Chargement';
-import Balance from '../components/Balance';
+import SyntheseEcriture from '../components/SyntheseEcriture';
 
 /* ============================================================
    Saisie d'une écriture comptable.
@@ -186,8 +186,7 @@ export default function SaisiePiece() {
         </div>
 
         <div className="pied-saisie">
-          {/* Aide visuelle : la balance suit les montants saisis. Le serveur reste seul juge. */}
-          <Balance debit={totalDebit} credit={totalCredit} compacte />
+          <SyntheseEcriture debit={totalDebit} credit={totalCredit} compacte />
           <div className="actions">
             <Link to="/pieces" className="btn btn-secondaire">Annuler</Link>
             <button type="submit" className="btn btn-primaire" disabled={incomplet || envoi}>

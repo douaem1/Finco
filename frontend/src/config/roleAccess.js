@@ -2,14 +2,10 @@
  * SOURCE DE VÉRITÉ UNIQUE POUR LES ACCÈS PAR RÔLE (RBAC).
  *
  * Découpage conforme au diagramme de cas d'utilisation FinCo :
- * - COMPTABLE : Saisie d'écriture, Journal, Tiers (clients/fournisseurs), Exercices
- *               (+ TODO futures pages : factures, paiements, grand livre).
- * - CONTROLEUR : Centres de coûts, Budgets CO
- *               (+ TODO futures pages : répartition des coûts, rapports analytiques).
- * - ADMIN : Plan comptable
- *               (+ TODO future page : gestion des utilisateurs).
- * - DIRECTEUR_FINANCIER : Espace direction
- *               (+ TODO futures pages : validation des paiements, tableau de bord).
+ * - COMPTABLE : Journal, saisie, tiers, factures, paiements, grand livre et exercices.
+ * - CONTROLEUR : Centres de coûts, budgets, répartitions et rapports analytiques.
+ * - ADMIN : Tableau de bord, plan comptable et gestion des utilisateurs.
+ * - DIRECTEUR_FINANCIER : Tableau de bord et validation des paiements.
  */
 
 export const ROLES = {
@@ -80,9 +76,33 @@ export const PAGES = [
     dansMenu: true,
     end: false,
   },
-  // TODO [COMPTABLE] : /factures -> Gérer les factures
-  // TODO [COMPTABLE] : /paiements -> Enregistrer un paiement
-  // TODO [COMPTABLE] : /grand-livre -> Consulter le grand livre et la balance
+  {
+    path: '/factures',
+    libelle: 'Factures',
+    icone: 'factures',
+    section: 'Comptabilité financière',
+    roles: [ROLES.COMPTABLE],
+    dansMenu: true,
+    end: false,
+  },
+  {
+    path: '/paiements',
+    libelle: 'Paiements',
+    icone: 'paiements',
+    section: 'Comptabilité financière',
+    roles: [ROLES.COMPTABLE],
+    dansMenu: true,
+    end: false,
+  },
+  {
+    path: '/grand-livre',
+    libelle: 'Grand livre & balance',
+    icone: 'grandLivre',
+    section: 'Comptabilité financière',
+    roles: [ROLES.COMPTABLE],
+    dansMenu: true,
+    end: false,
+  },
 
   // ==========================================
   // MODULE CONTRÔLE DE GESTION (CONTROLEUR)
@@ -105,8 +125,24 @@ export const PAGES = [
     dansMenu: true,
     end: false,
   },
-  // TODO [CONTROLEUR] : /repartition-couts -> Répartir les coûts
-  // TODO [CONTROLEUR] : /rapports-analytiques -> Consulter les rapports analytiques
+  {
+    path: '/repartition-couts',
+    libelle: 'Répartition des coûts',
+    icone: 'repartition',
+    section: 'Contrôle de gestion',
+    roles: [ROLES.CONTROLEUR],
+    dansMenu: true,
+    end: false,
+  },
+  {
+    path: '/rapports-analytiques',
+    libelle: 'Rapports analytiques',
+    icone: 'rapport',
+    section: 'Contrôle de gestion',
+    roles: [ROLES.CONTROLEUR],
+    dansMenu: true,
+    end: false,
+  },
 
   // ==========================================
   // MODULE ADMINISTRATION (ADMIN)
@@ -115,6 +151,15 @@ export const PAGES = [
     path: '/comptes',
     libelle: 'Plan comptable',
     icone: 'comptes',
+    section: 'Administration',
+    roles: [ROLES.ADMIN],
+    dansMenu: true,
+    end: false,
+  },
+  {
+    path: '/admin/tableau-de-bord',
+    libelle: 'Tableau de bord',
+    icone: 'accueil',
     section: 'Administration',
     roles: [ROLES.ADMIN],
     dansMenu: true,
@@ -134,16 +179,31 @@ export const PAGES = [
   // MODULE DIRECTION FINANCIÈRE (DIRECTEUR_FINANCIER)
   // ==========================================
   {
-    path: '/direction',
-    libelle: 'Espace Direction',
-    icone: 'balance',
+    path: '/tableau-de-bord',
+    libelle: 'Tableau de bord',
+    icone: 'accueil',
     section: 'Direction financière',
     roles: [ROLES.DIRECTEUR_FINANCIER],
     dansMenu: true,
     end: false,
   },
-  // TODO [DIRECTEUR_FINANCIER] : /validation-paiements -> Valider les paiements
-  // TODO [DIRECTEUR_FINANCIER] : /tableau-de-bord -> Consulter le tableau de bord
+  {
+    path: '/validation-paiements',
+    libelle: 'Validation des paiements',
+    icone: 'valide',
+    section: 'Direction financière',
+    roles: [ROLES.DIRECTEUR_FINANCIER],
+    dansMenu: true,
+    end: false,
+  },
+  {
+    path: '/direction',
+    libelle: 'Ancien accès direction',
+    icone: 'accueil',
+    section: 'Direction financière',
+    roles: [ROLES.DIRECTEUR_FINANCIER],
+    dansMenu: false,
+  },
 ];
 
 /**
@@ -153,7 +213,7 @@ export const PAGE_ACCUEIL_PAR_ROLE = {
   [ROLES.COMPTABLE]: '/pieces',
   [ROLES.CONTROLEUR]: '/centres-cout',
   [ROLES.ADMIN]: '/comptes',
-  [ROLES.DIRECTEUR_FINANCIER]: '/direction',
+  [ROLES.DIRECTEUR_FINANCIER]: '/tableau-de-bord',
 };
 
 /**

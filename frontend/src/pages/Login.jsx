@@ -6,7 +6,7 @@ import { demanderCode, renvoyerCode } from '../services/authApi';
 import { messageErreur } from '../services/api';
 import { minutesSecondes } from '../utils/format';
 import Logo from '../components/Logo';
-import { EcritureAnimee } from '../components/Balance';
+import { EcritureAnimee } from '../components/SyntheseEcriture';
 import ChampSaisie from '../components/ChampSaisie';
 import MessageErreur from '../components/MessageErreur';
 import SaisieCode from '../components/SaisieCode';

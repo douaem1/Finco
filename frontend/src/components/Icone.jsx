@@ -13,6 +13,7 @@ const TRACES = {
   editer: <><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" /></>,
   supprimer: <><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6" /></>,
   croix: <><path d="M18 6L6 18M6 6l12 12" /></>,
+  menu: <><path d="M4 6h16M4 12h16M4 18h16" /></>,
   sortie: <><path d="M10 4.5H6.5a2 2 0 00-2 2v11a2 2 0 002 2H10" /><path d="M15 16l4-4-4-4M19 12H9.5" /></>,
   recherche: <><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.3-4.3" /></>,
   valide: <><circle cx="12" cy="12" r="8.5" /><path d="M8.2 12.3l2.5 2.5 5-5.3" /></>,
@@ -20,6 +21,11 @@ const TRACES = {
   fleche: <><path d="M5 12h14M13 6l6 6-6 6" /></>,
   verrou: <><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 018 0v4" /></>,
   calendrier: <><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></>,
+  factures: <><path d="M6 3.5h9l4 4v13H6z" /><path d="M15 3.5v4h4M9 12h7M9 16h7" /></>,
+  paiements: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 10h18M7 15h4" /></>,
+  grandLivre: <><path d="M4 5.5A2.5 2.5 0 016.5 3H20v17H6.5A2.5 2.5 0 014 17.5z" /><path d="M4 6v12M8 7h8M8 11h8M8 15h5" /></>,
+  repartition: <><path d="M4 7h8M12 7l-3-3M12 7l-3 3M20 17h-8M12 17l3-3M12 17l3 3" /><circle cx="4" cy="7" r="1.5" /><circle cx="20" cy="17" r="1.5" /></>,
+  rapport: <><path d="M4 20V4M4 20h17" /><path d="M8 16v-4M13 16V8M18 16V5" /></>,
 };
 
 export default function Icone({ nom, taille = 20, className = '' }) {

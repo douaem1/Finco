@@ -21,6 +21,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -61,12 +62,18 @@ public class SecurityConfig {
 
                         // Module COMPTABILITÉ FINANCIÈRE (COMPTABLE uniquement) :
                         // Écritures et journal des pièces
-                        .requestMatchers(HttpMethod.GET, "/api/pieces/**").hasAnyRole("COMPTABLE", "DIRECTEUR_FINANCIER")
+                        .requestMatchers(HttpMethod.GET, "/api/pieces/**").hasAnyRole("COMPTABLE", "DIRECTEUR_FINANCIER", "ADMIN")
                         .requestMatchers("/api/pieces/**").hasRole("COMPTABLE")
                         // Tiers (clients et fournisseurs)
                         .requestMatchers("/api/fournisseurs/**", "/api/clients/**").hasRole("COMPTABLE")
                         // Exercices comptables (clôture de période)
                         .requestMatchers("/api/exercices/**").hasRole("COMPTABLE")
+                        // Factures : saisie, comptabilisation, consultation
+                        .requestMatchers("/api/factures/**").hasRole("COMPTABLE")
+                        // Paiements : la saisie est comptable, la validation est réservée à la direction
+                        .requestMatchers(HttpMethod.GET, "/api/paiements/**").hasAnyRole("COMPTABLE", "DIRECTEUR_FINANCIER")
+                        .requestMatchers(HttpMethod.POST, "/api/paiements/**").hasRole("COMPTABLE")
+                        .requestMatchers(HttpMethod.PUT, "/api/paiements/*/valider").hasRole("DIRECTEUR_FINANCIER")
 
                         // Module CONTRÔLE DE GESTION (CONTROLEUR uniquement) :
                         // Écriture centres de coûts (CUD)
@@ -75,6 +82,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/centres-cout/**").hasRole("CONTROLEUR")
                         // Budgets CO (gestion complète)
                         .requestMatchers("/api/budgets/**").hasRole("CONTROLEUR")
+                        .requestMatchers("/api/imputations/**", "/api/rapports/analytique/**").hasRole("CONTROLEUR")
 
                         // Module ADMINISTRATION (ADMIN uniquement) :
                         // Écriture plan comptable (CUD comptes généraux)
@@ -82,8 +90,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/comptes/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/comptes/**").hasRole("ADMIN")
                         .requestMatchers("/api/utilisateurs/**").hasRole("ADMIN")
-                        .requestMatchers("/api/paiements/**").hasRole("DIRECTEUR_FINANCIER")
-
                         // Consultations transversales (nécessaires pour les listes déroulantes de la saisie d'écritures) :
                         // Lecture des comptes généraux et des centres de coûts : tout utilisateur authentifié
                         .requestMatchers(HttpMethod.GET, "/api/comptes/**").authenticated()
@@ -123,12 +129,16 @@ public class SecurityConfig {
         return configuration.getAuthenticationManager();
     }
 
-    /** CORS : autorise le frontend React (http://localhost:5173) à appeler l'API. */
+    /** CORS : autorise les origines locales du frontend à appeler l'API. */
     @Bean
     CorsConfigurationSource corsConfigurationSource(
             @Value("${app.cors.allowed-origin:http://localhost:5173}") String origineAutorisee) {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(origineAutorisee));
+        List<String> originesAutorisees = Arrays.stream(origineAutorisee.split(","))
+                .map(String::trim)
+                .filter(origine -> !origine.isEmpty())
+                .toList();
+        configuration.setAllowedOrigins(originesAutorisees);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 

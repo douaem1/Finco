@@ -11,6 +11,13 @@ import Exercices from './pages/Exercices.jsx';
 import Budgets from './pages/Budgets.jsx';
 import EspaceDaf from './pages/EspaceDaf.jsx';
 import Utilisateurs from './pages/Utilisateurs.jsx';
+import TableauDeBord from './pages/TableauDeBord.jsx';
+import Factures from './pages/Factures.jsx';
+import Paiements from './pages/Paiements.jsx';
+import GrandLivre from './pages/GrandLivre.jsx';
+import RepartitionCouts from './pages/RepartitionCouts.jsx';
+import RapportsAnalytiques from './pages/RapportsAnalytiques.jsx';
+import ValidationPaiements from './pages/ValidationPaiements.jsx';
 import RouteProtegee from './components/RouteProtegee.jsx';
 import MiseEnPageApp from './components/MiseEnPageApp.jsx';
 import { useAuth } from './context/AuthContext.jsx';
@@ -40,17 +47,25 @@ export default function App() {
           <Route path="/pieces/:id" element={<DetailPiece />} />
           <Route path="/tiers" element={<Tiers />} />
           <Route path="/exercices" element={<Exercices />} />
+          <Route path="/factures" element={<Factures />} />
+          <Route path="/paiements" element={<Paiements />} />
+          <Route path="/grand-livre" element={<GrandLivre />} />
 
           {/* Module Contrôle de gestion (CONTROLEUR) */}
           <Route path="/centres-cout" element={<CentresCout />} />
           <Route path="/budgets" element={<Budgets />} />
+          <Route path="/repartition-couts" element={<RepartitionCouts />} />
+          <Route path="/rapports-analytiques" element={<RapportsAnalytiques />} />
 
           {/* Module Administration (ADMIN) */}
           <Route path="/comptes" element={<PlanComptable />} />
+          <Route path="/admin/tableau-de-bord" element={<TableauDeBord />} />
           <Route path="/utilisateurs" element={<Utilisateurs />} />
 
           {/* Module Direction financière (DIRECTEUR_FINANCIER) */}
-          <Route path="/direction" element={<EspaceDaf />} />
+          <Route path="/direction" element={<Navigate to="/tableau-de-bord" replace />} />
+          <Route path="/tableau-de-bord" element={<EspaceDaf />} />
+          <Route path="/validation-paiements" element={<ValidationPaiements />} />
         </Route>
       </Route>
 
